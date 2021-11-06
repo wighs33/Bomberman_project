@@ -147,8 +147,10 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="characters_bmp\Eve.bmp" />
+    <Image Include="characters_bmp\icon1.ico" />
     <Image Include="characters_bmp\Lazarus.bmp" />
     <Image Include="characters_bmp\Magdalene.bmp" />
+    <Image Include="icon\smile_bomb.ico" />
     <Image Include="maps_bmp\background.bmp" />
     <Image Include="map_bmp\background.bmp" />
     <Image Include="objects_bmp\block.bmp" />

@@ -61,6 +61,12 @@
     <Image Include="objects_bmp\item.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
+    <Image Include="characters_bmp\icon1.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="icon\smile_bomb.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bomberman_project.cpp">
