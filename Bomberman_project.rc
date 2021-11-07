@@ -70,7 +70,7 @@ IDB_BITMAP9             BITMAP                  "characters_bmp\\Eve.bmp"
 
 IDB_BITMAP10            BITMAP                  "objects_bmp\\bomb.bmp"
 
-IDB_BITMAP11            BITMAP                  "C:\\Users\\seung\\Desktop\\네트워크 게임 프로그래밍\\팀 프로젝트\\공동 작업 git\\objects_bmp\\item.bmp"
+IDB_BITMAP11            BITMAP                  "objects_bmp\\item.bmp"
 
 IDB_BITMAP12            BITMAP                  "objects_bmp\\item.bmp"
 
@@ -82,7 +82,7 @@ IDB_BITMAP12            BITMAP                  "objects_bmp\\item.bmp"
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON1               ICON                    "icon\\terror_man.ico"
+IDI_ICON1               ICON                    "icon_ico\\terror_man.ico"
 
 #endif    // 한국어(대한민국) resources
 /////////////////////////////////////////////////////////////////////////////

@@ -18,6 +18,12 @@
     <ClInclude Include="resource.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="protocol.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Bomberman_project.rc">
@@ -61,15 +67,18 @@
     <Image Include="objects_bmp\item.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="characters_bmp\icon1.ico">
+    <Image Include="icon_ico\terror_man.ico">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="icon\smile_bomb.ico">
+    <Image Include="icon_ico\terror_man.ico">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bomberman_project.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
