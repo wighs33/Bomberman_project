@@ -21,10 +21,10 @@
     <ClInclude Include="Player.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="GameObject.h">
+    <ClInclude Include="protocol.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="protocol.h">
+    <ClInclude Include="GameObject.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -70,10 +70,10 @@
     <Image Include="objects_bmp\item.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="characters_bmp\icon1.ico">
+    <Image Include="icon_ico\terror_man.ico">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="icon\smile_bomb.ico">
+    <Image Include="icon_ico\terror_man.ico">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>

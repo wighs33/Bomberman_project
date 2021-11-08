@@ -9,18 +9,6 @@
 #include "GameObject.h"
 #include "protocol.h"
 
-//테스트용 맵
-template<typename T>
-using arr15x10 = std::array<std::array<T, 15>, 10>;
-arr15x10<int> tmpMap{};
-
-//로그인 요청함수(임시 값 - 변경해야함)
-void Login() {
-	LOGIN_packet login_packet;
-	login_packet.type = 0;
-	login_packet.ID = 0;
-}
-
 HINSTANCE g_hInst;
 LPCTSTR lpszClass = L"Window Class Name";
 LPCTSTR lpszWindowName = L"테러맨";
@@ -33,22 +21,87 @@ std::random_device rd;
 std::default_random_engine dre{ rd() };
 std::uniform_int_distribution<> uid{ 1,100 };
 
-const int bg_w{ 884 };
-const int bg_h{ 571 };
 
-const int bl_size{ 69 };
+//로그인 요청함수(임시 값 - 변경해야함)
+void Login() {
+	LOGIN_packet login_packet;
+	login_packet.type = 0;
+	login_packet.ID = 0;
+}
 
-const int tear_w{ 96 };//{ 100 };//{ 52 };
-const int tear_h{ 96 };//{ 105 };//{ 50 };
+
+//테스트용 맵
+template<typename T>
+using arr15x10 = std::array<std::array<T, 15>, 10>;
+arr15x10<int> tmpMap{};
 
 
-struct Block {
+//게임에서 쓰이는 모든객체가 필요로하는 모든정보들을 한곳에 담은 객체 구조체(임시 값 - GameObject 클래스로 바꿔야함)
+struct Obiect {
 	int left, top;
-	int size;
 	int dir; //1 - 오, 2 - 왼, 3 - 아래, 4 - 위
 	int health;
 	int death_idx;
 };
+
+
+//스프라이트 관련 상수들
+
+const int bg_img_w{ 884 };	//실제 배경 이미지 비트크기
+const int bg_img_h{ 571 };	//실제 배경 이미지 비트크기
+const int bg_w{ 1210 };		//화면상에 그릴 배경 크기
+const int bg_h{ 780 };		//화면상에 그릴 배경 크기
+
+const int p_body_img_w_start{ 15 };		//실제 플레이어 몸통 이미지 시작비트 위치
+const int p_body_img_h_start{ 80 };		//실제 플레이어 몸통 이미지 시작비트 위치
+const int p_body_img_w_gap{ 32 };		//실제 플레이어 몸통 이미지 좌우 스프라이트 갭 비트크기
+const int p_body_img_h_rd_gap{ 43 };	//실제 플레이어 몸통 이미지 상하 오른쪽방향 이동시 스프라이트 갭 비트크기
+const int p_body_img_h_ld_gap{ 30 };	//실제 플레이어 몸통 이미지 상하 왼쪽방향 이동시 스프라이트 갭 비트크기
+const int p_body_img_size{ 30 };		//실제 플레이어 몸통 이미지 비트크기
+
+const int p_head_img_w_start{ 5 };		//실제 플레이어 머리 이미지 시작비트 위치
+const int p_head_img_h_start{ 20 };		//실제 플레이어 머리 이미지 시작비트 위치
+const int p_head_img_w_gap{ 40 };		//실제 플레이어 머리 이미지 스프라이트 갭 비트크기
+const int p_head_img_w_size{ 40 };		//실제 플레이어 머리 이미지 비트크기
+const int p_head_img_h_size{ 35 };		//실제 플레이어 머리 이미지 비트크기
+
+const int p_size{ 60 };			//화면상 플레이어 크기(머리, 몸통 통합) & 충돌체크시 사용할 플레이어의 전체크기
+
+const int p_head_loc_w{ 10 };	//화면상 플레이어 머리 시작위치
+const int p_head_loc_h{ 47 };	//화면상 플레이어 머리 시작위치
+
+const int bl_img_size{ 79 };	//실제 블록 이미지 비트크기
+const int bl_size{ 59 };		//화면상 블록 사이즈
+
+const int bomb_img_w{ 100 };	//실제 폭탄 이미지 비트크기
+const int bomb_img_h{ 105 };	//실제 폭탄 이미지 비트크기
+const int bomb_w{ 50 };			//화면상 폭탄 크기
+const int bomb_h{ 52 };			//화면상 폭탄 크기
+
+
+//블록 생성 관련 상수들
+
+const int block_init_w_num{ 15 };	//좌우로 블록 몇개생성
+const int block_init_h_num{ 8 };	//상하로 블록 몇개생성
+
+
+//오브젝트 생성 관련 상수들
+
+const int block_num{ 80 };	//생성할 블록개수
+const int bomb_num{ 10 };	//생성할 폭탄개수
+
+
+//충동체크 관련 상수들
+
+const int outer_wall_start{ 150 };	//외벽 최상측, 최좌측 시작위치
+
+const int bomb_size{ 45 };	//충돌체크시 사용할 폭탄 크기
+
+
+//속도 관련 상수들
+
+const int pl_speed{ 7 };
+const int bomb_speed{ 14 };
 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
@@ -76,7 +129,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
-	
+
 	while (GetMessage(&Message, 0, 0, 0)) {
 		TranslateMessage(&Message);
 		DispatchMessage(&Message);
@@ -89,19 +142,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	HDC hdc;
 	PAINTSTRUCT ps;
 	HDC mem1dc, mem2dc;
-	static HBITMAP hBit_main, hBit_bg, hBit_block, hBit_isaac, hBit_tear, hBit_monster;
+	static HBITMAP hBit_main, hBit_bg, hBit_block, hBit_player, hBit_bomb;
 	static HBITMAP oldBit1, oldBit2;
 
-	static Block player;
-	static Block enemy[3];
-	static Block block[10];
-	static Block tear[20];
+	static Obiect player;
+	static Obiect block[block_num];
+	static Obiect bomb[bomb_num];
 
 	static int timecnt{ 0 };
 	static int p_head_idx{ 0 };
 	static int p_body_idx{ 0 };
-	static int m_head_idx{ 0 };
-	static int m_body_idx{ 0 };
 
 	static bool p{ 0 };
 
@@ -113,51 +163,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		hBit_bg = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP1));
 		hBit_block = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP2));
-		hBit_isaac = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP3));
-		hBit_tear = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP11));/*LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP10));*/ /*LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP4));*/
-		hBit_monster = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP5));
+		hBit_player = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP3));
+		hBit_bomb = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP10));
 
-		player.left = 200;
-		player.top = 200;
-		player.size = 60;
+		player.left = outer_wall_start + bl_size + 10;
+		player.top = outer_wall_start + bl_size + 10;
 		player.dir = 0;
 
-		for (int i = 0; i < 3; ++i) {
-			enemy[i].size = 80;
-			enemy[i].health = 3;
-			enemy[i].left = 500 + 80 * i;
-			enemy[i].top = 400;
-			enemy[i].dir = 2;
-		}
-
-		for (int i = 0; i < 20; ++i) {
-			tear[i].size = 50;
-		}
-
-		for (int i = 0; i < 10; ++i) {
+		for (int i = 0; i < block_num; ++i) {
 			block[i].health = 5;
-			block[i].left = 110 + (uid(dre) % 8) * (bl_size + 1);
-			block[i].top = 110 + (uid(dre) % 4) * (bl_size + 1);
+			block[i].left = outer_wall_start + (uid(dre) % block_init_w_num) * (bl_size + 1);
+			block[i].top = outer_wall_start + (uid(dre) % block_init_h_num) * (bl_size + 1);
 
 			int a{ 1 };
 
 			while (a != 0) {
 				a = 0;
-				for (int j = 0; j < 10; ++j) {
+				for (int j = 0; j < block_num; ++j) {
 					if (block[i].left == block[j].left && block[i].top == block[j].top && i != j) {
-						block[i].left = 110 + (uid(dre) % 8) * (bl_size + 1);
-						block[i].top = 110 + (uid(dre) % 4) * (bl_size + 1);
+						block[i].left = outer_wall_start + (uid(dre) % block_init_w_num) * (bl_size + 1);
+						block[i].top = outer_wall_start + (uid(dre) % block_init_h_num) * (bl_size + 1);
 						a++;
 					}
-					else if (block[i].left == 110 + (bl_size + 1) && block[i].top == 110 + (bl_size + 1)) {
-						block[i].left = 110 + (uid(dre) % 8) * (bl_size + 1);
-						block[i].top = 110 + (uid(dre) % 4) * (bl_size + 1);
+					else if (block[i].left == outer_wall_start + (bl_size + 1) && block[i].top == outer_wall_start + (bl_size + 1)) {
+						block[i].left = outer_wall_start + (uid(dre) % block_init_w_num) * (bl_size + 1);
+						block[i].top = outer_wall_start + (uid(dre) % block_init_h_num) * (bl_size + 1);
 						a++;
 					}
 				}
 			}
 		}
-		
+
 		SetTimer(hwnd, 1, 50, NULL);
 
 		break;
@@ -196,34 +232,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_SPACE:
-			for (int i = 0; i < 20; ++i) {
-				if (tear[i].dir == 0) {
-					tear[i].dir = player.dir;
-					tear[i].left = player.left + 10;
-					tear[i].top = player.top - 41 + 15;
+			//폭탄 생성
+			for (int i = 0; i < bomb_num; ++i) {
+				if (bomb[i].dir == 0) {
+					bomb[i].dir = player.dir;
+					bomb[i].left = player.left - 10;
+					bomb[i].top = player.top - p_size / 3;
 					break;
 				}
 			}
 			break;
 
 		case VK_NUMPAD1:
-			hBit_isaac = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP3));
+			hBit_player = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP3));
 			break;
 
 		case VK_NUMPAD2:
-			hBit_isaac = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP6));
+			hBit_player = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP6));
 			break;
 
 		case VK_NUMPAD3:
-			hBit_isaac = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP7));
+			hBit_player = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP7));
 			break;
 
 		case VK_NUMPAD4:
-			hBit_isaac = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP8));
+			hBit_player = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP8));
 			break;
 
 		case VK_NUMPAD5:
-			hBit_isaac = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP9));
+			hBit_player = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP9));
 			break;
 
 		case 'P':
@@ -247,9 +284,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				timecnt = 0;
 
 				int a = uid(dre) % 4 + 1;
-				for (int i = 0; i < 3; ++i)
-					if(enemy[i].health > 0)
-						enemy[i].dir = a;
 			}
 
 			//플레이어
@@ -266,70 +300,57 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					p_head_idx = 0;
 			}
 
-			//몬스터
-			if (timecnt % 2 == 0) {
-				m_body_idx++;
-
-				if (m_body_idx >= 12)
-					m_body_idx = 0;
-			
-				m_head_idx++;
-
-				if (m_head_idx >= 6)
-					m_head_idx = 0;
-			}
-
 			//움직임
 			//플레이어
 			switch (player.dir) {
 			case 1:
-				player.left += 5;
+				player.left += pl_speed;
 
-				for (int i = 0; i < 10; ++i) {
+				for (int i = 0; i < block_num; ++i) {
 					RECT temp;
-					RECT player_rt{ player.left, player.top, player.left + player.size, player.top + player.size };
+					RECT player_rt{ player.left, player.top, player.left + p_size, player.top + p_size };
 					RECT block_rt{ block[i].left + 30,block[i].top + 35, block[i].left + bl_size, block[i].top + bl_size };
 					if (IntersectRect(&temp, &player_rt, &block_rt) && block[i].health > 0) {
-						player.left -= 5;
+						player.left -= pl_speed;
 						break;
 					}
 				}
 				break;
 			case 2:
-				player.left -= 5;
+				player.left -= pl_speed;
 
-				for (int i = 0; i < 10; ++i) {
+				for (int i = 0; i < block_num; ++i) {
 					RECT temp;
-					RECT player_rt{ player.left, player.top, player.left + player.size, player.top + player.size };
+					RECT player_rt{ player.left, player.top, player.left + p_size, player.top + p_size };
 					RECT block_rt{ block[i].left + 30,block[i].top + 35, block[i].left + bl_size, block[i].top + bl_size };
 					if (IntersectRect(&temp, &player_rt, &block_rt) && block[i].health > 0) {
-						player.left += 5;
+						player.left += pl_speed;
 						break;
 					}
 				}
 				break;
 			case 3:
-				player.top += 5;
+				player.top += pl_speed;
 
-				for (int i = 0; i < 10; ++i) {
+				for (int i = 0; i < block_num; ++i) {
 					RECT temp;
-					RECT player_rt{ player.left, player.top, player.left + player.size, player.top + player.size };
+					RECT player_rt{ player.left, player.top, player.left + p_size, player.top + p_size };
 					RECT block_rt{ block[i].left + 30,block[i].top + 35, block[i].left + bl_size, block[i].top + bl_size };
 					if (IntersectRect(&temp, &player_rt, &block_rt) && block[i].health > 0) {
-						player.top -= 5;
+						player.top -= pl_speed;
 						break;
 					}
 				}
 				break;
 			case 4:
-				player.top -= 5;
+				player.top -= pl_speed;
 
-				for (int i = 0; i < 10; ++i) {
+				for (int i = 0; i < block_num; ++i) {
 					RECT temp;
-					RECT player_rt{ player.left, player.top, player.left + player.size, player.top + player.size };
+					RECT player_rt{ player.left, player.top, player.left + p_size, player.top + p_size };
 					RECT block_rt{ block[i].left + 30,block[i].top + 35, block[i].left + bl_size, block[i].top + bl_size };
 					if (IntersectRect(&temp, &player_rt, &block_rt) && block[i].health > 0) {
-						player.top += 5;
+						player.top += pl_speed;
 						break;
 					}
 				}
@@ -337,111 +358,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 
 			//플레이어 - 외벽과 충돌체크
-			if (player.left >= 770)
-				player.left -= 5;
-			if (player.left <= 120)
-				player.left += 5;
-			if (player.top >= 460)
-				player.top -= 5;
-			if (player.top <= 110)
-				player.top += 5;
+			if (player.left >= bg_w - outer_wall_start - p_size / 3)
+				player.left -= pl_speed;
+			if (player.left <= outer_wall_start - p_size / 3)
+				player.left += pl_speed;
+			if (player.top >= bg_h - outer_wall_start - p_size / 3)
+				player.top -= pl_speed;
+			if (player.top <= outer_wall_start - p_size / 3)
+				player.top += pl_speed;
 
-			//총알
-			for (int i = 0; i < 20; ++i) {
-				if (tear[i].dir != 0) {
-					switch (tear[i].dir) {
+			//폭탄
+			for (int i = 0; i < bomb_num; ++i) {
+				if (bomb[i].dir != 0) {
+					switch (bomb[i].dir) {
 					case 1:
-						tear[i].left += 10;
+						bomb[i].left += bomb_speed;
 						break;
 					case 2:
-						tear[i].left -= 10;
+						bomb[i].left -= bomb_speed;
 						break;
 					case 3:
-						tear[i].top += 10;
+						bomb[i].top += bomb_speed;
 						break;
 					case 4:
-						tear[i].top -= 10;
+						bomb[i].top -= bomb_speed;
 						break;
 					}
 
-					//장애물과 충돌
-					for (int j = 0; j < 10; ++j) {
+					//블록과 충돌
+					for (int j = 0; j < block_num; ++j) {
 						RECT temp;
-						RECT tear_rt{ tear[i].left, tear[i].top, tear[i].left + tear[i].size, tear[i].top + tear[i].size };
-						RECT block_rt{ block[j].left + 30,block[j].top + 35, block[j].left + bl_size, block[j].top + bl_size };
-						if (IntersectRect(&temp, &tear_rt, &block_rt) && block[j].health > 0) {
-							tear[i].dir = 0;
+						RECT bomb_rt{ bomb[i].left, bomb[i].top, bomb[i].left + bomb_size, bomb[i].top + bomb_size };
+						RECT block_rt{ block[j].left,block[j].top, block[j].left + bl_size, block[j].top + bl_size };
+						if (IntersectRect(&temp, &bomb_rt, &block_rt) && block[j].health > 0) {
+							bomb[i].dir = 0;
 							block[j].health--;
 							break;
 						}
 					}
 
-					//몬스터와 충돌
-					for (int j = 0; j < 3; ++j) {
-						RECT temp;
-						RECT tear_rt{ tear[i].left, tear[i].top, tear[i].left + tear[i].size, tear[i].top + tear[i].size };
-						RECT monster_rt{ enemy[j].left + 50,enemy[j].top + 30, enemy[j].left + 55, enemy[j].top + 55 };
-						if (IntersectRect(&temp, &tear_rt, &monster_rt) && enemy[j].health > 0) {
-							tear[i].dir = 0;
-							enemy[j].health--;
-							break;
-						}
-					}
-
 					//외벽과 충돌
-					if (tear[i].left >= 770)
-						tear[i].dir = 0;
-					if (tear[i].left <= 120)
-						tear[i].dir = 0;
-					if (tear[i].top >= 460)
-						tear[i].dir = 0;
-					if (tear[i].top <= 110)
-						tear[i].dir = 0;
-				}
-			}
-
-			//몬스터
-			for (int i = 0; i < 3; ++i) {
-				switch (enemy[i].dir) {
-				case 1:
-					enemy[i].left += 3;
-
-					if (enemy[i].left >= 710)
-						enemy[i].dir = 2;
-					break;
-				case 2:
-					enemy[i].left -= 3;
-
-					if (enemy[i].left <= 100)
-						enemy[i].dir = 1;
-					break;
-				case 3:
-					enemy[i].top += 3;
-
-					if (enemy[i].top >= 410)
-						enemy[i].dir = 4;
-					break;
-				case 4:
-					enemy[i].top -= 3;
-
-					if (enemy[i].top <= 100)
-						enemy[i].dir = 3;
-					break;
-				}
-			}
-
-			//몬스터 목숨 0 애니메이션
-			for (int i = 0; i < 3; ++i) {
-				if (enemy[i].health == 0 && enemy[i].dir != 0) {
-					enemy[i].dir = 0;
-					enemy[i].death_idx = 3;
-				}
-			}
-			if (timecnt % 4 == 0) {
-				for (int i = 0; i < 3; ++i) {
-					if (enemy[i].death_idx != 0) {
-						enemy[i].death_idx--;
-					}
+					if (bomb[i].left >= bg_w - outer_wall_start - bomb_w / 3)
+						bomb[i].dir = 0;
+					if (bomb[i].left <= outer_wall_start - bomb_w / 3)
+						bomb[i].dir = 0;
+					if (bomb[i].top >= bg_h - outer_wall_start - bomb_w / 3)
+						bomb[i].dir = 0;
+					if (bomb[i].top <= outer_wall_start - bomb_w / 3)
+						bomb[i].dir = 0;
 				}
 			}
 
@@ -457,66 +421,72 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			oldBit1 = (HBITMAP)SelectObject(mem1dc, hBit_main);
 			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bg);
 
-			BitBlt(mem1dc, 0, 0, bg_w, bg_h, mem2dc, 0, 0, SRCCOPY);
+			StretchBlt(mem1dc, 0, 0, bg_w, bg_h, mem2dc, 0, 0, bg_img_w, bg_img_h, SRCCOPY);
 
 			//블록
 			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_block);
 
-			for (int i = 0; i < 10; ++i) {
+			for (int i = 0; i < block_num; ++i) {
 				if (block[i].health > 0)
-					TransparentBlt(mem1dc, block[i].left, block[i].top, bl_size, bl_size, mem2dc, 0, 0, bl_size + 10, bl_size + 10, RGB(79, 51, 44));
+					TransparentBlt(mem1dc, block[i].left, block[i].top, bl_size, bl_size, mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
 			}
 
-			//몬스터
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_monster);
+			//폭탄
+			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
 
-			for (int i = 0; i < 3; ++i) {
-				if (enemy[i].health > 0) {
-					if (m_body_idx <= 7)
-						TransparentBlt(mem1dc, enemy[i].left, enemy[i].top, enemy[i].size, enemy[i].size, mem2dc, 64 * m_body_idx, 48 + 60 * 2, 64, 60, RGB(100, 100, 100));		//몸통
-					else
-						TransparentBlt(mem1dc, enemy[i].left, enemy[i].top, enemy[i].size, enemy[i].size, mem2dc, 64 * (m_body_idx - 8), 48 + 60 * 3, 64, 60, RGB(100, 100, 100));		//몸통
-
-					if (m_body_idx == 2 || m_body_idx == 8)
-						TransparentBlt(mem1dc, enemy[i].left + 12, enemy[i].top - 23, enemy[i].size - 25, enemy[i].size - 25, mem2dc, 32 * m_head_idx, 0, 32, 27, RGB(100, 100, 100)); 	//머리
-					else if (m_body_idx == 3 || m_body_idx == 9)
-						TransparentBlt(mem1dc, enemy[i].left + 12, enemy[i].top - 18, enemy[i].size - 25, enemy[i].size - 25, mem2dc, 32 * m_head_idx, 0, 32, 27, RGB(100, 100, 100)); 	//머리
-					else if (m_body_idx == 4 || m_body_idx == 10)
-						TransparentBlt(mem1dc, enemy[i].left + 12, enemy[i].top - 22, enemy[i].size - 25, enemy[i].size - 25, mem2dc, 32 * m_head_idx, 0, 32, 27, RGB(100, 100, 100)); 	//머리
-					else
-						TransparentBlt(mem1dc, enemy[i].left + 12, enemy[i].top - 25, enemy[i].size - 25, enemy[i].size - 25, mem2dc, 32 * m_head_idx, 0, 32, 27, RGB(100, 100, 100)); 	//머리
-				}
-				else {	//죽을때 모션
-					if (enemy[i].death_idx == 3) {
-						TransparentBlt(mem1dc, enemy[i].left, enemy[i].top, enemy[i].size, enemy[i].size, mem2dc, 64 * 5, 48 + 60 * 2, 64, 60, RGB(100, 100, 100));		//몸통
-						TransparentBlt(mem1dc, enemy[i].left + 12, enemy[i].top - 25, enemy[i].size - 25, enemy[i].size - 25, mem2dc, 208 + 32 * 2, 0, 32, 27, RGB(100, 100, 100)); 	//머리
-					}
-					else if (enemy[i].death_idx == 2) {
-						TransparentBlt(mem1dc, enemy[i].left, enemy[i].top, enemy[i].size, enemy[i].size, mem2dc, 64 * 4, 48 + 60 * 2, 64, 60, RGB(100, 100, 100));		//몸통
-						TransparentBlt(mem1dc, enemy[i].left + 12, enemy[i].top - 23, enemy[i].size - 25, enemy[i].size - 25, mem2dc, 208 + 32 * 1, 0, 32, 27, RGB(100, 100, 100)); 	//머리
-					}
-					else if (enemy[i].death_idx == 1) {
-						TransparentBlt(mem1dc, enemy[i].left, enemy[i].top, enemy[i].size, enemy[i].size, mem2dc, 64 * 3, 48 + 60 * 2, 64, 60, RGB(100, 100, 100));		//몸통
-						TransparentBlt(mem1dc, enemy[i].left + 12, enemy[i].top - 20, enemy[i].size - 25, enemy[i].size - 25, mem2dc, 208, 0, 32, 27, RGB(100, 100, 100)); 	//머리
-					}
+			for (int i = 0; i < bomb_num; ++i) {
+				if (bomb[i].dir != 0) {
+					TransparentBlt(mem1dc, bomb[i].left, bomb[i].top, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_w, bomb_img_h, RGB(255, 0, 0));
 				}
 			}
 
 			//플레이어
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_isaac);
+			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_player);
 
-			TransparentBlt(mem1dc, player.left, player.top, player.size, player.size, mem2dc, 15 + 32 * p_body_idx, 80, 30, 30, RGB(0, 0, 0));		//몸통
-			TransparentBlt(mem1dc, player.left - 10, player.top - 51, player.size, player.size, mem2dc, 5 + 40 * p_head_idx, 20, 40, 30, RGB(0, 0, 0));		//머리
-
-			//총알
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_tear);
-
-			for (int i = 0; i < 20; ++i) {
-				if (tear[i].dir != 0) {
-					/*TransparentBlt(mem1dc, tear[i].left, tear[i].top, tear_w - 30, tear_h - 30, mem2dc, 0, 0, tear_w, tear_h, RGB(100, 100, 100));*/
-					/*TransparentBlt(mem1dc, tear[i].left, tear[i].top, tear_w - 50, tear_h - 51, mem2dc, 0, 0, tear_w, tear_h, RGB(255, 0, 0));*/
-					TransparentBlt(mem1dc, tear[i].left, tear[i].top, tear_w - 48, tear_h - 48, mem2dc, 0, 0, tear_w, tear_h, RGB(255, 0, 0));
-				}
+			//우 이동시
+			if (player.dir == 1) {
+				//몸통
+				TransparentBlt(mem1dc, player.left, player.top, p_size, p_size,
+					mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+				//머리
+				TransparentBlt(mem1dc, player.left - p_head_loc_w, player.top - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
+					mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 2), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
+			}
+			//좌 이동시 
+			else if (player.dir == 2) {
+				//몸통
+				TransparentBlt(mem1dc, player.left, player.top, p_size, p_size,
+					mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+				//머리
+				TransparentBlt(mem1dc, player.left - p_head_loc_w, player.top - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
+					mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 6), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
+			}
+			//하 이동시
+			else if (player.dir == 3) {
+				//몸통
+				TransparentBlt(mem1dc, player.left, player.top, p_size, p_size,
+					mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+				//머리
+				TransparentBlt(mem1dc, player.left - p_head_loc_w, player.top - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
+					mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
+			}
+			//상 이동시
+			else if (player.dir == 4) {
+				//몸통
+				TransparentBlt(mem1dc, player.left, player.top, p_size, p_size,
+					mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+				//머리
+				TransparentBlt(mem1dc, player.left - p_head_loc_w, player.top - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
+					mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 4), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
+			}
+			//이동X
+			else {
+				//몸통
+				TransparentBlt(mem1dc, player.left, player.top, p_size, p_size,
+					mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+				//머리
+				TransparentBlt(mem1dc, player.left - p_head_loc_w, player.top - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
+					mem2dc, p_head_img_w_start, p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 			}
 
 			SelectObject(mem2dc, oldBit2);
@@ -528,6 +498,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			InvalidateRect(hwnd, NULL, false);
 		}
+
 		break;
 
 	case WM_DESTROY:

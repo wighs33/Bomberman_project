@@ -82,7 +82,7 @@ IDB_BITMAP12            BITMAP                  "objects_bmp\\item.bmp"
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON1               ICON                    "icon\\terror_man.ico"
+IDI_ICON1               ICON                    "icon_ico\\terror_man.ico"
 
 #endif    // 한국어(대한민국) resources
 /////////////////////////////////////////////////////////////////////////////
