@@ -1,25 +1,7 @@
 #include <windows.h>	
 #include <tchar.h>
 #include <random>
-#include <vector>
-#include <array>
-
 #include "resource.h"
-#include "Player.h"
-#include "GameObject.h"
-#include "protocol.h"
-
-//테스트용 맵
-template<typename T>
-using arr15x10 = std::array<std::array<T, 15>, 10>;
-arr15x10<int> tmpMap{};
-
-//로그인 요청함수(임시 값 - 변경해야함)
-void Login() {
-	LOGIN_packet login_packet;
-	login_packet.type = 0;
-	login_packet.ID = 0;
-}
 
 HINSTANCE g_hInst;
 LPCTSTR lpszClass = L"Window Class Name";

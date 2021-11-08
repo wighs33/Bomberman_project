@@ -21,12 +21,6 @@
     <ClInclude Include="Player.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-<<<<<<< HEAD:Bomberman_project.vcxproj.filters
-=======
-    <ClInclude Include="GameObject.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
->>>>>>> main:Multi_game_client/Bomberman_project/Bomberman_project.vcxproj.filters
     <ClInclude Include="protocol.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -87,11 +81,5 @@
     <ClCompile Include="Player.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-<<<<<<< HEAD:Bomberman_project.vcxproj.filters
-=======
-    <ClCompile Include="GameObject.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
->>>>>>> main:Multi_game_client/Bomberman_project/Bomberman_project.vcxproj.filters
   </ItemGroup>
 </Project>

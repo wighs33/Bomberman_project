@@ -140,10 +140,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-<<<<<<< HEAD:Bomberman_project.vcxproj
-=======
-    <ClInclude Include="GameObject.h" />
->>>>>>> main:Multi_game_client/Bomberman_project/Bomberman_project.vcxproj
     <ClInclude Include="Player.h" />
     <ClInclude Include="protocol.h" />
     <ClInclude Include="resource.h" />
@@ -168,10 +164,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bomberman_project.cpp" />
-<<<<<<< HEAD:Bomberman_project.vcxproj
-=======
-    <ClCompile Include="GameObject.cpp" />
->>>>>>> main:Multi_game_client/Bomberman_project/Bomberman_project.vcxproj
     <ClCompile Include="Player.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
