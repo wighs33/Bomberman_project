@@ -2,6 +2,8 @@
 #include <tchar.h>
 #include <random>
 #include "resource.h"
+#include "Player.h"
+#include "protocol.h"
 
 HINSTANCE g_hInst;
 LPCTSTR lpszClass = L"Window Class Name";
