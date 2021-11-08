@@ -1,7 +1,13 @@
 #include <windows.h>	
 #include <tchar.h>
 #include <random>
+#include <vector>
+#include <array>
+
 #include "resource.h"
+#include "Player.h"
+#include "GameObject.h"
+#include "protocol.h"
 
 HINSTANCE g_hInst;
 LPCTSTR lpszClass = L"Window Class Name";
@@ -15,6 +21,30 @@ std::random_device rd;
 std::default_random_engine dre{ rd() };
 std::uniform_int_distribution<> uid{ 1,100 };
 
+
+//로그인 요청함수(임시 값 - 변경해야함)
+void Login() {
+	LOGIN_packet login_packet;
+	login_packet.type = 0;
+	login_packet.ID = 0;
+}
+
+
+//테스트용 맵
+template<typename T>
+using arr15x10 = std::array<std::array<T, 15>, 10>;
+arr15x10<int> tmpMap{};
+
+
+//게임에서 쓰이는 모든객체가 필요로하는 모든정보들을 한곳에 담은 객체 구조체(임시 값 - GameObject 클래스로 바꿔야함)
+struct Obiect {
+	int left, top;
+	int dir; //1 - 오, 2 - 왼, 3 - 아래, 4 - 위
+	int health;
+	int death_idx;
+};
+
+
 //스프라이트 관련 상수들
 
 const int bg_img_w{ 884 };	//실제 배경 이미지 비트크기
@@ -24,9 +54,9 @@ const int bg_h{ 780 };		//화면상에 그릴 배경 크기
 
 const int p_body_img_w_start{ 15 };		//실제 플레이어 몸통 이미지 시작비트 위치
 const int p_body_img_h_start{ 80 };		//실제 플레이어 몸통 이미지 시작비트 위치
-const int p_body_img_w_gap{ 32 };		//실제 플레이어 몸통 이미지 스프라이트 갭 비트크기
-const int p_body_img_h_r_gap{ 43 };		//실제 플레이어 몸통 이미지 스프라이트 갭 비트크기
-const int p_body_img_h_l_gap{ 30 };		//실제 플레이어 몸통 이미지 스프라이트 갭 비트크기
+const int p_body_img_w_gap{ 32 };		//실제 플레이어 몸통 이미지 좌우 스프라이트 갭 비트크기
+const int p_body_img_h_rd_gap{ 43 };	//실제 플레이어 몸통 이미지 상하 오른쪽방향 이동시 스프라이트 갭 비트크기
+const int p_body_img_h_ld_gap{ 30 };	//실제 플레이어 몸통 이미지 상하 왼쪽방향 이동시 스프라이트 갭 비트크기
 const int p_body_img_size{ 30 };		//실제 플레이어 몸통 이미지 비트크기
 
 const int p_head_img_w_start{ 5 };		//실제 플레이어 머리 이미지 시작비트 위치
@@ -74,15 +104,6 @@ const int pl_speed{ 7 };
 const int bomb_speed{ 14 };
 
 
-
-struct Block {
-	int left, top;
-	int dir; //1 - 오, 2 - 왼, 3 - 아래, 4 - 위
-	int health;
-	int death_idx;
-};
-
-
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
 	HWND hwnd;
@@ -108,7 +129,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
-	
+
 	while (GetMessage(&Message, 0, 0, 0)) {
 		TranslateMessage(&Message);
 		DispatchMessage(&Message);
@@ -124,9 +145,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	static HBITMAP hBit_main, hBit_bg, hBit_block, hBit_player, hBit_bomb;
 	static HBITMAP oldBit1, oldBit2;
 
-	static Block player;
-	static Block block[block_num];
-	static Block bomb[bomb_num];
+	static Obiect player;
+	static Obiect block[block_num];
+	static Obiect bomb[bomb_num];
 
 	static int timecnt{ 0 };
 	static int p_head_idx{ 0 };
@@ -172,7 +193,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				}
 			}
 		}
-		
+
 		SetTimer(hwnd, 1, 50, NULL);
 
 		break;
@@ -423,10 +444,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_player);
 
 			//우 이동시
-			if (player.dir == 1) {	
+			if (player.dir == 1) {
 				//몸통
 				TransparentBlt(mem1dc, player.left, player.top, p_size, p_size,
-					mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start + p_body_img_h_r_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+					mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
 				//머리
 				TransparentBlt(mem1dc, player.left - p_head_loc_w, player.top - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 					mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 2), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
@@ -435,13 +456,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			else if (player.dir == 2) {
 				//몸통
 				TransparentBlt(mem1dc, player.left, player.top, p_size, p_size,
-					mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start + p_body_img_h_r_gap + p_body_img_h_l_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+					mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
 				//머리
 				TransparentBlt(mem1dc, player.left - p_head_loc_w, player.top - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 					mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 6), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 			}
 			//하 이동시
-			else if(player.dir == 3){
+			else if (player.dir == 3) {
 				//몸통
 				TransparentBlt(mem1dc, player.left, player.top, p_size, p_size,
 					mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
