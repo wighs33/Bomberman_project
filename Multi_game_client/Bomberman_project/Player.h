@@ -8,4 +8,3 @@ public:
 	int _heart;
 	int _bomb_count;
 };
-
