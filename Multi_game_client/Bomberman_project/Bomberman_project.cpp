@@ -81,8 +81,8 @@ const int bomb_h{ 52 };			//화면상 폭탄 크기
 
 //블록 생성 관련 상수들
 
-const int block_init_w_num{ 15 };	//좌우로 블록 몇개생성
-const int block_init_h_num{ 8 };	//상하로 블록 몇개생성
+const int block_max_w_num{ 15 };	//좌우로 블록 최대 개수
+const int block_max_h_num{ 8 };	//상하로 블록 최대 개수
 
 
 //오브젝트 생성 관련 상수들
@@ -172,8 +172,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		for (int i = 0; i < block_num; ++i) {
 			block[i].health = 5;
-			block[i].left = outer_wall_start + (uid(dre) % block_init_w_num) * (bl_size + 1);
-			block[i].top = outer_wall_start + (uid(dre) % block_init_h_num) * (bl_size + 1);
+			block[i].left = outer_wall_start + (uid(dre) % block_max_w_num) * (bl_size + 1);
+			block[i].top = outer_wall_start + (uid(dre) % block_max_h_num) * (bl_size + 1);
 
 			int a{ 1 };
 
@@ -181,13 +181,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				a = 0;
 				for (int j = 0; j < block_num; ++j) {
 					if (block[i].left == block[j].left && block[i].top == block[j].top && i != j) {
-						block[i].left = outer_wall_start + (uid(dre) % block_init_w_num) * (bl_size + 1);
-						block[i].top = outer_wall_start + (uid(dre) % block_init_h_num) * (bl_size + 1);
+						block[i].left = outer_wall_start + (uid(dre) % block_max_w_num) * (bl_size + 1);
+						block[i].top = outer_wall_start + (uid(dre) % block_max_h_num) * (bl_size + 1);
 						a++;
 					}
 					else if (block[i].left == outer_wall_start + (bl_size + 1) && block[i].top == outer_wall_start + (bl_size + 1)) {
-						block[i].left = outer_wall_start + (uid(dre) % block_init_w_num) * (bl_size + 1);
-						block[i].top = outer_wall_start + (uid(dre) % block_init_h_num) * (bl_size + 1);
+						block[i].left = outer_wall_start + (uid(dre) % block_max_w_num) * (bl_size + 1);
+						block[i].top = outer_wall_start + (uid(dre) % block_max_h_num) * (bl_size + 1);
 						a++;
 					}
 				}
