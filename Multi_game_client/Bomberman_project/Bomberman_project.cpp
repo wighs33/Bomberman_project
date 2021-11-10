@@ -3,6 +3,7 @@
 #include <random>
 #include <vector>
 #include <array>
+#include <iostream>
 
 #include "resource.h"
 #include "Player.h"
@@ -28,12 +29,6 @@ void Login() {
 	login_packet.type = 0;
 	login_packet.ID = 0;
 }
-
-
-//테스트용 맵
-template<typename T>
-using arr15x10 = std::array<std::array<T, 15>, 10>;
-arr15x10<int> tmpMap{};
 
 
 //게임에서 쓰이는 모든객체가 필요로하는 모든정보들을 한곳에 담은 객체 구조체(임시 값 - GameObject 클래스로 바꿔야함)
@@ -83,11 +78,11 @@ const int bomb_h{ 52 };			//화면상 폭탄 크기
 
 const int block_init_w_num{ 15 };	//좌우로 블록 몇개생성
 const int block_init_h_num{ 8 };	//상하로 블록 몇개생성
+const int nTiles{ block_init_w_num * block_init_h_num };	//타일수
 
 
 //오브젝트 생성 관련 상수들
 
-const int block_num{ 80 };	//생성할 블록개수
 const int bomb_num{ 10 };	//생성할 폭탄개수
 
 
@@ -104,8 +99,24 @@ const int pl_speed{ 7 };
 const int bomb_speed{ 14 };
 
 
+//테스트용 맵
+template<typename T, size_t X, size_t Y>
+using tileArr = std::array<std::array<T, X>, Y>;
+tileArr<int, block_init_w_num, block_init_h_num> tmpMap{ 1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
+															1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
+															1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
+															1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
+															1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
+															1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
+															1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
+															1,0,1,0,1,0,1,0,1,0,1,0,1,0,1 };
+
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
+	AllocConsole();
+	freopen("CONOUT$", "wt", stdout);
+
 	HWND hwnd;
 	MSG Message;
 	WNDCLASSEX WndClass;
@@ -146,7 +157,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	static HBITMAP oldBit1, oldBit2;
 
 	static Obiect player;
-	static Obiect block[block_num];
+	static Obiect block[nTiles];
 	static Obiect bomb[bomb_num];
 
 	static int timecnt{ 0 };
@@ -170,28 +181,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		player.top = outer_wall_start + bl_size + 10;
 		player.dir = 0;
 
-		for (int i = 0; i < block_num; ++i) {
+		for (int i = 0; i < nTiles; ++i) {
 			block[i].health = 5;
-			block[i].left = outer_wall_start + (uid(dre) % block_init_w_num) * (bl_size + 1);
-			block[i].top = outer_wall_start + (uid(dre) % block_init_h_num) * (bl_size + 1);
-
-			int a{ 1 };
-
-			while (a != 0) {
-				a = 0;
-				for (int j = 0; j < block_num; ++j) {
-					if (block[i].left == block[j].left && block[i].top == block[j].top && i != j) {
-						block[i].left = outer_wall_start + (uid(dre) % block_init_w_num) * (bl_size + 1);
-						block[i].top = outer_wall_start + (uid(dre) % block_init_h_num) * (bl_size + 1);
-						a++;
-					}
-					else if (block[i].left == outer_wall_start + (bl_size + 1) && block[i].top == outer_wall_start + (bl_size + 1)) {
-						block[i].left = outer_wall_start + (uid(dre) % block_init_w_num) * (bl_size + 1);
-						block[i].top = outer_wall_start + (uid(dre) % block_init_h_num) * (bl_size + 1);
-						a++;
-					}
-				}
-			}
+			block[i].left = outer_wall_start + tmpMap[i / block_init_w_num][i % block_init_w_num] * (i % block_init_w_num) * (bl_size + 1);
+			block[i].top = outer_wall_start + tmpMap[i / block_init_w_num][i % block_init_w_num] * (i / block_init_w_num) * (bl_size + 1);
 		}
 
 		SetTimer(hwnd, 1, 50, NULL);
@@ -216,6 +209,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		switch (wParam) {
 		case VK_RIGHT:
+			//테스트
+			std::cout << tmpMap[3][14] << std::endl;
+
+
+
+
+
+
+			////////////////////////////////////////////////
 			player.dir = 1;
 			break;
 
@@ -276,6 +278,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_TIMER:
+
 		if (p != 1) {
 			//[연산처리]
 			//애니메이션
@@ -306,7 +309,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			case 1:
 				player.left += pl_speed;
 
-				for (int i = 0; i < block_num; ++i) {
+				for (int i = 0; i < nTiles; ++i) {
 					RECT temp;
 					RECT player_rt{ player.left, player.top, player.left + p_size, player.top + p_size };
 					RECT block_rt{ block[i].left + 30,block[i].top + 35, block[i].left + bl_size, block[i].top + bl_size };
@@ -319,7 +322,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			case 2:
 				player.left -= pl_speed;
 
-				for (int i = 0; i < block_num; ++i) {
+				for (int i = 0; i < nTiles; ++i) {
 					RECT temp;
 					RECT player_rt{ player.left, player.top, player.left + p_size, player.top + p_size };
 					RECT block_rt{ block[i].left + 30,block[i].top + 35, block[i].left + bl_size, block[i].top + bl_size };
@@ -332,7 +335,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			case 3:
 				player.top += pl_speed;
 
-				for (int i = 0; i < block_num; ++i) {
+				for (int i = 0; i < nTiles; ++i) {
 					RECT temp;
 					RECT player_rt{ player.left, player.top, player.left + p_size, player.top + p_size };
 					RECT block_rt{ block[i].left + 30,block[i].top + 35, block[i].left + bl_size, block[i].top + bl_size };
@@ -345,7 +348,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			case 4:
 				player.top -= pl_speed;
 
-				for (int i = 0; i < block_num; ++i) {
+				for (int i = 0; i < nTiles; ++i) {
 					RECT temp;
 					RECT player_rt{ player.left, player.top, player.left + p_size, player.top + p_size };
 					RECT block_rt{ block[i].left + 30,block[i].top + 35, block[i].left + bl_size, block[i].top + bl_size };
@@ -386,7 +389,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					}
 
 					//블록과 충돌
-					for (int j = 0; j < block_num; ++j) {
+					for (int j = 0; j < nTiles; ++j) {
 						RECT temp;
 						RECT bomb_rt{ bomb[i].left, bomb[i].top, bomb[i].left + bomb_size, bomb[i].top + bomb_size };
 						RECT block_rt{ block[j].left,block[j].top, block[j].left + bl_size, block[j].top + bl_size };
@@ -426,7 +429,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			//블록
 			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_block);
 
-			for (int i = 0; i < block_num; ++i) {
+			for (int i = 0; i < nTiles; ++i) {
 				if (block[i].health > 0)
 					TransparentBlt(mem1dc, block[i].left, block[i].top, bl_size, bl_size, mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
 			}
