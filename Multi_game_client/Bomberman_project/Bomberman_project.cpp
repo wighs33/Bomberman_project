@@ -3,7 +3,7 @@
 #include <random>
 #include <vector>
 #include <array>
-#include <iostream>
+//#include <iostream>
 
 #include "resource.h"
 #include "Player.h"
@@ -76,14 +76,9 @@ const int bomb_h{ 52 };			//화면상 폭탄 크기
 
 //블록 생성 관련 상수들
 
-<<<<<<< HEAD
-const int block_max_w_num{ 15 };	//좌우로 블록 최대 개수
-const int block_max_h_num{ 8 };	//상하로 블록 최대 개수
-=======
-const int block_init_w_num{ 15 };	//좌우로 블록 몇개생성
-const int block_init_h_num{ 8 };	//상하로 블록 몇개생성
-const int nTiles{ block_init_w_num * block_init_h_num };	//타일수
->>>>>>> main
+const int block_max_w_num{ 15 };	//좌우로 블록 몇개생성
+const int block_max_h_num{ 8 };		//상하로 블록 몇개생성
+const int nTiles{ block_max_w_num * block_max_h_num };	//최대 타일수
 
 
 //오브젝트 생성 관련 상수들
@@ -107,7 +102,7 @@ const int bomb_speed{ 14 };
 //테스트용 맵
 template<typename T, size_t X, size_t Y>
 using tileArr = std::array<std::array<T, X>, Y>;
-tileArr<int, block_init_w_num, block_init_h_num> tmpMap{ 1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
+tileArr<int, block_max_w_num, block_max_h_num> tmpMap{ 1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
 															1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
 															1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
 															1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
@@ -120,7 +115,7 @@ tileArr<int, block_init_w_num, block_init_h_num> tmpMap{ 1,0,1,0,1,0,1,0,1,0,1,0
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
 	AllocConsole();
-	freopen("CONOUT$", "wt", stdout);
+	//freopen("CONOUT$", "wt", stdout);
 
 	HWND hwnd;
 	MSG Message;
@@ -188,31 +183,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		for (int i = 0; i < nTiles; ++i) {
 			block[i].health = 5;
-<<<<<<< HEAD
-			block[i].left = outer_wall_start + (uid(dre) % block_max_w_num) * (bl_size + 1);
-			block[i].top = outer_wall_start + (uid(dre) % block_max_h_num) * (bl_size + 1);
 
-			int a{ 1 };
-
-			while (a != 0) {
-				a = 0;
-				for (int j = 0; j < block_num; ++j) {
-					if (block[i].left == block[j].left && block[i].top == block[j].top && i != j) {
-						block[i].left = outer_wall_start + (uid(dre) % block_max_w_num) * (bl_size + 1);
-						block[i].top = outer_wall_start + (uid(dre) % block_max_h_num) * (bl_size + 1);
-						a++;
-					}
-					else if (block[i].left == outer_wall_start + (bl_size + 1) && block[i].top == outer_wall_start + (bl_size + 1)) {
-						block[i].left = outer_wall_start + (uid(dre) % block_max_w_num) * (bl_size + 1);
-						block[i].top = outer_wall_start + (uid(dre) % block_max_h_num) * (bl_size + 1);
-						a++;
-					}
-				}
-			}
-=======
-			block[i].left = outer_wall_start + tmpMap[i / block_init_w_num][i % block_init_w_num] * (i % block_init_w_num) * (bl_size + 1);
-			block[i].top = outer_wall_start + tmpMap[i / block_init_w_num][i % block_init_w_num] * (i / block_init_w_num) * (bl_size + 1);
->>>>>>> main
+			block[i].left = outer_wall_start + tmpMap[i / block_max_w_num][i % block_max_w_num] * (i % block_max_w_num) * (bl_size + 1);
+			block[i].top = outer_wall_start + tmpMap[i / block_max_w_num][i % block_max_w_num] * (i / block_max_w_num) * (bl_size + 1);
 		}
 
 		SetTimer(hwnd, 1, 50, NULL);
@@ -237,15 +210,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		switch (wParam) {
 		case VK_RIGHT:
-			//테스트
-			std::cout << tmpMap[3][14] << std::endl;
-
-
-
-
-
-
-			////////////////////////////////////////////////
 			player.dir = 1;
 			break;
 

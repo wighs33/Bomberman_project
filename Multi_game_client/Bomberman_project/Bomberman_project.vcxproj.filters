@@ -34,9 +34,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="map_bmp\background.bmp">
-      <Filter>리소스 파일</Filter>
-    </Image>
     <Image Include="objects_bmp\block.bmp">
       <Filter>리소스 파일</Filter>
     </Image>

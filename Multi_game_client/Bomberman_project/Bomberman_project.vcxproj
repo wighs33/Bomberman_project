@@ -154,7 +154,6 @@
     <Image Include="characters_bmp\Magdalene.bmp" />
     <Image Include="icon_ico\terror_man.ico" />
     <Image Include="maps_bmp\background.bmp" />
-    <Image Include="map_bmp\background.bmp" />
     <Image Include="objects_bmp\block.bmp" />
     <Image Include="characters_bmp\Isaac.bmp" />
     <Image Include="monsters_bmp\monster.bmp" />
