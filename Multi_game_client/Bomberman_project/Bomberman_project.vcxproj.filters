@@ -27,6 +27,12 @@
     <ClInclude Include="GameObject.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="json\json.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="constant_numbers.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Bomberman_project.rc">
@@ -43,9 +49,6 @@
     <Image Include="objects_bmp\tear.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="monsters_bmp\monster.bmp">
-      <Filter>리소스 파일</Filter>
-    </Image>
     <Image Include="characters_bmp\Magdalene.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
@@ -55,7 +58,7 @@
     <Image Include="characters_bmp\Samson.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="maps_bmp\background.bmp">
+    <Image Include="maps_bmp\background_opened.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
     <Image Include="characters_bmp\Eve.bmp">
@@ -64,13 +67,64 @@
     <Image Include="objects_bmp\bomb.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="objects_bmp\item.bmp">
+    <Image Include="objects_bmp\more_power.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
     <Image Include="icon_ico\terror_man.ico">
       <Filter>리소스 파일</Filter>
     </Image>
     <Image Include="icon_ico\terror_man.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="objects_bmp\rock1.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="maps_bmp\backboard.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="characters_bmp\bitmap15.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="objects_bmp\heart_1.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="objects_bmp\more_bomb.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="objects_bmp\heart_2.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="maps_bmp\num_0.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="maps_bmp\num_1.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="maps_bmp\num_2.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="maps_bmp\num_3.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="maps_bmp\num_4.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="maps_bmp\num_5.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="maps_bmp\al_p.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="maps_bmp\empty.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="maps_bmp\idle.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="maps_bmp\ready.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="maps_bmp\play.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>
@@ -84,5 +138,10 @@
     <ClCompile Include="GameObject.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="map_json\map_1.json">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
 </Project>

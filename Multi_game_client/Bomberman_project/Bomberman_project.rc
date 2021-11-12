@@ -50,15 +50,13 @@ END
 // Bitmap
 //
 
-IDB_BITMAP1             BITMAP                  "maps_bmp/background.bmp"
+IDB_BITMAP1             BITMAP                  "maps_bmp/background_opened.bmp"
 
 IDB_BITMAP2             BITMAP                  "objects_bmp/block.bmp"
 
 IDB_BITMAP3             BITMAP                  "characters_bmp/Isaac.bmp"
 
 IDB_BITMAP4             BITMAP                  "objects_bmp/tear.bmp"
-
-IDB_BITMAP5             BITMAP                  "monsters_bmp/monster.bmp"
 
 IDB_BITMAP6             BITMAP                  "characters_bmp/Magdalene.bmp"
 
@@ -70,9 +68,41 @@ IDB_BITMAP9             BITMAP                  "characters_bmp\\Eve.bmp"
 
 IDB_BITMAP10            BITMAP                  "objects_bmp\\bomb.bmp"
 
-IDB_BITMAP11            BITMAP                  "objects_bmp\\item.bmp"
+IDB_BITMAP11            BITMAP                  "objects_bmp\\more_power.bmp"
 
-IDB_BITMAP12            BITMAP                  "objects_bmp\\item.bmp"
+IDB_BITMAP12            BITMAP                  "C:\\Users\\seung\\Desktop\\네트워크 게임 프로그래밍\\팀 프로젝트\\공동 작업 git\\Multi_game_client\\Bomberman_project\\objects_bmp\\more_bomb.bmp"
+
+IDB_BITMAP13            BITMAP                  "objects_bmp\\rock1.bmp"
+
+IDB_BITMAP14            BITMAP                  "maps_bmp\\backboard.bmp"
+
+IDB_BITMAP5             BITMAP                  "objects_bmp\\heart_1.bmp"
+
+IDB_BITMAP15            BITMAP                  "C:\\Users\\seung\\Desktop\\네트워크 게임 프로그래밍\\팀 프로젝트\\공동 작업 git\\Multi_game_client\\Bomberman_project\\objects_bmp\\heart_2.bmp"
+
+IDB_BITMAP16            BITMAP                  "objects_bmp\\more_bomb.bmp"
+
+IDB_BITMAP17            BITMAP                  "maps_bmp\\num_0.bmp"
+
+IDB_BITMAP18            BITMAP                  "maps_bmp\\num_1.bmp"
+
+IDB_BITMAP19            BITMAP                  "maps_bmp\\num_2.bmp"
+
+IDB_BITMAP20            BITMAP                  "maps_bmp\\num_3.bmp"
+
+IDB_BITMAP21            BITMAP                  "maps_bmp\\num_4.bmp"
+
+IDB_BITMAP22            BITMAP                  "maps_bmp\\num_5.bmp"
+
+IDB_BITMAP23            BITMAP                  "C:\\Users\\seung\\Desktop\\네트워크 게임 프로그래밍\\팀 프로젝트\\공동 작업 git\\Multi_game_client\\Bomberman_project\\maps_bmp\\al_p.bmp"
+
+IDB_BITMAP24            BITMAP                  "maps_bmp\\empty.bmp"
+
+IDB_BITMAP25            BITMAP                  "maps_bmp\\idle.bmp"
+
+IDB_BITMAP26            BITMAP                  "maps_bmp\\ready.bmp"
+
+IDB_BITMAP27            BITMAP                  "maps_bmp\\play.bmp"
 
 
 /////////////////////////////////////////////////////////////////////////////

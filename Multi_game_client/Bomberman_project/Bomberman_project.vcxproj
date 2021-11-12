@@ -140,7 +140,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="constant_numbers.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="json\json.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="protocol.h" />
     <ClInclude Include="resource.h" />
@@ -149,16 +151,32 @@
     <ResourceCompile Include="Bomberman_project.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="characters_bmp\bitmap15.bmp" />
     <Image Include="characters_bmp\Eve.bmp" />
     <Image Include="characters_bmp\Lazarus.bmp" />
     <Image Include="characters_bmp\Magdalene.bmp" />
     <Image Include="icon_ico\terror_man.ico" />
-    <Image Include="maps_bmp\background.bmp" />
+    <Image Include="maps_bmp\al_p.bmp" />
+    <Image Include="maps_bmp\backboard.bmp" />
+    <Image Include="maps_bmp\background_opened.bmp" />
+    <Image Include="maps_bmp\empty.bmp" />
+    <Image Include="maps_bmp\idle.bmp" />
+    <Image Include="maps_bmp\num_0.bmp" />
+    <Image Include="maps_bmp\num_1.bmp" />
+    <Image Include="maps_bmp\num_2.bmp" />
+    <Image Include="maps_bmp\num_3.bmp" />
+    <Image Include="maps_bmp\num_4.bmp" />
+    <Image Include="maps_bmp\num_5.bmp" />
+    <Image Include="maps_bmp\play.bmp" />
+    <Image Include="maps_bmp\ready.bmp" />
     <Image Include="objects_bmp\block.bmp" />
     <Image Include="characters_bmp\Isaac.bmp" />
-    <Image Include="monsters_bmp\monster.bmp" />
     <Image Include="objects_bmp\bomb.bmp" />
-    <Image Include="objects_bmp\item.bmp" />
+    <Image Include="objects_bmp\heart_1.bmp" />
+    <Image Include="objects_bmp\heart_2.bmp" />
+    <Image Include="objects_bmp\more_bomb.bmp" />
+    <Image Include="objects_bmp\more_power.bmp" />
+    <Image Include="objects_bmp\rock1.bmp" />
     <Image Include="objects_bmp\tear.bmp" />
     <Image Include="characters_bmp\Samson.bmp" />
   </ItemGroup>
@@ -166,6 +184,9 @@
     <ClCompile Include="Bomberman_project.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Player.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="map_json\map_1.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
