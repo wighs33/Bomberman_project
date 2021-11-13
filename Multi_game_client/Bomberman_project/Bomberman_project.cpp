@@ -14,7 +14,7 @@
 #include "constant_numbers.h"
 
 #pragma comment (lib, "msimg32.lib")
-#pragma comment(lib, "jsoncpp.lib")
+#pragma comment(lib, "json/jsoncpp.lib")
 
 using namespace std;
 
