@@ -84,6 +84,8 @@ void process_packet(int client_index, char* p)
 	Session& cl = clients[client_index];
 	char packet_type = p[1];
 
+	cout << endl << (int)p[1] << endl;
+
 	switch (packet_type) {
 	
 	case PACKET_LOGIN: {
