@@ -10,5 +10,8 @@ public:
 	int _heart;
 	int _bomb_count;
 	int _bomb_power;
+	int _level;
+	int _exp;
+	int _index;
 };
 

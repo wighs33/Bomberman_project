@@ -46,7 +46,7 @@ struct LOGIN_OK_packet {// 로그인 허락 패킷
 	int x, y; // 플레이어 좌표
 	int name; //플레이어 닉네임
 	int level; // 플레이어 레벨
-	int Exp; // 플레이어 경험치
+	int exp; // 플레이어 경험치
 	int map[]; // 맵 정보
 };
 
