@@ -1,9 +1,10 @@
+#include <winsock2.h>	// windows.h 보다 위에 두어야 재정의 빌드 에러 안 생김
 #include <windows.h>	
 #include <tchar.h>
 #include <random>
 #include <array>
 //#include <vector>
-//#include <iostream>
+#include <iostream>
 #include <fstream>
 
 #include "resource.h"
@@ -13,8 +14,16 @@
 #include "json/json.h"
 #include "constant_numbers.h"
 
+
 #pragma comment (lib, "msimg32.lib")
 #pragma comment(lib, "json/jsoncpp.lib")
+#pragma comment(lib, "ws2_32")
+
+
+#define SERVERIP "127.0.0.1"
+#define SERVERPORT 4000
+#define BUFSIZE 256
+
 
 using namespace std;
 
@@ -29,11 +38,21 @@ random_device rd;
 default_random_engine dre{ rd() };
 uniform_int_distribution<> uid{ 1,100 };
 
+
+//--- 컨테이너
+ 
 //테스트용 맵
 template<typename T, size_t X, size_t Y>
 using tileArr = array<array<T, X>, Y>;
 
 tileArr<int, tile_max_w_num, tile_max_h_num> map_1;
+
+//플레이어
+template<typename T, size_t X>
+using playerArr = array<T, X>;
+
+playerArr<Player, 4> player;
+
 
 
 //--- 구조체
@@ -55,31 +74,17 @@ enum Object_type {
 
 //--- 사용자 정의 함수
 
-//로그인 요청함수(임시 값 - 변경해야함)
-void Login() {
-	LOGIN_packet login_packet;
-	login_packet.type = 0;
-	login_packet.ID = 0;
-}
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
 
 //source_type: 0 - player/ 1 - bomb
 //충돌 발생시 해당 오브젝트 인덱스 번호 + 1 리턴 / 충돌이 없으면 0 리턴
 //충돌이 안일어날시 0을 리턴하므로, 0번째 인덱스를 구분하기 위해서 + 1을 해준다.
-int Check_Collision(Object source, Object target[], int source_type)
+int Check_Collision_bomb(Object source, Object target[])
 {
-	int source_size = 0;
-
-	if (source_type == 0)
-		source_size = p_size;
-	else
-		source_size = bomb_size;
-
 	for (int i = 0; i < nTiles; ++i) {
 		if (target[i].health > 0) {
 			RECT temp;
-			RECT source_rt{ source.left, source.top, source.left + source_size, source.top + source_size };
+			RECT source_rt{ source.left, source.top, source.left + bomb_size, source.top + bomb_size };
 			RECT target_rt{ target[i].left + adj_obstacle_size_tl,target[i].top + adj_obstacle_size_tl, target[i].left + tile_size - adj_obstacle_size_br, target[i].top + tile_size - adj_obstacle_size_br };
 
 			if (IntersectRect(&temp, &source_rt, &target_rt))
@@ -90,10 +95,98 @@ int Check_Collision(Object source, Object target[], int source_type)
 	return 0;
 }
 
+//나중에 함칠 예정
+int Check_Collision_player(Player source, Object target[])
+{
+	for (int i = 0; i < nTiles; ++i) {
+		if (target[i].health > 0) {
+			RECT temp;
+			RECT source_rt{ source._x, source._y, source._x + p_size, source._y + p_size };
+			RECT target_rt{ target[i].left + adj_obstacle_size_tl,target[i].top + adj_obstacle_size_tl, target[i].left + tile_size - adj_obstacle_size_br, target[i].top + tile_size - adj_obstacle_size_br };
+
+			if (IntersectRect(&temp, &source_rt, &target_rt))
+				return (i + 1);
+		}
+	}
+
+	return 0;
+}
+
+void err_quit(const char* msg)
+{
+	LPVOID lpMsgBuf;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, WSAGetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf, 0, NULL);
+	MessageBox(NULL, (LPCTSTR)lpMsgBuf, (LPCWSTR)msg, MB_ICONERROR);
+	LocalFree(lpMsgBuf);
+	exit(1);
+}
+
+void err_display(const char* msg)
+{
+	LPVOID lpMsgBuf;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, WSAGetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf, 0, NULL);
+	cout << msg << (char*)lpMsgBuf << endl;
+	LocalFree(lpMsgBuf);
+}
+
+//로그인 요청 함수
+void Send_Login_packet()
+{
+	int retval;
+
+	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock == INVALID_SOCKET) err_quit("socket()");
+
+	SOCKADDR_IN serveraddr;
+	ZeroMemory(&serveraddr, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
+	serveraddr.sin_port = htons(SERVERPORT);
+	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
+	if (retval == SOCKET_ERROR) err_quit("connect()");
+
+	char ID;
+
+	cout << "아이디를 입력해주세요.(문자 하나) ";
+	ID = getchar();
+
+	LOGIN_packet L_packet;
+	L_packet.type = PACKET_LOGIN;
+	L_packet.size = sizeof(L_packet);
+	L_packet.ID = ID;
+
+	char _send_buf[BUFSIZE];
+	ZeroMemory(_send_buf, sizeof(_send_buf));
+	memcpy(&_send_buf[0], &L_packet, BUFSIZE);
+	retval = send(sock, _send_buf, BUFSIZE, 0);
+	if (retval == SOCKET_ERROR) {
+		err_display("send()");
+	}
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
-	//AllocConsole();
-	//freopen("CONOUT$", "wt", stdout);
+	AllocConsole();
+	freopen("CONOUT$", "wt", stdout);
+
+	WSADATA wsa;
+	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+		return 1;
+
+	//로그인 패킷 보내기 
+	Send_Login_packet();
+
+	player[0]._x = outer_wall_start + tile_size + 10;
+	player[0]._y = outer_wall_start + tile_size + 10;
+	player[0]._dir = 0;
 
 	HWND hwnd;
 	MSG Message;
@@ -136,7 +229,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	static HBITMAP hBit_backboard, hBit_num_0, hBit_num_1, hBit_num_2, hBit_num_3, hBit_num_4, hBit_num_5, hBit_al_p, hBit_empty, hBit_idle, hBit_ready, hBit_play;
 	static HBITMAP oldBit1, oldBit2;
 
-	static Object player;
 	static Object block[nTiles];
 	static Object rock[nTiles];
 	static Object bomb[bomb_num];
@@ -187,9 +279,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		hBit_ready = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP26));
 		hBit_play = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP27));
 
-		player.left = outer_wall_start + tile_size + 10;
+		/*player.left = outer_wall_start + tile_size + 10;
 		player.top = outer_wall_start + tile_size + 10;
-		player.dir = 0;
+		player.dir = 0;*/
 
 		//map 로드
 		json_map.open("map_json/map_1.json");
@@ -262,28 +354,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		switch (wParam) {
 		case VK_RIGHT:
-			player.dir = 1;
+			player[0]._dir = 1;
 			break;
 
 		case VK_LEFT:
-			player.dir = 2;
+			player[0]._dir = 2;
 			break;
 
 		case VK_UP:
-			player.dir = 4;
+			player[0]._dir = 4;
 			break;
 
 		case VK_DOWN:
-			player.dir = 3;
+			player[0]._dir = 3;
 			break;
 
 		case VK_SPACE:
 			//폭탄 생성
 			for (int i = 0; i < bomb_num; ++i) {
 				if (bomb[i].dir == 0) {
-					bomb[i].dir = player.dir;
-					bomb[i].left = player.left - 10;
-					bomb[i].top = player.top - p_size / 3;
+					bomb[i].dir = player[0]._dir;
+					bomb[i].left = player[0]._x - 10;
+					bomb[i].top = player[0]._y - p_size / 3;
 					break;
 				}
 			}
@@ -351,45 +443,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			//--- 움직임
 			//플레이어
-			switch (player.dir) {
+			switch (player[0]._dir) {
 			case 1:
-				player.left += pl_speed;
+				player[0]._x += pl_speed;
 
-				if (Check_Collision(player, block, 0) || Check_Collision(player, rock, 0))
-					player.left -= pl_speed;
+				if (Check_Collision_player(player[0], block) || Check_Collision_player(player[0], rock))
+					player[0]._x -= pl_speed;
 				break;
 
 			case 2:
-				player.left -= pl_speed;
+				player[0]._x -= pl_speed;
 
-				if (Check_Collision(player, block, 0) || Check_Collision(player, rock, 0))
-					player.left += pl_speed;
+				if (Check_Collision_player(player[0], block) || Check_Collision_player(player[0], rock))
+					player[0]._x += pl_speed;
 				break;
 
 			case 3:
-				player.top += pl_speed;
+				player[0]._y += pl_speed;
 
-				if (Check_Collision(player, block, 0) || Check_Collision(player, rock, 0))
-					player.top -= pl_speed;
+				if (Check_Collision_player(player[0], block) || Check_Collision_player(player[0], rock))
+					player[0]._y -= pl_speed;
 				break;
 
 			case 4:
-				player.top -= pl_speed;
+				player[0]._y -= pl_speed;
 
-				if (Check_Collision(player, block, 0) || Check_Collision(player, rock, 0))
-					player.top += pl_speed;
+				if (Check_Collision_player(player[0], block) || Check_Collision_player(player[0], rock))
+					player[0]._y += pl_speed;
 				break;
 			}
 
 			//플레이어 - 외벽과 충돌체크
-			if (player.left >= bg_w - outer_wall_start - p_size / 3)
-				player.left -= pl_speed;
-			if (player.left <= outer_wall_start - p_size / 3)
-				player.left += pl_speed;
-			if (player.top >= bg_h - outer_wall_start - p_size / 3)
-				player.top -= pl_speed;
-			if (player.top <= outer_wall_start - p_size / 3)
-				player.top += pl_speed;
+			if (player[0]._x >= bg_w - outer_wall_start - p_size / 3)
+				player[0]._x -= pl_speed;
+			if (player[0]._x <= outer_wall_start - p_size / 3)
+				player[0]._x += pl_speed;
+			if (player[0]._y  >= bg_h - outer_wall_start - p_size / 3)
+				player[0]._y  -= pl_speed;
+			if (player[0]._y  <= outer_wall_start - p_size / 3)
+				player[0]._y  += pl_speed;
 
 			//폭탄
 			for (int i = 0; i < bomb_num; ++i) {
@@ -412,14 +504,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					
 					int indx;
 					//돌과 충돌
-					indx = Check_Collision(bomb[i], rock, 1);
+					indx = Check_Collision_bomb(bomb[i], rock);
 					if (indx != 0) {
 						bomb[i].dir = 0;
 						rock[indx - 1].health -= 1;
 						break;
 					}
 					//블록과 충돌
-					indx = Check_Collision(bomb[i], block, 1);
+					indx = Check_Collision_bomb(bomb[i], block);
 					if (indx != 0) {
 						bomb[i].dir = 0;
 						break;
@@ -531,48 +623,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_player);
 
 			//우 이동시
-			if (player.dir == 1) {
+			if (player[0]._dir == 1) {
 				//몸통
-				TransparentBlt(mem1dc, player.left, player.top, p_size, p_size,
+				TransparentBlt(mem1dc, player[0]._x, player[0]._y, p_size, p_size,
 					mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
 				//머리
-				TransparentBlt(mem1dc, player.left - p_head_loc_w, player.top - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
+				TransparentBlt(mem1dc, player[0]._x - p_head_loc_w, player[0]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 					mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 2), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 			}
 			//좌 이동시 
-			else if (player.dir == 2) {
+			else if (player[0]._dir == 2) {
 				//몸통
-				TransparentBlt(mem1dc, player.left, player.top, p_size, p_size,
+				TransparentBlt(mem1dc, player[0]._x, player[0]._y, p_size, p_size,
 					mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
 				//머리
-				TransparentBlt(mem1dc, player.left - p_head_loc_w, player.top - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
+				TransparentBlt(mem1dc, player[0]._x - p_head_loc_w, player[0]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 					mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 6), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 			}
 			//하 이동시
-			else if (player.dir == 3) {
+			else if (player[0]._dir == 3) {
 				//몸통
-				TransparentBlt(mem1dc, player.left, player.top, p_size, p_size,
+				TransparentBlt(mem1dc, player[0]._x, player[0]._y, p_size, p_size,
 					mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
 				//머리
-				TransparentBlt(mem1dc, player.left - p_head_loc_w, player.top - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
+				TransparentBlt(mem1dc, player[0]._x - p_head_loc_w, player[0]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 					mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 			}
 			//상 이동시
-			else if (player.dir == 4) {
+			else if (player[0]._dir == 4) {
 				//몸통
-				TransparentBlt(mem1dc, player.left, player.top, p_size, p_size,
+				TransparentBlt(mem1dc, player[0]._x, player[0]._y, p_size, p_size,
 					mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
 				//머리
-				TransparentBlt(mem1dc, player.left - p_head_loc_w, player.top - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
+				TransparentBlt(mem1dc, player[0]._x - p_head_loc_w, player[0]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 					mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 4), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 			}
 			//이동X
 			else {
 				//몸통
-				TransparentBlt(mem1dc, player.left, player.top, p_size, p_size,
+				TransparentBlt(mem1dc, player[0]._x, player[0]._y, p_size, p_size,
 					mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
 				//머리
-				TransparentBlt(mem1dc, player.left - p_head_loc_w, player.top - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
+				TransparentBlt(mem1dc, player[0]._x - p_head_loc_w, player[0]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 					mem2dc, p_head_img_w_start, p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 			}
 

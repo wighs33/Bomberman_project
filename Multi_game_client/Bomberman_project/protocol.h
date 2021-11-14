@@ -1,5 +1,39 @@
 #pragma once
 
+const short SERVER_PORT = 4000;
+//const int	WORLD_HEIGHT = 16;
+//const int	WORLD_WIDTH = 16;
+
+const int  MAX_NAME_SIZE = 20;
+const int  MAX_MAP_SIZE = 256;
+const int  MAX_ITEM_SIZE = 256;
+
+
+const int  MAX_USER = 10;
+
+const char PACKET_LOGIN = 0;
+const char PACKET_LOGIN_OK = 1;
+const char PACKET_INIT_PLAYER = 2;
+const char PACKET_CONDITION = 3;
+const char PACKET_BUF = 4;
+const char PACKET_GET_ITEM = 5;
+
+const char PACKET_MOVE = 6;
+const char PACKET_MOVE_OK = 7;
+const char PACKET_INIT_OBJECT = 8;
+const char PACKET_INIT_BOMB = 9;
+const char PACKET_DELETE_OBJECT = 10;
+const char PACKET_CHANGE_HEART = 11;
+
+
+const char CON_NO_ACCEPT = 0;
+const char CON_ACCEPT = 1;
+const char CON_READY = 2;
+const char CON_PLAY = 3;
+const char CON_DEAD = 4;
+
+#pragma pack (push, 1)
+
 struct LOGIN_packet { // 로그인 요청 패킷
 	int type; // 패킷 타입
 	int size; // 패킷 사이즈
@@ -87,3 +121,4 @@ struct CHANGE_HEART_packet { // 플레이어 체력 변경 정보 패킷
 	int ID;// 플레이어 아이디
 	bool hp_decrease; // "0-체력 변화X"
 };
+#pragma pack(pop)
