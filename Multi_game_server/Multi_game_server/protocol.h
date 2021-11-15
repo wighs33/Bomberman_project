@@ -37,7 +37,7 @@ const char CON_DEAD = 4;
 struct LOGIN_packet { // 로그인 요청 패킷
 	int size; // 패킷 사이즈
 	int type; // 패킷 타입 0
-	char ID; // 플레이어 아이디
+	char id; // 플레이어 아이디
 };
 
 struct LOGIN_OK_packet {// 로그인 허락 패킷
@@ -52,7 +52,7 @@ struct LOGIN_OK_packet {// 로그인 허락 패킷
 struct INIT_PLAYER_packet { // 플레이어 생성 패킷
 	int size; // 패킷 사이즈
 	int type; // 패킷 타입 2	
-	int id; // 플레이어 아이디
+	char id; // 플레이어 아이디
 	int x, y; // 플레이어 좌표
 	int condition; // 플레이어 상태
 };
