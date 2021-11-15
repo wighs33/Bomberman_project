@@ -28,6 +28,7 @@
 using namespace std;
 
 
+////////////////////////////////////////////////////////////////////////////
 //--- 전역 변수
 
 HINSTANCE g_hInst;
@@ -38,11 +39,10 @@ random_device rd;
 default_random_engine dre{ rd() };
 uniform_int_distribution<> uid{ 1,100 };
 
-
-
 char recv_buf[BUFSIZE];
 
 
+/////////////////////////////////////////////////////////////////////////////
 //--- 컨테이너
  
 //테스트용 맵
@@ -58,7 +58,7 @@ using playerArr = array<T, X>;
 playerArr<Player, 4>			players;
 
 
-
+/////////////////////////////////////////////////////////////////////////////////////
 //--- 구조체
 
 //게임에서 쓰이는 모든객체가 필요로하는 모든정보들을 한곳에 담은 객체 구조체(임시 값 - GameObject 클래스로 바꿔야함)
@@ -75,148 +75,18 @@ enum Object_type {
 	EMPTY, BLOCK, ROCK
 };
 
-
+////////////////////////////////////////////////////////////////////////////////////////
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
+int Check_Collision_bomb(Object source, Object target[]);
+int Check_Collision_player(Player source, Object target[]);
+void err_quit(const char* msg);
+void err_display(const char* msg);
+void Send_Login_packet(SOCKET s);
+void Recv_packet(SOCKET s);
+void process_packet(char* p);
 
-
-
-//--- 사용자 정의 함수
-// 
-// 
-//source_type: 0 - pl/ 1 - bomb
-//충돌 발생시 해당 오브젝트 인덱스 번호 + 1 리턴 / 충돌이 없으면 0 리턴
-//충돌이 안일어날시 0을 리턴하므로, 0번째 인덱스를 구분하기 위해서 + 1을 해준다.
-int Check_Collision_bomb(Object source, Object target[])
-{
-	for (int i = 0; i < nTiles; ++i) {
-		if (target[i].health > 0) {
-			RECT temp;
-			RECT source_rt{ source.left, source.top, source.left + bomb_size, source.top + bomb_size };
-			RECT target_rt{ target[i].left + adj_obstacle_size_tl,target[i].top + adj_obstacle_size_tl, target[i].left + tile_size - adj_obstacle_size_br, target[i].top + tile_size - adj_obstacle_size_br };
-
-			if (IntersectRect(&temp, &source_rt, &target_rt))
-				return (i + 1);
-		}
-	}
-
-	return 0;
-}
-
-//나중에 함칠 예정
-int Check_Collision_player(Player source, Object target[])
-{
-	for (int i = 0; i < nTiles; ++i) {
-		if (target[i].health > 0) {
-			RECT temp;
-			RECT source_rt{ source._x, source._y, source._x + p_size, source._y + p_size };
-			RECT target_rt{ target[i].left + adj_obstacle_size_tl,target[i].top + adj_obstacle_size_tl, target[i].left + tile_size - adj_obstacle_size_br, target[i].top + tile_size - adj_obstacle_size_br };
-
-			if (IntersectRect(&temp, &source_rt, &target_rt))
-				return (i + 1);
-		}
-	}
-
-	return 0;
-}
-
-void err_quit(const char* msg)
-{
-	LPVOID lpMsgBuf;
-	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL, WSAGetLastError(),
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR)&lpMsgBuf, 0, NULL);
-	MessageBox(NULL, (LPCTSTR)lpMsgBuf, (LPCWSTR)msg, MB_ICONERROR);
-	LocalFree(lpMsgBuf);
-	exit(1);
-}
-
-void err_display(const char* msg)
-{
-	LPVOID lpMsgBuf;
-	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL, WSAGetLastError(),
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR)&lpMsgBuf, 0, NULL);
-	cout << msg << (char*)lpMsgBuf << endl;
-	LocalFree(lpMsgBuf);
-}
-
-//로그인 요청 함수
-void Send_Login_packet(SOCKET s)
-{
-	char ID = 'a';
-
-	cout << "a 보내기" << endl;
-
-	GET_ITEM_packet L_packet;
-	L_packet.type = PACKET_GET_ITEM;
-	//L_packet.size = sizeof(L_packet);
-	//L_packet.ID = ID;
-
-	char _send_buf[BUFSIZE];
-	ZeroMemory(_send_buf, sizeof(_send_buf));
-	memcpy(&_send_buf[0], &L_packet, BUFSIZE);
-	int retval = send(s, _send_buf, BUFSIZE, 0);
-	if (retval == SOCKET_ERROR) {
-		err_display("send()");
-	}
-}
-
-void Recv_packet(SOCKET s)
-{
-	ZeroMemory(recv_buf, sizeof(recv_buf));
-	int retval = recv(s, recv_buf, BUFSIZE, 0);
-	if (retval == SOCKET_ERROR) {
-		err_display("recv()");
-	}
-}
-
-
-
-void process_packet(char* p)
-{
-	char packet_type = p[1];
-
-	cout << endl << (int)packet_type << endl;
-
-	switch (packet_type) {
-
-	case PACKET_LOGIN_OK: {
-		LOGIN_OK_packet* packet = reinterpret_cast<LOGIN_OK_packet*>(p);
-
-		break;
-	}
-	case PACKET_INIT_PLAYER: {
-		INIT_PLAYER_packet* packet = reinterpret_cast<INIT_PLAYER_packet*>(p);
-		cout << packet->ID << endl;
-		break;
-	}
-
-	case PACKET_MOVE_OK: {
-		break;
-	}
-
-	case PACKET_GET_ITEM: {
-		break;
-	}
-	case PACKET_INIT_BOMB: {
-		break;
-	}
-	case PACKET_CONDITION: {
-		break;
-	}
-	default: {
-		cout << "UnKnown Packet" << endl;
-		break;
-	}
-	}
-
-
-}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -760,3 +630,133 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	return (DefWindowProc(hwnd, iMessage, wParam, lParam));
 }
 
+//source_type: 0 - pl/ 1 - bomb
+//충돌 발생시 해당 오브젝트 인덱스 번호 + 1 리턴 / 충돌이 없으면 0 리턴
+//충돌이 안일어날시 0을 리턴하므로, 0번째 인덱스를 구분하기 위해서 + 1을 해준다.
+int Check_Collision_bomb(Object source, Object target[])
+{
+	for (int i = 0; i < nTiles; ++i) {
+		if (target[i].health > 0) {
+			RECT temp;
+			RECT source_rt{ source.left, source.top, source.left + bomb_size, source.top + bomb_size };
+			RECT target_rt{ target[i].left + adj_obstacle_size_tl,target[i].top + adj_obstacle_size_tl, target[i].left + tile_size - adj_obstacle_size_br, target[i].top + tile_size - adj_obstacle_size_br };
+
+			if (IntersectRect(&temp, &source_rt, &target_rt))
+				return (i + 1);
+		}
+	}
+
+	return 0;
+}
+
+//나중에 함칠 예정
+int Check_Collision_player(Player source, Object target[])
+{
+	for (int i = 0; i < nTiles; ++i) {
+		if (target[i].health > 0) {
+			RECT temp;
+			RECT source_rt{ source._x, source._y, source._x + p_size, source._y + p_size };
+			RECT target_rt{ target[i].left + adj_obstacle_size_tl,target[i].top + adj_obstacle_size_tl, target[i].left + tile_size - adj_obstacle_size_br, target[i].top + tile_size - adj_obstacle_size_br };
+
+			if (IntersectRect(&temp, &source_rt, &target_rt))
+				return (i + 1);
+		}
+	}
+
+	return 0;
+}
+
+void err_quit(const char* msg)
+{
+	LPVOID lpMsgBuf;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, WSAGetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf, 0, NULL);
+	MessageBox(NULL, (LPCTSTR)lpMsgBuf, (LPCWSTR)msg, MB_ICONERROR);
+	LocalFree(lpMsgBuf);
+	exit(1);
+}
+
+void err_display(const char* msg)
+{
+	LPVOID lpMsgBuf;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, WSAGetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf, 0, NULL);
+	cout << msg << (char*)lpMsgBuf << endl;
+	LocalFree(lpMsgBuf);
+}
+
+//로그인 요청 함수
+void Send_Login_packet(SOCKET s)
+{
+	char ID = 'a';
+
+	cout << "a 보내기" << endl;
+
+	LOGIN_packet L_packet;
+	L_packet.size = sizeof(L_packet);
+	L_packet.type = PACKET_LOGIN;
+	L_packet.id = ID;
+
+	char _send_buf[BUFSIZE];
+	ZeroMemory(_send_buf, sizeof(_send_buf));
+	memcpy(&_send_buf[0], &L_packet, BUFSIZE);
+	int retval = send(s, _send_buf, BUFSIZE, 0);
+	if (retval == SOCKET_ERROR) {
+		err_display("send()");
+	}
+}
+
+void Recv_packet(SOCKET s)
+{
+	ZeroMemory(recv_buf, sizeof(recv_buf));
+	int retval = recv(s, recv_buf, BUFSIZE, 0);
+	if (retval == SOCKET_ERROR) {
+		err_display("recv()");
+	}
+}
+
+
+
+void process_packet(char* p)
+{
+	char packet_type = p[4];
+
+	switch (packet_type) {
+
+	case PACKET_LOGIN_OK: {
+		LOGIN_OK_packet* packet = reinterpret_cast<LOGIN_OK_packet*>(p);
+		break;
+	}
+	case PACKET_INIT_PLAYER: {
+		INIT_PLAYER_packet* packet = reinterpret_cast<INIT_PLAYER_packet*>(p);
+		cout << packet->id << endl;
+		break;
+	}
+
+	case PACKET_MOVE_OK: {
+		break;
+	}
+
+	case PACKET_GET_ITEM: {
+		break;
+	}
+	case PACKET_INIT_BOMB: {
+		break;
+	}
+	case PACKET_CONDITION: {
+		break;
+	}
+	default: {
+		cout << "UnKnown Packet" << endl;
+		break;
+	}
+	}
+
+
+}

@@ -82,9 +82,7 @@ void process_packet(int client_index, char* p)
 {
 	
 	Session& cl = clients[client_index];
-	char packet_type = p[1];
-
-	cout << endl << (int)p[1] << endl;
+	char packet_type = p[4];
 
 	switch (packet_type) {
 	
@@ -93,22 +91,23 @@ void process_packet(int client_index, char* p)
 		//send_login_ok_packet(client_index);
 
 		for (auto& other : clients) {
-			if (other._index == client_index) { 
-				LOGIN_OK_packet L_packet;
-				L_packet.type = PACKET_LOGIN_OK;
-				L_packet.size = sizeof(packet);
-				L_packet.x = cl._x;
-				L_packet.y = cl._y;
-				L_packet.level = cl._level;
-				L_packet.exp = cl._exp;
-				strcpy_s(L_packet.map, g_init_map_01);
-				cl.do_send(sizeof(L_packet), &L_packet);
-				continue;
-			};
-			if ( CON_NO_ACCEPT == other._type) continue;
+			//if (other._index == client_index) { 
+			//	LOGIN_OK_packet L_packet;
+			//	L_packet.type = PACKET_LOGIN_OK;
+			//	L_packet.size = sizeof(packet);
+			//	L_packet.x = cl._x;
+			//	L_packet.y = cl._y;
+			//	L_packet.level = cl._level;
+			//	L_packet.exp = cl._exp;
+			//	strcpy_s(L_packet.map, g_init_map_01);
+			//	cl.do_send(sizeof(L_packet), &L_packet);
+			//	continue;
+			//};
+			//if ( CON_NO_ACCEPT == other._type) continue;
 			
 			INIT_PLAYER_packet IN_packet;
-			IN_packet.id = other._id;
+			//IN_packet.id = other._id;
+			IN_packet.id = packet->id;
 			IN_packet.size = sizeof(packet);
 			IN_packet.type = PACKET_INIT_PLAYER;
 			IN_packet.x = other._x;
