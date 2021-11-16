@@ -91,38 +91,42 @@ void process_packet(int client_index, char* p)
 		//send_login_ok_packet(client_index);
 
 		for (auto& other : clients) {
-			//if (other._index == client_index) { 
-			//	LOGIN_OK_packet L_packet;
-			//	L_packet.type = PACKET_LOGIN_OK;
-			//	L_packet.size = sizeof(packet);
-			//	L_packet.x = cl._x;
-			//	L_packet.y = cl._y;
-			//	L_packet.level = cl._level;
-			//	L_packet.exp = cl._exp;
-			//	strcpy_s(L_packet.map, g_init_map_01);
-			//	cl.do_send(sizeof(L_packet), &L_packet);
-			//	continue;
-			//};
-			//if ( CON_NO_ACCEPT == other._type) continue;
-			
-			INIT_PLAYER_packet IN_packet;
-			//IN_packet.id = other._id;
-			IN_packet.id = packet->id;
-			IN_packet.size = sizeof(packet);
-			IN_packet.type = PACKET_INIT_PLAYER;
-			IN_packet.x = other._x;
-			IN_packet.y = other._y;
-			IN_packet.condition = other._type;
-			cl.do_send(sizeof(IN_packet), &IN_packet);
+			if (other._index == client_index) { 
+				LOGIN_OK_packet L_packet;
+				L_packet.type = PACKET_LOGIN_OK;
+				L_packet.size = sizeof(packet);
 
-			INIT_PLAYER_packet IN_other_packet;
-			IN_other_packet.id = cl._id;
-			IN_other_packet.size = sizeof(IN_other_packet);
-			IN_other_packet.type = PACKET_INIT_PLAYER;
-			IN_other_packet.x = cl._x;
-			IN_other_packet.y = cl._y;
-			IN_other_packet.condition = cl._type;
-			other.do_send(sizeof(IN_other_packet), &IN_other_packet);
+				//확인작업을 위해 추가한 것 나중에 지워야함
+				L_packet.id = packet->id;
+
+				L_packet.x = cl._x;
+				L_packet.y = cl._y;
+				L_packet.level = cl._level;
+				L_packet.exp = cl._exp;
+				strcpy_s(L_packet.map, g_init_map_01);
+				cl.do_send(sizeof(L_packet), &L_packet);
+				continue;
+			};
+			if ( CON_NO_ACCEPT == other._type) continue;
+			
+			//INIT_PLAYER_packet IN_packet;
+			////IN_packet.id = other._id;
+			//IN_packet.id = packet->id;
+			//IN_packet.size = sizeof(packet);
+			//IN_packet.type = PACKET_INIT_PLAYER;
+			//IN_packet.x = other._x;
+			//IN_packet.y = other._y;
+			//IN_packet.condition = other._type;
+			//cl.do_send(sizeof(IN_packet), &IN_packet);
+
+			//INIT_PLAYER_packet IN_other_packet;
+			//IN_other_packet.id = cl._id;
+			//IN_other_packet.size = sizeof(IN_other_packet);
+			//IN_other_packet.type = PACKET_INIT_PLAYER;
+			//IN_other_packet.x = cl._x;
+			//IN_other_packet.y = cl._y;
+			//IN_other_packet.condition = cl._type;
+			//other.do_send(sizeof(IN_other_packet), &IN_other_packet);
 
 
 		}
@@ -173,6 +177,7 @@ void process_packet(int client_index, char* p)
 
 	
 }
+
 int get_new_index()
 {
 	static int g_id = 0;
@@ -188,9 +193,6 @@ int get_new_index()
 
 DWORD WINAPI Thread_1(LPVOID arg)
 {
-	
-	
-
 	SOCKET client_sock = (SOCKET)arg;
 	int index = get_new_index();
 	Session& player= clients[index];
@@ -203,7 +205,7 @@ DWORD WINAPI Thread_1(LPVOID arg)
 		player.do_recv();
 		//int remain_data = num_byte + cl._prev_size;
 		char* packet_start = clients[index]._recv_buf;
-		int packet_size = packet_start[0];
+		char packet_size = packet_start[0];
 
 		//while (packet_size <= remain_data) {
 			process_packet(index, packet_start);
