@@ -32,8 +32,8 @@ using namespace std;
 //--- 전역 변수
 
 HINSTANCE g_hInst;
-LPCTSTR lpszClass = L"Window Class Name";
-LPCTSTR lpszWindowName = L"테러맨";
+LPCTSTR lpszClass = "Window Class Name";
+LPCTSTR lpszWindowName = "테러맨";
 
 random_device rd;
 default_random_engine dre{ rd() };
@@ -58,7 +58,7 @@ using playerArr = array<T, X>;
 playerArr<Player, 4>			players;
 
 
-/////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 //--- 구조체
 
 //게임에서 쓰이는 모든객체가 필요로하는 모든정보들을 한곳에 담은 객체 구조체(임시 값 - GameObject 클래스로 바꿔야함)
@@ -86,7 +86,7 @@ void Send_Login_packet(SOCKET s);
 void Recv_packet(SOCKET s);
 void process_packet(char* p);
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -96,7 +96,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 	freopen("CONOUT$", "wt", stdout);
 
 
-	///////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
 
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
@@ -120,9 +120,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 	Send_Login_packet(sock);
 	Sleep(1000);
 	Recv_packet(sock);
+
+	//로그인 오케이 패킷 받기
 	process_packet(recv_buf);
 
-	//////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
 
 	players[0]._x = outer_wall_start + tile_size + 10;
 	players[0]._y = outer_wall_start + tile_size + 10;
@@ -250,7 +252,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 		}
 		else {
-			MessageBox(hwnd, L"맵을 불러오지 못하였습니다.", L"ERROR - Parse failed", MB_ICONERROR);
+			MessageBox(hwnd, "맵을 불러오지 못하였습니다.", "ERROR - Parse failed", MB_ICONERROR);
 			DestroyWindow(hwnd);
 		}
 
@@ -674,7 +676,7 @@ void err_quit(const char* msg)
 		NULL, WSAGetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR)&lpMsgBuf, 0, NULL);
-	MessageBox(NULL, (LPCTSTR)lpMsgBuf, (LPCWSTR)msg, MB_ICONERROR);
+	MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONERROR);
 	LocalFree(lpMsgBuf);
 	exit(1);
 }
@@ -696,7 +698,7 @@ void Send_Login_packet(SOCKET s)
 {
 	char ID = 'a';
 
-	cout << "a 보내기" << endl;
+	cout << "ID:" << ID << " 보내기" << endl;
 
 	LOGIN_packet L_packet;
 	L_packet.size = sizeof(L_packet);
@@ -725,17 +727,17 @@ void Recv_packet(SOCKET s)
 
 void process_packet(char* p)
 {
-	char packet_type = p[4];
+	char packet_type = p[1];
 
 	switch (packet_type) {
 
 	case PACKET_LOGIN_OK: {
 		LOGIN_OK_packet* packet = reinterpret_cast<LOGIN_OK_packet*>(p);
+		cout << "[수신 성공] 로그인 확인" << endl;
 		break;
 	}
 	case PACKET_INIT_PLAYER: {
 		INIT_PLAYER_packet* packet = reinterpret_cast<INIT_PLAYER_packet*>(p);
-		cout << packet->id << endl;
 		break;
 	}
 
@@ -753,7 +755,7 @@ void process_packet(char* p)
 		break;
 	}
 	default: {
-		cout << "UnKnown Packet" << endl;
+		cout << "[에러] UnKnown Packet" << endl;
 		break;
 	}
 	}
