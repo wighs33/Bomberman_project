@@ -95,10 +95,6 @@ void process_packet(int client_index, char* p)
 				LOGIN_OK_packet L_packet;
 				L_packet.type = PACKET_LOGIN_OK;
 				L_packet.size = sizeof(packet);
-
-				//확인작업을 위해 추가한 것 나중에 지워야함
-				L_packet.id = packet->id;
-
 				L_packet.x = cl._x;
 				L_packet.y = cl._y;
 				L_packet.level = cl._level;
@@ -130,6 +126,8 @@ void process_packet(int client_index, char* p)
 
 
 		}
+
+		cout << "[수신 성공] 로그인 요청" << endl;
 		
 		break;
 	}
@@ -170,7 +168,7 @@ void process_packet(int client_index, char* p)
 		break;
 	}
 	default: {
-		cout << "UnKnown Packet" << endl;
+		cout << "[에러] UnKnown Packet" << endl;
 		break;
 	}
 	}
@@ -187,7 +185,7 @@ int get_new_index()
 			clients[i].in_use = true;
 			return i;
 		}
-	cout << "Maximum Number of Clients Overflow!!\n";
+	cout << "Maximum Number of Clients Overflow!!" << endl;
 	return -1;
 }
 
@@ -260,7 +258,7 @@ int main(int argc, char* argv[])
 		
 			 // 접속한 클라이언트 정보 출력
 			std::cout << "[TCP 서버] 클라이언트 접속: IP 주소 " <<
-				inet_ntoa(clientaddr.sin_addr) << "  포트 번호 : " << ntohs(clientaddr.sin_port);
+				inet_ntoa(clientaddr.sin_addr) << "  포트 번호 : " << ntohs(clientaddr.sin_port) << endl;
 			
 		
 			CreateThread(NULL, 0, Thread_1, (LPVOID)client_sock, 0, NULL);

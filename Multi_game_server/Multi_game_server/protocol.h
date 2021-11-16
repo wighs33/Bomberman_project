@@ -46,11 +46,6 @@ struct LOGIN_packet { // 로그인 요청 패킷
 struct LOGIN_OK_packet {// 로그인 허락 패킷
 	char size; // 패킷 사이즈
 	char type; // 패킷 타입 1
-
-	//확인작업을 위해 추가한 것 나중에 지워야함
-	char id;
-
-
 	int x, y; // 플레이어 좌표
 	int level; // 플레이어 레벨
 	int exp; // 플레이어 경험치

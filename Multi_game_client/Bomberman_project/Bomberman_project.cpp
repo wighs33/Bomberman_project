@@ -733,7 +733,7 @@ void process_packet(char* p)
 
 	case PACKET_LOGIN_OK: {
 		LOGIN_OK_packet* packet = reinterpret_cast<LOGIN_OK_packet*>(p);
-		cout << packet->id << endl;
+		cout << "[수신 성공] 로그인 확인" << endl;
 		break;
 	}
 	case PACKET_INIT_PLAYER: {
@@ -755,7 +755,7 @@ void process_packet(char* p)
 		break;
 	}
 	default: {
-		cout << "[Error] UnKnown Packet" << endl;
+		cout << "[에러] UnKnown Packet" << endl;
 		break;
 	}
 	}
