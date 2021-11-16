@@ -82,7 +82,7 @@ void process_packet(int client_index, char* p)
 {
 	
 	Session& cl = clients[client_index];
-	char packet_type = p[4];
+	char packet_type = p[1];
 
 	switch (packet_type) {
 	

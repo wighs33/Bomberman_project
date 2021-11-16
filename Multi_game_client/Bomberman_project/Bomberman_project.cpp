@@ -727,7 +727,7 @@ void Recv_packet(SOCKET s)
 
 void process_packet(char* p)
 {
-	char packet_type = p[4];
+	char packet_type = p[1];
 
 	switch (packet_type) {
 
