@@ -187,7 +187,8 @@
     <ClCompile Include="Player.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="map_json\map_1.json" />
+    <None Include="maps_json\map_1.json" />
+    <None Include="map_json\map_2.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

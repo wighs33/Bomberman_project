@@ -42,7 +42,7 @@ uniform_int_distribution<> uid{ 1,100 };
 char recv_buf[BUFSIZE];
 
 
-/////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 //--- 컨테이너
  
 //테스트용 맵
@@ -50,6 +50,7 @@ template<typename T, size_t X, size_t Y>
 using tileArr = array<array<T, X>, Y>;
 
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_1;
+tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
 
 //플레이어
 template<typename T, size_t X>
@@ -69,13 +70,16 @@ struct Object {
 };
 
 
+////////////////////////////////////////////////////////////////////////////
 //--- 열거형
 
 enum Object_type {
 	EMPTY, BLOCK, ROCK
 };
 
-////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////
+//--- 사용자 정의 함수
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
 int Check_Collision_bomb(Object source, Object target[]);
@@ -85,10 +89,10 @@ void err_display(const char* msg);
 void Send_Login_packet(SOCKET s);
 void Recv_packet(SOCKET s);
 void process_packet(char* p);
+void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map,const char* map_path);
+
 
 ////////////////////////////////////////////////////////////////////////////
-
-
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
@@ -118,17 +122,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 
 	//로그인 패킷 보내기 
 	Send_Login_packet(sock);
+	
+	
 	Sleep(1000);
+	
+	
 	Recv_packet(sock);
 
 	//로그인 오케이 패킷 받기
 	process_packet(recv_buf);
 
-	////////////////////////////////////////////////////////////////////////////
-
 	players[0]._x = outer_wall_start + tile_size + 10;
 	players[0]._y = outer_wall_start + tile_size + 10;
 	players[0]._dir = 0;
+
+
+	//map 로드
+	Load_Map(map_1, "maps_json/map_1.json");
+	Load_Map(map_2, "maps_json/map_2.json");
+
+
+	////////////////////////////////////////////////////////////////////////////
 
 	HWND hwnd;
 	MSG Message;
@@ -181,15 +195,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 	static bool pause{ 0 };
 
-	ifstream json_map;
-	Json::CharReaderBuilder builder;
-	builder["collectComments"] = false;
-	Json::Value value;
-	JSONCPP_STRING errs;
-	bool ok;
-
-	static int block_cnt{ 0 };
-	static int rock_cnt{ 0 };
 
 	switch (iMessage) {
 	case WM_CREATE:
@@ -220,43 +225,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		hBit_idle = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP25));
 		hBit_ready = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP26));
 		hBit_play = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP27));
-
-		/*pl.left = outer_wall_start + tile_size + 10;
-		pl.top = outer_wall_start + tile_size + 10;
-		pl.dir = 0;*/
-
-		//map 로드
-		json_map.open("map_json/map_1.json");
-	
-		ok = parseFromStream(builder, json_map, &value, &errs);
-
-		if (ok == true) {
-			for (int i = 0; i < tile_max_h_num; ++i) {
-				for (int j = 0; j < tile_max_w_num; ++j) {
-					switch (value[i][j].asInt()) {
-					case 0:
-						map_1[i][j] = EMPTY;
-						break;
-
-					case 1:
-						map_1[i][j] = BLOCK;
-						block_cnt++;
-						break;
-
-					case 2:
-						map_1[i][j] = ROCK;
-						rock_cnt++;
-						break;
-					}
-				}
-			}
-		}
-		else {
-			MessageBox(hwnd, "맵을 불러오지 못하였습니다.", "ERROR - Parse failed", MB_ICONERROR);
-			DestroyWindow(hwnd);
-		}
-
-		json_map.close();
 
 		//map 세팅
 		for (int i = 0; i < nTiles; ++i) {
@@ -632,6 +600,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	return (DefWindowProc(hwnd, iMessage, wParam, lParam));
 }
 
+
+////////////////////////////////////////////////////////////////////////////
+//--- 사용자 정의 함수 정의
+
 //source_type: 0 - pl/ 1 - bomb
 //충돌 발생시 해당 오브젝트 인덱스 번호 + 1 리턴 / 충돌이 없으면 0 리턴
 //충돌이 안일어날시 0을 리턴하므로, 0번째 인덱스를 구분하기 위해서 + 1을 해준다.
@@ -698,8 +670,6 @@ void Send_Login_packet(SOCKET s)
 {
 	char ID = 'a';
 
-	cout << "ID:" << ID << " 보내기" << endl;
-
 	LOGIN_packet L_packet;
 	L_packet.size = sizeof(L_packet);
 	L_packet.type = PACKET_LOGIN;
@@ -723,7 +693,50 @@ void Recv_packet(SOCKET s)
 	}
 }
 
+void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map, const char* map_path)
+{
+	ifstream json_map;
+	Json::CharReaderBuilder builder;
+	builder["collectComments"] = false;
+	Json::Value value;
+	JSONCPP_STRING errs;
+	bool ok;
+	
+	json_map.open(map_path);
 
+	ok = parseFromStream(builder, json_map, &value, &errs);
+
+	if (ok == true) {
+		for (int i = 0; i < tile_max_h_num; ++i) {
+			for (int j = 0; j < tile_max_w_num; ++j) {
+				switch (value[i][j].asInt()) {
+				case 0:
+					map[i][j] = EMPTY;
+					break;
+
+				case 1:
+					map[i][j] = BLOCK;
+					break;
+
+				case 2:
+					map[i][j] = ROCK;
+					break;
+				}
+			}
+		}
+	}
+	else {
+		char msg[256]{ "" };
+		char _msg[]{ " 맵을 불러오지 못하였습니다." } ;
+		strcat(msg, map_path);
+		strcat(msg, _msg);
+		MessageBox(NULL, msg , "ERROR - Parse failed", MB_ICONERROR);
+		json_map.close();
+		exit(0);
+	}
+
+	json_map.close();
+}
 
 void process_packet(char* p)
 {
@@ -734,6 +747,9 @@ void process_packet(char* p)
 	case PACKET_LOGIN_OK: {
 		LOGIN_OK_packet* packet = reinterpret_cast<LOGIN_OK_packet*>(p);
 		cout << "[수신 성공] 로그인 확인" << endl;
+
+		//players[0]._x = 
+
 		break;
 	}
 	case PACKET_INIT_PLAYER: {
