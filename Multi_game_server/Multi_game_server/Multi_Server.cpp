@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <thread>
 #include "protocol.h"
+#include "constant_numbers.h"
 
 using namespace std;
 
@@ -82,6 +83,33 @@ void process_packet(int client_index, char* p)
 {
 	
 	Session& cl = clients[client_index];
+
+	switch (client_index) {
+	case 0:
+		cl._x = outer_wall_start + tile_size + 10;
+		cl._y = outer_wall_start + tile_size + 10;
+
+		break;
+
+	case 1:
+		cl._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 12;
+		cl._y = outer_wall_start + tile_size + 10;
+
+		break;
+
+	case 2:
+		cl._x = outer_wall_start + tile_size + 10;
+		cl._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
+
+		break;
+
+	case 3:
+		cl._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 12;
+		cl._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
+
+		break;
+	}
+
 	char packet_type = p[1];
 
 	switch (packet_type) {
@@ -193,7 +221,7 @@ DWORD WINAPI Thread_1(LPVOID arg)
 {
 	SOCKET client_sock = (SOCKET)arg;
 	int index = get_new_index();
-	Session& player= clients[index];
+	Session& player = clients[index];
 	player._cl = client_sock;
 	player._index = index;
 

@@ -142,6 +142,7 @@
     <ClCompile Include="Multi_Server.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="constant_numbers.h" />
     <ClInclude Include="protocol.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

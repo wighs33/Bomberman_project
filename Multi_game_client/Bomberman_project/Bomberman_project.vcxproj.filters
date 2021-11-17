@@ -140,7 +140,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="map_json\map_1.json">
+    <None Include="maps_json\map_1.json">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="map_json\map_2.json">
       <Filter>리소스 파일</Filter>
     </None>
   </ItemGroup>
