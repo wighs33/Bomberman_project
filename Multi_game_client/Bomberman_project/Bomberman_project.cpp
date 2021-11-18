@@ -53,8 +53,8 @@ tileArr<int, tile_max_w_num, tile_max_h_num>	map_1;
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
 
 //플레이어
-template<typename T, size_t X>
-using playerArr = array<T, X>;
+template<typename T, size_t N>
+using playerArr = array<T, N>;
 
 playerArr<Player, 4>			players;
 
@@ -81,7 +81,8 @@ enum Object_type {
 ////////////////////////////////////////////////////////////////////////////
 //--- 사용자 정의 함수
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
+DWORD WINAPI ClientMain(LPVOID arg);
+LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
 int Check_Collision_bomb(Object source, Object target[]);
 int Check_Collision_player(Player source, Object target[]);
 void err_quit(const char* msg);
@@ -99,46 +100,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 	AllocConsole();
 	freopen("CONOUT$", "wt", stdout);
 
-
-	////////////////////////////////////////////////////////////////////////////
-
-	WSADATA wsa;
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-		return 1;
-
-	int retval;
-
-	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == INVALID_SOCKET) err_quit("socket()");
-
-	SOCKADDR_IN serveraddr;
-	ZeroMemory(&serveraddr, sizeof(serveraddr));
-	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
-	serveraddr.sin_port = htons(SERVERPORT);
-	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
-	if (retval == SOCKET_ERROR) err_quit("connect()");
-
-
-	//로그인 패킷 보내기 
-	Send_Login_packet(sock);
-	
-	
-	//Sleep(1000);
-	
-	
-	Recv_packet(sock);
-
-	//로그인 오케이 패킷 받기
-	process_packet(recv_buf);
-
+	//소켓 통신 스레드 생성
+	CreateThread(NULL, 0, ClientMain, NULL, 0, NULL);
 
 	//map 로드
 	Load_Map(map_1, "maps_json/map_1.json");
 	Load_Map(map_2, "maps_json/map_2.json");
-
-
-	////////////////////////////////////////////////////////////////////////////
 
 	HWND hwnd;
 	MSG Message;
@@ -169,6 +136,35 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 		DispatchMessage(&Message);
 	}
 	return Message.wParam;
+}
+
+DWORD WINAPI ClientMain(LPVOID arg) 
+{
+	WSADATA wsa;
+	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+		return 1;
+
+	int retval;
+
+	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock == INVALID_SOCKET) err_quit("socket()");
+
+	SOCKADDR_IN serveraddr;
+	ZeroMemory(&serveraddr, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
+	serveraddr.sin_port = htons(SERVERPORT);
+	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
+	if (retval == SOCKET_ERROR) err_quit("connect()");
+
+
+	//로그인 패킷 보내기 
+	Send_Login_packet(sock);
+
+	Recv_packet(sock);
+
+	//로그인 오케이 패킷 받기
+	process_packet(recv_buf);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
