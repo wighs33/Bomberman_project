@@ -8,6 +8,8 @@
 #include <array>
 #include <algorithm>
 #include <thread>
+#include <fstream>
+#include <filesystem>
 #include "protocol.h"
 #include "constant_numbers.h"
 
@@ -50,7 +52,13 @@ public:
 		_type = CON_ACCEPT;
 		in_use = false;
 	}
-
+	Session(istream& is)
+	{
+		is.read((char*)this, sizeof(Session));
+		_prev_size = 0;
+		_type = CON_ACCEPT;
+		in_use = false;
+	}
 	~Session()
 	{
 	}
@@ -74,6 +82,22 @@ const int MAX_Player = 4;
 array<Session, MAX_Player> clients;
 
 vector<Session> clients_DB;
+int g_id;
+
+void get_status(int client_index, int id)
+{
+	g_id = id;
+	auto b_n = find_if(clients_DB.cbegin(), clients_DB.cend(), [](Session a) {
+		return a._id == g_id;
+		});
+	
+	clients[client_index]._level = b_n->_level;
+	clients[client_index]._level = b_n->_exp;
+	clients[client_index]._power = 1;
+	clients[client_index]._heart = 3;
+	clients[client_index]._type = CON_ACCEPT;
+}
+
 char g_init_map_01[MAX_MAP_SIZE];
 char g_init_map_02[MAX_MAP_SIZE];
 bool g_item[MAX_ITEM_SIZE];
@@ -83,7 +107,7 @@ void process_packet(int client_index, char* p)
 {
 	
 	Session& cl = clients[client_index];
-
+	
 	switch (client_index) {
 	case 0:
 		cl._x = outer_wall_start + tile_size + 10;
@@ -117,6 +141,9 @@ void process_packet(int client_index, char* p)
 	case PACKET_LOGIN: {
 		LOGIN_packet* packet = reinterpret_cast<LOGIN_packet*>(p);
 		//send_login_ok_packet(client_index);
+		cl._id = packet->id;
+
+		get_status(client_index, cl._id);
 
 		for (auto& other : clients) {
 			if (other._index == client_index) { 
@@ -127,30 +154,29 @@ void process_packet(int client_index, char* p)
 				L_packet.y = cl._y;
 				L_packet.level = cl._level;
 				L_packet.exp = cl._exp;
-				strcpy_s(L_packet.map, g_init_map_01);
 				cl.do_send(sizeof(L_packet), &L_packet);
 				continue;
 			};
 			if ( CON_NO_ACCEPT == other._type) continue;
 			
-			//INIT_PLAYER_packet IN_packet;
-			////IN_packet.id = other._id;
-			//IN_packet.id = packet->id;
-			//IN_packet.size = sizeof(packet);
-			//IN_packet.type = PACKET_INIT_PLAYER;
-			//IN_packet.x = other._x;
-			//IN_packet.y = other._y;
-			//IN_packet.condition = other._type;
-			//cl.do_send(sizeof(IN_packet), &IN_packet);
+			INIT_PLAYER_packet IN_packet;
+			IN_packet.id = other._id;
+			IN_packet.id = packet->id;
+			IN_packet.size = sizeof(packet);
+			IN_packet.type = PACKET_INIT_PLAYER;
+			IN_packet.x = other._x;
+			IN_packet.y = other._y;
+			IN_packet.condition = other._type;
+			cl.do_send(sizeof(IN_packet), &IN_packet);
 
-			//INIT_PLAYER_packet IN_other_packet;
-			//IN_other_packet.id = cl._id;
-			//IN_other_packet.size = sizeof(IN_other_packet);
-			//IN_other_packet.type = PACKET_INIT_PLAYER;
-			//IN_other_packet.x = cl._x;
-			//IN_other_packet.y = cl._y;
-			//IN_other_packet.condition = cl._type;
-			//other.do_send(sizeof(IN_other_packet), &IN_other_packet);
+			INIT_PLAYER_packet IN_other_packet;
+			IN_other_packet.id = cl._id;
+			IN_other_packet.size = sizeof(IN_other_packet);
+			IN_other_packet.type = PACKET_INIT_PLAYER;
+			IN_other_packet.x = cl._x;
+			IN_other_packet.y = cl._y;
+			IN_other_packet.condition = cl._type;
+			other.do_send(sizeof(IN_other_packet), &IN_other_packet);
 
 
 		}
@@ -225,6 +251,7 @@ DWORD WINAPI Thread_1(LPVOID arg)
 	player._cl = client_sock;
 	player._index = index;
 
+
 	
 	while (1) {
 		// 데이터 받기
@@ -257,6 +284,14 @@ DWORD WINAPI Thread_1(LPVOID arg)
 
 int main(int argc, char* argv[])
 {
+	clients_DB.reserve(MAX_USER);
+
+	ifstream in("플레이어 정보", ios::binary);
+		
+	for (int i = 0; i < MAX_USER; ++i) {                                           //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
+		clients_DB.push_back(Session(in));                                            //임시객체를 인자로 받아올 때 emplace 사용하면 바보
+	}
+
 	//윈속 초기화
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
