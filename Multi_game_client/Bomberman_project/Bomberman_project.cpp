@@ -124,17 +124,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 	Send_Login_packet(sock);
 	
 	
-	Sleep(1000);
+	//Sleep(1000);
 	
 	
 	Recv_packet(sock);
 
 	//로그인 오케이 패킷 받기
 	process_packet(recv_buf);
-
-	players[0]._x = outer_wall_start + tile_size + 10;
-	players[0]._y = outer_wall_start + tile_size + 10;
-	players[0]._dir = 0;
 
 
 	//map 로드
@@ -748,7 +744,9 @@ void process_packet(char* p)
 		LOGIN_OK_packet* packet = reinterpret_cast<LOGIN_OK_packet*>(p);
 		cout << "[수신 성공] 로그인 확인" << endl;
 
-		//players[0]._x = 
+		players[0]._x = packet->x;
+		players[0]._y = packet->y;
+		players[0]._dir = 0;
 
 		break;
 	}

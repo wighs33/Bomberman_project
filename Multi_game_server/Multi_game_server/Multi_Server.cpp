@@ -36,7 +36,7 @@ public:
 	SOCKET _cl; //클라이언트 연결 소켓
 	char _recv_buf[BUFSIZE]; // 리시브 버퍼
 	int	  _prev_size;
-	int _id; // 플레이어 아이디
+	char _id; // 플레이어 아이디
 	int _index; 
 	int _x, _y; // 플레이어 좌표
 	int _level;
@@ -45,6 +45,7 @@ public:
 	int _power; // 폭탄 위력
 	int _heart; // 목숨
 	bool in_use;
+
 	Session()
 	{
 
@@ -52,6 +53,7 @@ public:
 		_type = CON_ACCEPT;
 		in_use = false;
 	}
+
 	Session(istream& is)
 	{
 		is.read((char*)this, sizeof(Session));
@@ -177,7 +179,6 @@ void process_packet(int client_index, char* p)
 			IN_other_packet.y = cl._y;
 			IN_other_packet.condition = cl._type;
 			other.do_send(sizeof(IN_other_packet), &IN_other_packet);
-
 
 		}
 
