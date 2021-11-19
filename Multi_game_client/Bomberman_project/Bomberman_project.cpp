@@ -41,6 +41,9 @@ random_device rd;
 default_random_engine dre{ rd() };
 uniform_int_distribution<> uid{ 1,100 };
 
+HANDLE hEvent;
+SOCKET sock;
+
 char recv_buf[BUFSIZE];
 
 
@@ -89,7 +92,6 @@ int Check_Collision_bomb(Object source, Object target[]);
 int Check_Collision_player(Player source, Object target[]);
 void err_quit(const char* msg);
 void err_display(const char* msg);
-void Send_Login_packet(SOCKET s);
 void Recv_packet(SOCKET s);
 void process_packet(char* p);
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map,const char* map_path);
@@ -101,6 +103,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 {
 	AllocConsole();
 	freopen("CONOUT$", "wt", stdout);
+
+	hEvent = CreateEvent(NULL, FALSE, TRUE, NULL);
+	if (hEvent == NULL) return 1;
 
 	//소켓 통신 스레드 생성
 	CreateThread(NULL, 0, ClientMain, NULL, 0, NULL);
@@ -137,6 +142,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 		TranslateMessage(&Message);
 		DispatchMessage(&Message);
 	}
+
+	CloseHandle(hEvent);
+	closesocket(sock);
+	WSACleanup();
+
 	return Message.wParam;
 }
 
@@ -148,7 +158,7 @@ DWORD WINAPI ClientMain(LPVOID arg)
 
 	int retval;
 
-	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == INVALID_SOCKET) err_quit("socket()");
 
 	SOCKADDR_IN serveraddr;
@@ -160,13 +170,32 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	if (retval == SOCKET_ERROR) err_quit("connect()");
 
 
-	//로그인 패킷 보내기 
-	Send_Login_packet(sock);
+	while (true)
+	{
+		WaitForSingleObject(hEvent, INFINITE);
 
-	Recv_packet(sock);
+		//로그인 패킷 보내기 
+		char ID = 'a';
 
-	//로그인 오케이 패킷 받기
-	process_packet(recv_buf);
+		LOGIN_packet L_packet;
+		L_packet.size = sizeof(L_packet);
+		L_packet.type = PACKET_LOGIN;
+		L_packet.id = ID;
+
+		char _send_buf[BUFSIZE];
+		ZeroMemory(_send_buf, sizeof(_send_buf));
+		memcpy(&_send_buf[0], &L_packet, BUFSIZE);
+		int retval = send(sock, _send_buf, BUFSIZE, 0);
+		if (retval == SOCKET_ERROR) {
+			err_display("send()");
+		}
+
+		Recv_packet(sock);
+
+		//로그인 오케이 패킷 받기
+		process_packet(recv_buf);
+
+	}
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
@@ -190,7 +219,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	static bool pause{ 0 };
 
 	static HWND hButton, hEdit;
-	TCHAR str[100];
+	TCHAR str[10];
 
 
 	switch (iMessage) {
@@ -677,25 +706,6 @@ void err_display(const char* msg)
 		(LPTSTR)&lpMsgBuf, 0, NULL);
 	cout << msg << (char*)lpMsgBuf << endl;
 	LocalFree(lpMsgBuf);
-}
-
-//로그인 요청 함수
-void Send_Login_packet(SOCKET s)
-{
-	char ID = 'a';
-
-	LOGIN_packet L_packet;
-	L_packet.size = sizeof(L_packet);
-	L_packet.type = PACKET_LOGIN;
-	L_packet.id = ID;
-
-	char _send_buf[BUFSIZE];
-	ZeroMemory(_send_buf, sizeof(_send_buf));
-	memcpy(&_send_buf[0], &L_packet, BUFSIZE);
-	int retval = send(s, _send_buf, BUFSIZE, 0);
-	if (retval == SOCKET_ERROR) {
-		err_display("send()");
-	}
 }
 
 void Recv_packet(SOCKET s)
