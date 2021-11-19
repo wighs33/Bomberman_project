@@ -97,10 +97,6 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map,const char* map_
 
 ////////////////////////////////////////////////////////////////////////////
 
-void InputID() {
-	char ID;
-}
-
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
 	AllocConsole();
@@ -253,11 +249,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		switch (LOWORD(wParam)) 
 		{
 		case IDC_BUTTON:
-			GetDlgItemText(hwnd, IDC_EDIT, str, 100);
+			GetDlgItemText(hwnd, IDC_EDIT, str, 10);
 			//hdc = GetDC(hwnd);
 			//TextOut(hdc, 0, 100, str, _tcslen(str));
 			//ReleaseDC(hwnd, hdc);
+			players[0].InputID(str);
 			cout << str << endl;
+			cout << players[0]._id << endl;
 			break;
 		}
 		break;

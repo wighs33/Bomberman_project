@@ -1,8 +1,10 @@
 #pragma once
+#include <tchar.h>
+
 class Player
 {
 public:
-	char _id;
+	char _id[10];
 	int _type;
 	int _x;		//left
 	int	_y;		//top
@@ -13,5 +15,7 @@ public:
 	int _level;
 	int _exp;
 	int _index;
+
+	void InputID(char str[]);
 };
 
