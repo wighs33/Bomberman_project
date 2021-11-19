@@ -22,6 +22,8 @@
 #define SERVERIP "127.0.0.1"
 #define SERVERPORT 4000
 #define BUFSIZE 256
+#define IDC_BUTTON 100
+#define IDC_EDIT 101
 
 //콘솔 출력용
 #include <iostream>
@@ -94,6 +96,10 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map,const char* map_
 
 
 ////////////////////////////////////////////////////////////////////////////
+
+void InputID() {
+	char ID;
+}
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
@@ -187,6 +193,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 	static bool pause{ 0 };
 
+	static HWND hButton, hEdit;
+	TCHAR str[100];
+
 
 	switch (iMessage) {
 	case WM_CREATE:
@@ -234,8 +243,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 		}
 
+		hButton = CreateWindow(_T("Button"), _T("확인"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 200, 0, 100, 25, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
+		hEdit = CreateWindow(_T("edit"), _T("에디팅"), WS_CHILD | WS_VISIBLE | WS_BORDER, 0, 0, 200, 25, hwnd, (HMENU)IDC_EDIT, g_hInst, NULL);
+
 		SetTimer(hwnd, 1, game_mil_sec, NULL);
 
+		break;
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) 
+		{
+		case IDC_BUTTON:
+			GetDlgItemText(hwnd, IDC_EDIT, str, 100);
+			//hdc = GetDC(hwnd);
+			//TextOut(hdc, 0, 100, str, _tcslen(str));
+			//ReleaseDC(hwnd, hdc);
+			cout << str << endl;
+			break;
+		}
 		break;
 
 	case WM_PAINT:
