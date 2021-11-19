@@ -44,6 +44,7 @@ uniform_int_distribution<> uid{ 1,100 };
 HANDLE hEvent;
 SOCKET sock;
 
+char send_buf[BUFSIZE];
 char recv_buf[BUFSIZE];
 
 
@@ -104,7 +105,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 	AllocConsole();
 	freopen("CONOUT$", "wt", stdout);
 
-	hEvent = CreateEvent(NULL, FALSE, TRUE, NULL);
+	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (hEvent == NULL) return 1;
 
 	//소켓 통신 스레드 생성
@@ -166,26 +167,17 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
 	serveraddr.sin_port = htons(SERVERPORT);
+
+	WaitForSingleObject(hEvent, INFINITE);
+
 	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("connect()");
 
+	cout << "아이디: " << players[0]._id << endl;
 
 	while (true)
 	{
-		WaitForSingleObject(hEvent, INFINITE);
-
-		//로그인 패킷 보내기 
-		char ID = 'a';
-
-		LOGIN_packet L_packet;
-		L_packet.size = sizeof(L_packet);
-		L_packet.type = PACKET_LOGIN;
-		L_packet.id = ID;
-
-		char _send_buf[BUFSIZE];
-		ZeroMemory(_send_buf, sizeof(_send_buf));
-		memcpy(&_send_buf[0], &L_packet, BUFSIZE);
-		int retval = send(sock, _send_buf, BUFSIZE, 0);
+		retval = send(sock, send_buf, BUFSIZE, 0);
 		if (retval == SOCKET_ERROR) {
 			err_display("send()");
 		}
@@ -194,6 +186,8 @@ DWORD WINAPI ClientMain(LPVOID arg)
 
 		//로그인 오케이 패킷 받기
 		process_packet(recv_buf);
+
+		WaitForSingleObject(hEvent, INFINITE);
 
 	}
 }
@@ -282,9 +276,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			//hdc = GetDC(hwnd);
 			//TextOut(hdc, 0, 100, str, _tcslen(str));
 			//ReleaseDC(hwnd, hdc);
-			players[0].InputID(str);
-			cout << str << endl;
-			cout << players[0]._id << endl;
+			players[0].InputID(send_buf, str[0], BUFSIZE);
+			SetEvent(hEvent);
 			break;
 		}
 		break;

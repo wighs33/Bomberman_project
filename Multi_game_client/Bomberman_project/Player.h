@@ -1,11 +1,12 @@
 #pragma once
+#include <windows.h>
 #include <tchar.h>
 #include "protocol.h"
 
 class Player
 {
 public:
-	char _id[10];
+	char _id;
 	int _type;
 	int _x;		//left
 	int	_y;		//top
@@ -17,6 +18,6 @@ public:
 	int _exp;
 	int _index;
 
-	void InputID(char str[]);
+	void InputID(char send_buf[], char id, int BUFSIZE);
 };
 
