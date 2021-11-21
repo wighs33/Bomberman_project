@@ -82,3 +82,8 @@ const int pl_speed{ 4 };
 const int bomb_speed{ 8 };
 
 const int game_mil_sec{ 30 };		//게임 프레임 시간간격 - 밀리초
+
+
+//에디트 박스 관련 상수들
+
+const int edit_box_max_size{ 40 };

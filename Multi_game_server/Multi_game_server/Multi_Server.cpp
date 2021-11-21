@@ -211,7 +211,7 @@ void process_packet(int client_index, char* p)
 
 		}
 
-		cout << "[수신 성공] " << cl._id  << " 로그인 요청" << endl;
+		cout << "[수신 성공] \'" << cl._id  << "\' 로그인 요청" << endl;
 		
 		break;
 	}

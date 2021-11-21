@@ -261,7 +261,7 @@ private:
   public:
     enum DuplicationPolicy { noDuplication = 0, duplicate, duplicateOnCopy };
     CZString(ArrayIndex index);
-    CZString(char const* str, unsigned length, DuplicationPolicy allocate);
+    CZString(char const* input_str, unsigned length, DuplicationPolicy allocate);
     CZString(CZString const& other);
     CZString(CZString&& other);
     ~CZString();
