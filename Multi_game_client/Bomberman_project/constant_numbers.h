@@ -4,8 +4,8 @@
 
 const int bg_img_w{ 884 };	//실제 배경 이미지 비트크기
 const int bg_img_h{ 571 };	//실제 배경 이미지 비트크기
-const int bg_w{ 1210 };		//화면상에 그릴 배경 크기
-const int bg_h{ 780 };		//화면상에 그릴 배경 크기
+//const int bg_w{ 1210 };		//화면상에 그릴 배경 크기
+//const int bg_h{ 780 };		//화면상에 그릴 배경 크기
 
 const int p_body_img_w_start{ 15 };		//실제 플레이어 몸통 이미지 시작비트 위치
 const int p_body_img_h_start{ 80 };		//실제 플레이어 몸통 이미지 시작비트 위치
@@ -51,8 +51,7 @@ const int backboard_w{ 200 };
 
 const int bb_char_img_size{ 30 };				//실제 한글짜 알파벳 & 숫자 이미지 비트크기
 
-const int bb_string_5_img_size_w{ 132 };		//실제 문자열 이미지 비트크기
-const int bb_string_4_img_size_w{ 103 };		//실제 문자열 이미지 비트크기
+const int bb_string_img_size_w{ 132 };		//실제 문자열 이미지 비트크기
 const int bb_string_img_size_h{ 27 };			//실제 문자열 이미지 비트크기
 
 //타일 관련 상수들

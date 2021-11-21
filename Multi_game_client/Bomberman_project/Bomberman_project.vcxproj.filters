@@ -127,6 +127,9 @@
     <Image Include="maps_bmp\play.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
+    <Image Include="maps_bmp\dead.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bomberman_project.cpp">

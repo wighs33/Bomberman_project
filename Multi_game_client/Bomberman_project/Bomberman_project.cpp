@@ -53,8 +53,8 @@ tileArr<int, tile_max_w_num, tile_max_h_num>	map_1;
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
 
 //플레이어
-template<typename T, size_t X>
-using playerArr = array<T, X>;
+template<typename T, size_t N>
+using playerArr = array<T, N>;
 
 playerArr<Player, 4>			players;
 
@@ -81,7 +81,8 @@ enum Object_type {
 ////////////////////////////////////////////////////////////////////////////
 //--- 사용자 정의 함수
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
+DWORD WINAPI ClientMain(LPVOID arg);
+LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
 int Check_Collision_bomb(Object source, Object target[]);
 int Check_Collision_player(Player source, Object target[]);
 void err_quit(const char* msg);
@@ -90,6 +91,8 @@ void Send_Login_packet(SOCKET s);
 void Recv_packet(SOCKET s);
 void process_packet(char* p);
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map,const char* map_path);
+void Display_Players_Info(HDC, HDC, int, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, 
+	HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP);
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -99,46 +102,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 	AllocConsole();
 	freopen("CONOUT$", "wt", stdout);
 
-
-	////////////////////////////////////////////////////////////////////////////
-
-	WSADATA wsa;
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-		return 1;
-
-	int retval;
-
-	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == INVALID_SOCKET) err_quit("socket()");
-
-	SOCKADDR_IN serveraddr;
-	ZeroMemory(&serveraddr, sizeof(serveraddr));
-	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
-	serveraddr.sin_port = htons(SERVERPORT);
-	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
-	if (retval == SOCKET_ERROR) err_quit("connect()");
-
-
-	//로그인 패킷 보내기 
-	Send_Login_packet(sock);
-	
-	
-	//Sleep(1000);
-	
-	
-	Recv_packet(sock);
-
-	//로그인 오케이 패킷 받기
-	process_packet(recv_buf);
-
+	//소켓 통신 스레드 생성
+	CreateThread(NULL, 0, ClientMain, NULL, 0, NULL);
 
 	//map 로드
 	Load_Map(map_1, "maps_json/map_1.json");
 	Load_Map(map_2, "maps_json/map_2.json");
-
-
-	////////////////////////////////////////////////////////////////////////////
 
 	HWND hwnd;
 	MSG Message;
@@ -171,14 +140,43 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 	return Message.wParam;
 }
 
+DWORD WINAPI ClientMain(LPVOID arg) 
+{
+	WSADATA wsa;
+	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+		return 1;
+
+	int retval;
+
+	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock == INVALID_SOCKET) err_quit("socket()");
+
+	SOCKADDR_IN serveraddr;
+	ZeroMemory(&serveraddr, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
+	serveraddr.sin_port = htons(SERVERPORT);
+	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
+	if (retval == SOCKET_ERROR) err_quit("connect()");
+
+
+	//로그인 패킷 보내기 
+	Send_Login_packet(sock);
+
+	Recv_packet(sock);
+
+	//로그인 오케이 패킷 받기
+	process_packet(recv_buf);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc;
 	PAINTSTRUCT ps;
 	HDC mem1dc, mem2dc;
-	static HBITMAP hBit_main, hBit_bg, hBit_block, hBit_player, hBit_bomb, hBit_rock, hBit_heart;
+	static HBITMAP hBit_main, hBit_bg, hBit_issac, hBit_magdalene, hBit_lazarus, hBit_samson, hBit_eve, hBit_block, hBit_bomb, hBit_rock, hBit_heart;
 	static HBITMAP hBit_item_more_heart, hBit_item_more_power, hBit_item_more_bomb;
-	static HBITMAP hBit_backboard, hBit_num_0, hBit_num_1, hBit_num_2, hBit_num_3, hBit_num_4, hBit_num_5, hBit_al_p, hBit_empty, hBit_idle, hBit_ready, hBit_play;
+	static HBITMAP hBit_backboard, hBit_num_0, hBit_num_1, hBit_num_2, hBit_num_3, hBit_num_4, hBit_num_5, hBit_al_p, hBit_empty, hBit_idle, hBit_ready, hBit_play, hBit_dead;
 	static HBITMAP oldBit1, oldBit2;
 
 	static Object block[nTiles];
@@ -199,8 +197,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		ReleaseDC(hwnd, hdc);
 
 		hBit_bg = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP1));
+
+		hBit_issac = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP3));
+		hBit_magdalene = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP6));
+		hBit_lazarus = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP7));
+		hBit_samson = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP8));
+		hBit_eve = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP9));
+
 		hBit_block = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP2));
-		hBit_player = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP3));
 		hBit_bomb = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP10));
 		hBit_rock = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP13));
 		hBit_heart = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP5));
@@ -221,6 +225,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		hBit_idle = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP25));
 		hBit_ready = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP26));
 		hBit_play = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP27));
+		hBit_dead = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP28));
 
 		//map 세팅
 		for (int i = 0; i < nTiles; ++i) {
@@ -285,26 +290,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					break;
 				}
 			}
-			break;
-
-		case VK_NUMPAD1:
-			hBit_player = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP3));
-			break;
-
-		case VK_NUMPAD2:
-			hBit_player = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP6));
-			break;
-
-		case VK_NUMPAD3:
-			hBit_player = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP7));
-			break;
-
-		case VK_NUMPAD4:
-			hBit_player = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP8));
-			break;
-
-		case VK_NUMPAD5:
-			hBit_player = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP9));
 			break;
 
 		case 'P':
@@ -456,48 +441,63 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			StretchBlt(mem1dc, bg_w, 0, backboard_w, bg_h, mem2dc, 0, 0, backboard_img_w, backboard_img_h, SRCCOPY);
 
-			//1p 정보
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_num_1);
-			TransparentBlt(mem1dc, bg_w + 10, 25, bb_char_img_size, bb_char_img_size, mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
+			//player 정보
+			for (int i = 0; i < /*1*/MAX_USER; ++i) {
+				if (players[i]._state != CON_NO_ACCEPT) {
+					HBITMAP hBit_num = NULL, hBit_character = NULL, hBit_state = NULL;
+					HBITMAP hBit_heart_num = NULL, hBit_more_bomb_num = NULL, hBit_more_power_num = NULL, hBit_rock_num = NULL;
 
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_al_p);
-			TransparentBlt(mem1dc, bg_w + 10 + bb_char_img_size, 25, bb_char_img_size, bb_char_img_size, mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
+					switch (i) {
+					case 0: hBit_character = hBit_issac; hBit_num = hBit_num_1; break;
+					case 1: hBit_character = hBit_magdalene; hBit_num = hBit_num_2; break;
+					case 2: hBit_character = hBit_lazarus; hBit_num = hBit_num_3; break;
+					case 3: hBit_character = hBit_samson; hBit_num = hBit_num_4; break;
+					case 4: hBit_character = hBit_eve; hBit_num = hBit_num_5; break;
+					}
+					switch (players[i]._state) {
+					case CON_ACCEPT: hBit_state = hBit_idle; break;
+					case CON_READY: hBit_state = hBit_ready; break;
+					case CON_PLAY: hBit_state = hBit_play; break;
+					case CON_DEAD: hBit_state = hBit_dead; break;
+					}
 
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_player);
-			TransparentBlt(mem1dc, bg_w + 10, 25 + bb_char_img_size, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
-				mem2dc, p_head_img_w_start, p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
-			
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_idle);
-			TransparentBlt(mem1dc, bg_w + 10 + p_size, 25 + bb_char_img_size + 25, bb_string_4_img_size_w, bb_string_img_size_h,
-				mem2dc, 0, 0, bb_string_4_img_size_w, bb_string_img_size_h, RGB(0, 0, 0));
+					switch (players[i]._heart) {
+					case 0: hBit_heart_num = hBit_num_0; break;
+					case 1: hBit_heart_num = hBit_num_1; break;
+					case 2: hBit_heart_num = hBit_num_2; break;
+					case 3: hBit_heart_num = hBit_num_3; break;
+					case 4: hBit_heart_num = hBit_num_4; break;
+					case 5: hBit_heart_num = hBit_num_5; break;
+					}
+					switch (players[i]._bomb_count) {
+					case 0: hBit_more_bomb_num = hBit_num_0; break;
+					case 1: hBit_more_bomb_num = hBit_num_1; break;
+					case 2: hBit_more_bomb_num = hBit_num_2; break;
+					case 3: hBit_more_bomb_num = hBit_num_3; break;
+					case 4: hBit_more_bomb_num = hBit_num_4; break;
+					case 5: hBit_more_bomb_num = hBit_num_5; break;
+					}
+					switch (players[i]._bomb_power) {
+					case 0: hBit_more_power_num = hBit_num_0; break;
+					case 1: hBit_more_power_num = hBit_num_1; break;
+					case 2: hBit_more_power_num = hBit_num_2; break;
+					case 3: hBit_more_power_num = hBit_num_3; break;
+					case 4: hBit_more_power_num = hBit_num_4; break;
+					case 5: hBit_more_power_num = hBit_num_5; break;
+					}
+					switch (players[i]._rock_count) {
+					case 0: hBit_rock_num = hBit_num_0; break;
+					case 1: hBit_rock_num = hBit_num_1; break;
+					case 2: hBit_rock_num = hBit_num_2; break;
+					case 3: hBit_rock_num = hBit_num_3; break;
+					case 4: hBit_rock_num = hBit_num_4; break;
+					case 5: hBit_rock_num = hBit_num_5; break;
+					}
 
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_heart);
-			TransparentBlt(mem1dc, bg_w + 5, 25 + bb_char_img_size + 25 * 3, heart_img_size_w / 8, heart_img_size_h / 8,
-				mem2dc, 0, 0, heart_img_size_w, heart_img_size_h, RGB(255, 255, 255));
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_num_3);
-			TransparentBlt(mem1dc, bg_w + 5, 25 + bb_char_img_size + 25 * 4 + 5, heart_img_size_w / 8, heart_img_size_h / 8,
-				mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
-
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_item_more_bomb);
-			TransparentBlt(mem1dc, bg_w + 5 + 25 * 2, 25 + bb_char_img_size + 25 * 3, heart_img_size_w / 7, heart_img_size_h / 7,
-				mem2dc, 0, 0, item_more_bomb_img_size_w, item_more_bomb_img_size_h, RGB(185, 122, 86));
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_num_2);
-			TransparentBlt(mem1dc, bg_w + 5 + 25 * 2, 25 + bb_char_img_size + 25 * 4 + 5, heart_img_size_w / 8, heart_img_size_h / 8,
-				mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
-
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_item_more_power);
-			TransparentBlt(mem1dc, bg_w + 5 + 25 * 4, 25 + bb_char_img_size + 25 * 3, heart_img_size_w / 7, heart_img_size_h / 7,
-				mem2dc, 0, 0, item_more_power_img_size, item_more_power_img_size, RGB(255, 0, 0));
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_num_1);
-			TransparentBlt(mem1dc, bg_w + 5 + 25 * 4 + 5, 25 + bb_char_img_size + 25 * 4 + 5, heart_img_size_w / 8, heart_img_size_h / 8,
-				mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
-
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_rock);
-			TransparentBlt(mem1dc, bg_w + 5 + 25 * 6, 25 + bb_char_img_size + 25 * 3, heart_img_size_w / 7, heart_img_size_h / 7,
-				mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_num_0);
-			TransparentBlt(mem1dc, bg_w + 5 + 25 * 6 + 5, 25 + bb_char_img_size + 25 * 4 + 5, heart_img_size_w / 8, heart_img_size_h / 8,
-				mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
+						Display_Players_Info(mem1dc, mem2dc, i, oldBit2, hBit_num, hBit_al_p, hBit_character, hBit_state,
+							hBit_heart, hBit_heart_num, hBit_item_more_bomb, hBit_more_bomb_num, hBit_item_more_power, hBit_more_power_num, hBit_rock, hBit_rock_num);
+				}
+			}
 
 
 			//블록
@@ -526,7 +526,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 
 			//플레이어
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_player);
+			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_issac);
 
 			//우 이동시
 			if (players[0]._dir == 1) {
@@ -636,6 +636,54 @@ int Check_Collision_player(Player source, Object target[])
 	return 0;
 }
 
+void Display_Players_Info(HDC mem1dc, HDC mem2dc, int player_num, HBITMAP old_bitmap, HBITMAP num_bitmap, HBITMAP al_p_bitmap, HBITMAP player_bitmap, HBITMAP state_bitmap,
+	HBITMAP heart_bitmap, HBITMAP h_num_bitmap, HBITMAP more_bomb_bitmap, HBITMAP mb_num_bitmap, HBITMAP more_power_bitmap, HBITMAP mp_num_bitmap, HBITMAP rock_bitmap, HBITMAP r_num_bitmap)
+{
+	int h_gap = 190;	// 플레이어 ui 간 간격
+
+	old_bitmap = (HBITMAP)SelectObject(mem2dc, num_bitmap);
+	TransparentBlt(mem1dc, bg_w + 10, 25 + h_gap * player_num, bb_char_img_size, bb_char_img_size, mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
+
+	old_bitmap = (HBITMAP)SelectObject(mem2dc, al_p_bitmap);
+	TransparentBlt(mem1dc, bg_w + 10 + bb_char_img_size, 25 + h_gap * player_num, bb_char_img_size, bb_char_img_size, mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
+
+	old_bitmap = (HBITMAP)SelectObject(mem2dc, player_bitmap);
+	TransparentBlt(mem1dc, bg_w + 10, 25 + bb_char_img_size + h_gap * player_num, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
+		mem2dc, p_head_img_w_start, p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
+
+	old_bitmap = (HBITMAP)SelectObject(mem2dc, state_bitmap);
+	TransparentBlt(mem1dc, bg_w + 10 + p_size - 5, 25 + bb_char_img_size + 20 + h_gap * player_num, bb_string_img_size_w, bb_string_img_size_h,
+		mem2dc, 0, 0, bb_string_img_size_w, bb_string_img_size_h, RGB(255, 255, 255));
+
+	old_bitmap = (HBITMAP)SelectObject(mem2dc, heart_bitmap);
+	TransparentBlt(mem1dc, bg_w + 5, 25 + bb_char_img_size + 25 * 2 + 5 + h_gap * player_num, heart_img_size_w / 8, heart_img_size_h / 8,
+		mem2dc, 0, 0, heart_img_size_w, heart_img_size_h, RGB(255, 255, 255));
+	old_bitmap = (HBITMAP)SelectObject(mem2dc, h_num_bitmap);
+	TransparentBlt(mem1dc, bg_w + 5, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * player_num, heart_img_size_w / 8, heart_img_size_h / 8,
+		mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
+
+	old_bitmap = (HBITMAP)SelectObject(mem2dc, more_bomb_bitmap);
+	TransparentBlt(mem1dc, bg_w + 5 + 25 * 2, 25 + bb_char_img_size + 25 * 2 + 5 + h_gap * player_num, heart_img_size_w / 7, heart_img_size_h / 7,
+		mem2dc, 0, 0, item_more_bomb_img_size_w, item_more_bomb_img_size_h, RGB(185, 122, 86));
+	old_bitmap = (HBITMAP)SelectObject(mem2dc, mb_num_bitmap);
+	TransparentBlt(mem1dc, bg_w + 5 + 25 * 2, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * player_num, heart_img_size_w / 8, heart_img_size_h / 8,
+		mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
+
+	old_bitmap = (HBITMAP)SelectObject(mem2dc, more_power_bitmap);
+	TransparentBlt(mem1dc, bg_w + 5 + 25 * 4, 25 + bb_char_img_size + 25 * 2 + 5 + h_gap * player_num, heart_img_size_w / 7, heart_img_size_h / 7,
+		mem2dc, 0, 0, item_more_power_img_size, item_more_power_img_size, RGB(255, 0, 0));
+	old_bitmap = (HBITMAP)SelectObject(mem2dc, mp_num_bitmap);
+	TransparentBlt(mem1dc, bg_w + 5 + 25 * 4 + 5, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * player_num, heart_img_size_w / 8, heart_img_size_h / 8,
+		mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
+
+	old_bitmap = (HBITMAP)SelectObject(mem2dc, rock_bitmap);
+	TransparentBlt(mem1dc, bg_w + 5 + 25 * 6, 25 + bb_char_img_size + 25 * 2 + 5 + h_gap * player_num, heart_img_size_w / 7, heart_img_size_h / 7,
+		mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
+	old_bitmap = (HBITMAP)SelectObject(mem2dc, r_num_bitmap);
+	TransparentBlt(mem1dc, bg_w + 5 + 25 * 6 + 5, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * player_num, heart_img_size_w / 8, heart_img_size_h / 8,
+		mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
+}
+
 void err_quit(const char* msg)
 {
 	LPVOID lpMsgBuf;
@@ -664,12 +712,12 @@ void err_display(const char* msg)
 //로그인 요청 함수
 void Send_Login_packet(SOCKET s)
 {
-	char ID = 'a';
+	char ID[] = "a";
 
 	LOGIN_packet L_packet;
 	L_packet.size = sizeof(L_packet);
 	L_packet.type = PACKET_LOGIN;
-	L_packet.id = ID;
+	strcpy(L_packet.id, ID);
 
 	char _send_buf[BUFSIZE];
 	ZeroMemory(_send_buf, sizeof(_send_buf));
@@ -742,11 +790,21 @@ void process_packet(char* p)
 
 	case PACKET_LOGIN_OK: {
 		LOGIN_OK_packet* packet = reinterpret_cast<LOGIN_OK_packet*>(p);
-		cout << "[수신 성공] 로그인 확인" << endl;
 
-		players[0]._x = packet->x;
-		players[0]._y = packet->y;
-		players[0]._dir = 0;
+		int index = packet->index;
+
+		//cout << "[수신 성공] " << players[index]._id << " 로그인 확인" << endl;
+
+		players[index]._state = CON_ACCEPT;
+		players[index]._x = packet->x;
+		players[index]._y = packet->y;
+		players[index]._dir = 0;
+		players[index]._heart = 3;
+		players[index]._bomb_count = 2;
+		players[index]._bomb_power = 1;
+		players[index]._rock_count = 0;
+		players[index]._level = packet->level;
+		players[index]._exp = packet->exp;
 
 		break;
 	}

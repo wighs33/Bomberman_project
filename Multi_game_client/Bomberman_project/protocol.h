@@ -1,15 +1,20 @@
 #pragma once
 
 const short SERVER_PORT = 4000;
-//const int	WORLD_HEIGHT = 16;
-//const int	WORLD_WIDTH = 16;
+
+
+const int bg_w{ 1210 };		//화면상에 그릴 배경 크기
+const int bg_h{ 780 };		//화면상에 그릴 배경 크기
+
+const int	WORLD_HEIGHT = (bg_w - 10) / 65;
+const int	WORLD_WIDTH = (bg_h - 10) / 65;
 
 const int  MAX_NAME_SIZE = 20;
 const int  MAX_MAP_SIZE = 256;
-const int  MAX_ITEM_SIZE = 256;
+const int  MAX_ITEM_SIZE = 12;
+const int BUFSIZE = 256;
 
-
-const int  MAX_USER = 10;
+const int  MAX_USER = 4;
 
 enum Packet_Type {
 	PACKET_LOGIN,
@@ -23,7 +28,8 @@ enum Packet_Type {
 	PACKET_INIT_OBJECT,
 	PACKET_INIT_BOMB,
 	PACKET_DELETE_OBJECT,
-	PACKET_CHANGE_HEART
+	PACKET_DELETE_ITEM,
+	PACKET_CHANGE_BUF
 };
 
 
@@ -40,13 +46,14 @@ enum Player_Condition {
 struct LOGIN_packet { // 로그인 요청 패킷
 	char size; // 패킷 사이즈
 	char type; // 패킷 타입 0
-	char id; // 플레이어 아이디
+	char id[BUFSIZE]; // 플레이어 아이디
 };
 
 struct LOGIN_OK_packet {// 로그인 허락 패킷
 	char size; // 패킷 사이즈
 	char type; // 패킷 타입 1
 	int x, y; // 플레이어 좌표
+	int index; // 플레이어의 인덱스
 	int level; // 플레이어 레벨
 	int exp; // 플레이어 경험치
 	char map[MAX_MAP_SIZE]; // 맵 정보
@@ -55,15 +62,16 @@ struct LOGIN_OK_packet {// 로그인 허락 패킷
 struct INIT_PLAYER_packet { // 플레이어 생성 패킷
 	char size; // 패킷 사이즈
 	char type; // 패킷 타입 2	
-	char id; // 플레이어 아이디
+	char id[BUFSIZE]; // 플레이어 아이디
 	int x, y; // 플레이어 좌표
 	int condition; // 플레이어 상태
+	int index; // 플레이어의 인덱스
 };
 
 struct PLAYER_CONDITION_packet { // 플레이어 상태 패킷
 	char size; // 패킷 사이즈
 	char type; // 패킷 타입 3
-	int id; // 플레이어 아이디
+	char id[BUFSIZE]; // 플레이어 아이디
 	int x, y; // 플레이어 좌표
 	int condition; // 플레이어 상태
 };
@@ -71,27 +79,27 @@ struct PLAYER_CONDITION_packet { // 플레이어 상태 패킷
 struct PLAYER_BUF_packet {// 플레이어 버프 패킷
 	char size; // 패킷 사이즈
 	char type; // 패킷 타입 4
-	int id; // 플레이어 아이디
+	char id[BUFSIZE]; // 플레이어 아이디
 	int power; // 폭탄 위력
 };
 
 struct GET_ITEM_packet {// 아이템 획득 요청 피킷
 	char size; // 패킷 사이즈
 	char type; // 패킷 타입 5
-	int id; // 플레이어 아이디
+	int item_type; // 아이템 타입
 	int item_index; // 아이템 인덱스
 };
 
 struct MOVE_PLAYER_packet { // 플레이어 이동 패킷
 	char size; // 패킷 사이즈
 	char type; // 패킷 타입 6
-	int id; // 플레이어 아이디
+	char id[BUFSIZE]; // 플레이어 아이디
 	int dir; // 이동 방향
 };
 struct MOVE_OK_packet { // 플레이어 이동 확인 패킷
 	char size; // 패킷 사이즈
 	char type; // 패킷 타입 7
-	int id; // 플레이어 아이디
+	char id[BUFSIZE]; // 플레이어 아이디
 	int x, y; // 플레이어 좌표
 };
 
@@ -117,10 +125,19 @@ struct DELETE_OBJECT_packet { // 오브젝트 제거 패킷
 	int index; // 오브젝트 인덱스 번호
 };
 
-struct CHANGE_HEART_packet { // 플레이어 체력 변경 정보 패킷
+struct DELETE_ITEM_packet { // 오브젝트 제거 패킷
+	char size; // 패킷 사이즈
+	char type; // 패킷 타입 10
+	int index; // 아이템 인덱스 번호
+};
+
+
+struct CHANGE_BUF_packet { // 플레이어 버프 변경 정보 패킷
 	char size; // 패킷 사이즈
 	char type; // 패킷 사이즈//11
-	int id;// 플레이어 아이디
-	bool hp_decrease; // "0-체력 변화X"
+	int _power; // 폭탄 위력
+	int _bomb_count; // 폭탄개수
+	int _block_count;
+	int _heart; // 목숨
 };
 #pragma pack(pop)

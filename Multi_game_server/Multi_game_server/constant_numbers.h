@@ -4,8 +4,8 @@
 
 const int bg_img_w{ 884 };	//실제 배경 이미지 비트크기
 const int bg_img_h{ 571 };	//실제 배경 이미지 비트크기
-const int bg_w{ 1210 };		//화면상에 그릴 배경 크기
-const int bg_h{ 780 };		//화면상에 그릴 배경 크기
+//const int bg_w{ 1210 };		//화면상에 그릴 배경 크기
+//const int bg_h{ 780 };		//화면상에 그릴 배경 크기
 
 const int p_body_img_w_start{ 15 };		//실제 플레이어 몸통 이미지 시작비트 위치
 const int p_body_img_h_start{ 80 };		//실제 플레이어 몸통 이미지 시작비트 위치
