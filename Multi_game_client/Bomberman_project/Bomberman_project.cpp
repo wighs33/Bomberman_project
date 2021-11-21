@@ -95,6 +95,7 @@ int Check_Collision_bomb(Object source, Object target[]);
 int Check_Collision_player(Player source, Object target[]);
 void err_quit(const char* msg);
 void err_display(const char* msg);
+void Send_packet(SOCKET s);
 void Recv_packet(SOCKET s);
 void process_packet(char* p);
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map,const char* map_path);
@@ -177,11 +178,7 @@ DWORD WINAPI ClientMain(LPVOID arg)
 
 	while (true)
 	{
-		retval = send(sock, send_buf, BUFSIZE, 0);
-		if (retval == SOCKET_ERROR) {
-			err_display("send()");
-		}
-
+		Send_packet(sock);
 		Recv_packet(sock);
 
 		//로그인 오케이 패킷 받기
@@ -705,6 +702,14 @@ void err_display(const char* msg)
 		(LPTSTR)&lpMsgBuf, 0, NULL);
 	cout << msg << (char*)lpMsgBuf << endl;
 	LocalFree(lpMsgBuf);
+}
+
+void Send_packet(SOCKET s)
+{
+	retval = send(sock, send_buf, BUFSIZE, 0);
+	if (retval == SOCKET_ERROR) {
+		err_display("send()");
+	}
 }
 
 void Recv_packet(SOCKET s)
