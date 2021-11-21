@@ -1,10 +1,8 @@
 #pragma once
-  
+#include "constant_numbers.h"
+
 const short SERVER_PORT = 4000;
 
-
-const int bg_w{ 1210 };		//화면상에 그릴 배경 크기
-const int bg_h{ 780 };		//화면상에 그릴 배경 크기
 
 const int	WORLD_HEIGHT = (bg_w-10) / 65;
 const int	WORLD_WIDTH = (bg_h - 10) / 65;

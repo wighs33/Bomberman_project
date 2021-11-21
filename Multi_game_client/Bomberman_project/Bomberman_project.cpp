@@ -162,11 +162,10 @@ DWORD WINAPI ClientMain(LPVOID arg)
 
 	//로그인 패킷 보내기 
 	Send_Login_packet(sock);
-
-	Recv_packet(sock);
-
 	//로그인 오케이 패킷 받기
+	Recv_packet(sock);
 	process_packet(recv_buf);
+
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
