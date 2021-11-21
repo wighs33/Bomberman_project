@@ -277,6 +277,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			//TextOut(hdc, 0, 100, str, _tcslen(str));
 			//ReleaseDC(hwnd, hdc);
 			players[0].InputID(send_buf, str[0], BUFSIZE);
+			DestroyWindow(hButton);
+			DestroyWindow(hEdit);
 			SetEvent(hEvent);
 			break;
 		}
