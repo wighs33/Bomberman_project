@@ -89,17 +89,27 @@ public:
 		
 	}
 };
+class Session_DB {
 
+public:
+	char _id[BUFSIZE] = " "; // 플레이어 아이디
+	int _level;
+	int _exp;
+	Session_DB(istream& is)
+	{
+		is.read((char*)this, sizeof(Session));
+	}
+};
 const int MAX_Player = 4;
 array<Session, MAX_Player> clients;
 
-vector<Session> clients_DB;
+vector<Session_DB> clients_DB;
 char g_id_buf[BUFSIZE]=" ";
 
 void get_status(int client_index, char* id)
 {
 	strcpy_s(g_id_buf, id);
-	auto b_n = find_if(clients_DB.cbegin(), clients_DB.cend(), [](const Session &a) {
+	auto b_n = find_if(clients_DB.cbegin(), clients_DB.cend(), [](const Session_DB &a) {
 		return strcmp(a._id, g_id_buf);
 		});
 	
@@ -184,7 +194,7 @@ void process_packet(int client_index, char* p)
 			
 			INIT_PLAYER_packet IN_Player;
 			strcpy_s(IN_Player.id, other._id);
-			IN_Player.size = sizeof(IN_Player);
+			IN_Player.size = sizeof(INIT_PLAYER_packet);
 			IN_Player.type = PACKET_INIT_PLAYER;
 			IN_Player.x = other._x;
 			IN_Player.y = other._y;
@@ -193,7 +203,7 @@ void process_packet(int client_index, char* p)
 
 			INIT_PLAYER_packet IN_Other;
 			strcpy_s(IN_Other.id, cl._id);
-			IN_Other.size = sizeof(IN_Other);
+			IN_Other.size = sizeof(INIT_PLAYER_packet);
 			IN_Other.type = PACKET_INIT_PLAYER;
 			IN_Other.x = cl._x;
 			IN_Other.y = cl._y;
@@ -406,10 +416,10 @@ int main(int argc, char* argv[])
 {
 	clients_DB.reserve(MAX_USER);
 
-	ifstream in("플레이어 정보", ios::binary);
+	ifstream in("플레이어_정보.txt", ios::binary);
 		
 	for (int i = 0; i < MAX_USER -1 ; ++i) {                                           //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
-		clients_DB.push_back(Session(in));                                            //임시객체를 인자로 받아올 때 emplace 사용하면 바보
+		clients_DB.push_back(Session_DB(in));                                            //임시객체를 인자로 받아올 때 emplace 사용하면 바보
 	}
 
 	for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                                           //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
