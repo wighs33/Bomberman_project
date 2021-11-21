@@ -44,6 +44,8 @@ uniform_int_distribution<> uid{ 1,100 };
 HANDLE hEvent;
 SOCKET sock;
 
+int retval;
+
 char send_buf[BUFSIZE];
 char recv_buf[BUFSIZE];
 
@@ -156,8 +158,6 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 		return 1;
-
-	int retval;
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == INVALID_SOCKET) err_quit("socket()");
@@ -276,7 +276,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			//hdc = GetDC(hwnd);
 			//TextOut(hdc, 0, 100, str, _tcslen(str));
 			//ReleaseDC(hwnd, hdc);
-			players[0].InputID(send_buf, str[0], BUFSIZE);
+			players[0].InputID(send_buf, str, BUFSIZE);
 			DestroyWindow(hButton);
 			DestroyWindow(hEdit);
 			SetEvent(hEvent);
@@ -543,7 +543,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 
 			//블록
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_block);
+			if (retval)
+				oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_block);
 
 			for (int i = 0; i < nTiles; ++i) {
 				if (block[i].health > 0)
@@ -551,7 +552,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 
 			//돌
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_rock);
+			if (retval)
+				oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_rock);
 
 			for (int i = 0; i < nTiles; ++i) {
 				if (rock[i].health > 0)
@@ -559,7 +561,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 
 			//폭탄
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
+			if (retval)
+				oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
 
 			for (int i = 0; i < bomb_num; ++i) {
 				if (bomb[i].dir != 0) {
@@ -568,7 +571,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 
 			//플레이어
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_player);
+			if (retval)
+				oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_player);
 
 			//우 이동시
 			if (players[0]._dir == 1) {
