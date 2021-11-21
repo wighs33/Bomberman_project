@@ -22,6 +22,8 @@
 #define SERVERIP "127.0.0.1"
 #define SERVERPORT 4000
 #define BUFSIZE 256
+#define IDC_BUTTON 100
+#define IDC_EDIT 101
 
 //콘솔 출력용
 #include <iostream>
@@ -39,6 +41,10 @@ random_device rd;
 default_random_engine dre{ rd() };
 uniform_int_distribution<> uid{ 1,100 };
 
+HANDLE hEvent;
+SOCKET sock;
+
+char send_buf[BUFSIZE];
 char recv_buf[BUFSIZE];
 
 
@@ -87,7 +93,6 @@ int Check_Collision_bomb(Object source, Object target[]);
 int Check_Collision_player(Player source, Object target[]);
 void err_quit(const char* msg);
 void err_display(const char* msg);
-void Send_Login_packet(SOCKET s);
 void Recv_packet(SOCKET s);
 void process_packet(char* p);
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map,const char* map_path);
@@ -99,6 +104,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 {
 	AllocConsole();
 	freopen("CONOUT$", "wt", stdout);
+
+	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (hEvent == NULL) return 1;
 
 	//소켓 통신 스레드 생성
 	CreateThread(NULL, 0, ClientMain, NULL, 0, NULL);
@@ -135,6 +143,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 		TranslateMessage(&Message);
 		DispatchMessage(&Message);
 	}
+
+	CloseHandle(hEvent);
+	closesocket(sock);
+	WSACleanup();
+
 	return Message.wParam;
 }
 
@@ -146,7 +159,7 @@ DWORD WINAPI ClientMain(LPVOID arg)
 
 	int retval;
 
-	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == INVALID_SOCKET) err_quit("socket()");
 
 	SOCKADDR_IN serveraddr;
@@ -154,17 +167,29 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
 	serveraddr.sin_port = htons(SERVERPORT);
+
+	WaitForSingleObject(hEvent, INFINITE);
+
 	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("connect()");
 
+	cout << "아이디: " << players[0]._id << endl;
 
-	//로그인 패킷 보내기 
-	Send_Login_packet(sock);
+	while (true)
+	{
+		retval = send(sock, send_buf, BUFSIZE, 0);
+		if (retval == SOCKET_ERROR) {
+			err_display("send()");
+		}
 
-	Recv_packet(sock);
+		Recv_packet(sock);
 
-	//로그인 오케이 패킷 받기
-	process_packet(recv_buf);
+		//로그인 오케이 패킷 받기
+		process_packet(recv_buf);
+
+		WaitForSingleObject(hEvent, INFINITE);
+
+	}
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
@@ -186,6 +211,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	static int p_body_idx{ 0 };
 
 	static bool pause{ 0 };
+
+	static HWND hButton, hEdit;
+	TCHAR str[10];
 
 
 	switch (iMessage) {
@@ -234,8 +262,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 		}
 
+		hButton = CreateWindow(_T("Button"), _T("확인"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 200, 0, 100, 25, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
+		hEdit = CreateWindow(_T("edit"), _T("에디팅"), WS_CHILD | WS_VISIBLE | WS_BORDER, 0, 0, 200, 25, hwnd, (HMENU)IDC_EDIT, g_hInst, NULL);
+
 		SetTimer(hwnd, 1, game_mil_sec, NULL);
 
+		break;
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) 
+		{
+		case IDC_BUTTON:
+			GetDlgItemText(hwnd, IDC_EDIT, str, 10);
+			//hdc = GetDC(hwnd);
+			//TextOut(hdc, 0, 100, str, _tcslen(str));
+			//ReleaseDC(hwnd, hdc);
+			players[0].InputID(send_buf, str[0], BUFSIZE);
+			DestroyWindow(hButton);
+			DestroyWindow(hEdit);
+			SetEvent(hEvent);
+			break;
+		}
 		break;
 
 	case WM_PAINT:
@@ -655,25 +701,6 @@ void err_display(const char* msg)
 		(LPTSTR)&lpMsgBuf, 0, NULL);
 	cout << msg << (char*)lpMsgBuf << endl;
 	LocalFree(lpMsgBuf);
-}
-
-//로그인 요청 함수
-void Send_Login_packet(SOCKET s)
-{
-	char ID = 'a';
-
-	LOGIN_packet L_packet;
-	L_packet.size = sizeof(L_packet);
-	L_packet.type = PACKET_LOGIN;
-	L_packet.id = ID;
-
-	char _send_buf[BUFSIZE];
-	ZeroMemory(_send_buf, sizeof(_send_buf));
-	memcpy(&_send_buf[0], &L_packet, BUFSIZE);
-	int retval = send(s, _send_buf, BUFSIZE, 0);
-	if (retval == SOCKET_ERROR) {
-		err_display("send()");
-	}
 }
 
 void Recv_packet(SOCKET s)
