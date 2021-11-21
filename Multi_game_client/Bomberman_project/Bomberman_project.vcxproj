@@ -160,6 +160,7 @@
     <Image Include="maps_bmp\al_p.bmp" />
     <Image Include="maps_bmp\backboard.bmp" />
     <Image Include="maps_bmp\background_opened.bmp" />
+    <Image Include="maps_bmp\dead.bmp" />
     <Image Include="maps_bmp\empty.bmp" />
     <Image Include="maps_bmp\idle.bmp" />
     <Image Include="maps_bmp\num_0.bmp" />

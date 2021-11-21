@@ -49,18 +49,18 @@ public:
 	int _x, _y; // ÇÃ·¹ÀÌ¾î ÁÂÇ¥
 	int _level;
 	int _exp;
-	int _type; // Á¢¼Ó, ·¹µð, °ÔÀÓ Áß, »ç¸Á
-	int _power; // ÆøÅº À§·Â
-	int _bomb_count; // ÆøÅº°³¼ö
-	int _block_count;
+	int _state; // Á¢¼Ó, ·¹µð, °ÔÀÓ Áß, »ç¸Á
 	int _heart; // ¸ñ¼û
+	int _bomb_count; // ÆøÅº°³¼ö
+	int _power; // ÆøÅº À§·Â
+	int _rock_count;
 	bool in_use;
 
 	Session()
 	{
 
 		_prev_size = 0;
-		_type = CON_ACCEPT;
+		_state = CON_ACCEPT;
 		in_use = false;
 	}
 
@@ -68,7 +68,7 @@ public:
 	{
 		is.read((char*)this, sizeof(Session));
 		_prev_size = 0;
-		_type = CON_ACCEPT;
+		_state = CON_ACCEPT;
 		in_use = false;
 	}
 	~Session()
@@ -118,16 +118,16 @@ void get_status(int client_index, char* id)
 	clients[client_index]._power = 1;
 	clients[client_index]._heart = 3;
 	clients[client_index]._bomb_count = 2;
-	clients[client_index]._block_count = 0;
-	clients[client_index]._type = CON_ACCEPT;
+	clients[client_index]._rock_count = 0;
+	clients[client_index]._state = CON_ACCEPT;
 }
 
 bool get_ready(int client_index)
 {
-	clients[client_index]._type = CON_READY;
+	clients[client_index]._state = CON_READY;
 	for (auto& cl : clients)
 	{
-		if (cl._type != CON_READY)
+		if (cl._state != CON_READY)
 			return false;
 	}
 	return true;
@@ -145,25 +145,21 @@ void process_packet(int client_index, char* p)
 	case 0:
 		cl._x = outer_wall_start + tile_size + 10;
 		cl._y = outer_wall_start + tile_size + 10;
-
 		break;
 
 	case 1:
 		cl._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 12;
 		cl._y = outer_wall_start + tile_size + 10;
-
 		break;
 
 	case 2:
 		cl._x = outer_wall_start + tile_size + 10;
 		cl._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
-
 		break;
 
 	case 3:
 		cl._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 12;
 		cl._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
-
 		break;
 	}
 
@@ -186,11 +182,12 @@ void process_packet(int client_index, char* p)
 				L_packet.x = cl._x;
 				L_packet.y = cl._y;
 				L_packet.level = cl._level;
+				L_packet.index = cl._index;
 				L_packet.exp = cl._exp;
 				cl.do_send(sizeof(L_packet), &L_packet);
 				continue;
 			};
-			if ( CON_NO_ACCEPT == other._type) continue;
+			if ( CON_NO_ACCEPT == other._state) continue;
 			
 			INIT_PLAYER_packet IN_Player;
 			strcpy_s(IN_Player.id, other._id);
@@ -198,7 +195,8 @@ void process_packet(int client_index, char* p)
 			IN_Player.type = PACKET_INIT_PLAYER;
 			IN_Player.x = other._x;
 			IN_Player.y = other._y;
-			IN_Player.condition = other._type;
+			IN_Player.condition = other._state;
+			IN_Player.index = other._index;
 			cl.do_send(sizeof(IN_Player), &IN_Player);
 
 			INIT_PLAYER_packet IN_Other;
@@ -207,12 +205,13 @@ void process_packet(int client_index, char* p)
 			IN_Other.type = PACKET_INIT_PLAYER;
 			IN_Other.x = cl._x;
 			IN_Other.y = cl._y;
-			IN_Other.condition = cl._type;
+			IN_Other.condition = cl._state;
+			IN_Player.index = cl._index;
 			other.do_send(sizeof(IN_Other), &IN_Other);
 
 		}
 
-		cout << "[¼ö½Å ¼º°ø] ·Î±×ÀÎ ¿äÃ»" << endl;
+		cout << "[¼ö½Å ¼º°ø] " << cl._id  << " ·Î±×ÀÎ ¿äÃ»" << endl;
 		
 		break;
 	}
@@ -271,7 +270,7 @@ void process_packet(int client_index, char* p)
 			case 0: cl._power++; break; // ÆøÅº ¼¼±â
 			case 1:  cl._heart++; break; // ÇÏÆ®
 			case 2: cl._bomb_count++; break; //ÆøÅº °³¼ö
-			case 3: cl._block_count; break; //ºí·Ï °³¼ö
+			case 3: cl._rock_count; break; //ºí·Ï °³¼ö
 			default:
 				cout << "Invalid item in client " << cl._id << endl;
 				exit(-1);
@@ -282,7 +281,7 @@ void process_packet(int client_index, char* p)
 			Buf_Player._heart = cl._heart;
 			Buf_Player._power = cl._power;
 			Buf_Player._bomb_count = cl._bomb_count;
-			Buf_Player._block_count = cl._block_count;
+			Buf_Player._rock_count = cl._rock_count;
 			cl.do_send(sizeof(Buf_Player), &Buf_Player);
 		}
 		else {

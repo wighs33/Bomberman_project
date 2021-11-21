@@ -51,8 +51,7 @@ const int backboard_w{ 200 };
 
 const int bb_char_img_size{ 30 };				//실제 한글짜 알파벳 & 숫자 이미지 비트크기
 
-const int bb_string_5_img_size_w{ 132 };		//실제 문자열 이미지 비트크기
-const int bb_string_4_img_size_w{ 103 };		//실제 문자열 이미지 비트크기
+const int bb_string_img_size_w{ 132 };		//실제 문자열 이미지 비트크기
 const int bb_string_img_size_h{ 27 };			//실제 문자열 이미지 비트크기
 
 //타일 관련 상수들

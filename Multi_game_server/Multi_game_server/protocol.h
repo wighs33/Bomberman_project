@@ -53,6 +53,7 @@ struct LOGIN_OK_packet {// 로그인 허락 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 1
 	int x, y; // 플레이어 좌표
+	int index; // 플레이어의 인덱스
 	int level; // 플레이어 레벨
 	int exp; // 플레이어 경험치
 	char map[MAX_MAP_SIZE]; // 맵 정보
@@ -64,6 +65,7 @@ struct INIT_PLAYER_packet { // 플레이어 생성 패킷
 	char id[BUFSIZE]; // 플레이어 아이디
 	int x, y; // 플레이어 좌표
 	int condition; // 플레이어 상태
+	int index; // 플레이어의 인덱스
 };
 
 struct PLAYER_CONDITION_packet { // 플레이어 상태 패킷
@@ -135,7 +137,7 @@ struct CHANGE_BUF_packet { // 플레이어 버프 변경 정보 패킷
 	char type; // 패킷 사이즈//11
 	int _power; // 폭탄 위력
 	int _bomb_count; // 폭탄개수
-	int _block_count;
+	int _rock_count;
 	int _heart; // 목숨
 };
 #pragma pack(pop)
