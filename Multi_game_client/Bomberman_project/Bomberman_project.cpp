@@ -51,6 +51,7 @@ char recv_buf[BUFSIZE];
 
 TCHAR input_str[edit_box_max_size];
 
+int my_index;	//현재 클라이언트의 플레이어 배열에서 인덱스
 
 ////////////////////////////////////////////////////////////////////////////
 //--- 컨테이너
@@ -173,11 +174,10 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
 	serveraddr.sin_port = htons(SERVERPORT);
 
-	WaitForSingleObject(hEvent, INFINITE);
-
 	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("connect()");
 
+	WaitForSingleObject(hEvent, INFINITE);
 
 	while (true)
 	{
@@ -850,14 +850,38 @@ void Process_packet(char* p)
 	case PACKET_LOGIN_OK: {
 		LOGIN_OK_packet* packet = reinterpret_cast<LOGIN_OK_packet*>(p);
 
+		my_index = packet->index;
+
+		strcpy(players[my_index]._id, input_str);
+
+		cout << "[수신 성공] \'" << players[my_index]._id << "\' 로그인 확인" << endl;
+		cout << "나의 index: " << packet->index << endl;
+
+		players[my_index]._state = CON_ACCEPT;
+		players[my_index]._x = packet->x;
+		players[my_index]._y = packet->y;
+		players[my_index]._dir = 0;
+		players[my_index]._heart = 3;
+		players[my_index]._bomb_count = 2;
+		players[my_index]._bomb_power = 1;
+		players[my_index]._rock_count = 0;
+		players[my_index]._level = packet->level;
+		players[my_index]._exp = packet->exp;
+
+		break;
+	}
+
+	case PACKET_INIT_PLAYER: {
+		INIT_PLAYER_packet* packet = reinterpret_cast<INIT_PLAYER_packet*>(p);
+
 		int index = packet->index;
 
-		players[index].InputID(send_buf, input_str, edit_box_max_size);
+		strcpy(players[index]._id, packet->id);
 
 		cout << "[수신 성공] \'" << players[index]._id << "\' 로그인 확인" << endl;
-		cout << "packet->index: " << packet->index << endl;
+		cout << "타 플레이어의 index: " << packet->index << endl;
 
-		players[index]._state = CON_ACCEPT;
+		players[index]._state = packet->state;
 		players[index]._x = packet->x;
 		players[index]._y = packet->y;
 		players[index]._dir = 0;
@@ -868,10 +892,6 @@ void Process_packet(char* p)
 		players[index]._level = packet->level;
 		players[index]._exp = packet->exp;
 
-		break;
-	}
-	case PACKET_INIT_PLAYER: {
-		INIT_PLAYER_packet* packet = reinterpret_cast<INIT_PLAYER_packet*>(p);
 		break;
 	}
 

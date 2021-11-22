@@ -175,6 +175,7 @@ void process_packet(int client_index, char* p)
 		get_status(client_index, cl._id);
 
 		for (auto& other : clients) {
+			// 플레이어가 로그인 요청
 			if (other._index == client_index) { 
 				LOGIN_OK_packet L_packet;
 				L_packet.type = PACKET_LOGIN_OK;
@@ -189,29 +190,36 @@ void process_packet(int client_index, char* p)
 			};
 			if ( CON_NO_ACCEPT == other._state) continue;
 			
+			// 현재 접속한 플레이어에게 이미 접속해 있는 타 플레이어들의 정보 전송
 			INIT_PLAYER_packet IN_Player;
 			strcpy_s(IN_Player.id, other._id);
 			IN_Player.size = sizeof(INIT_PLAYER_packet);
 			IN_Player.type = PACKET_INIT_PLAYER;
 			IN_Player.x = other._x;
 			IN_Player.y = other._y;
-			IN_Player.condition = other._state;
+			IN_Player.state = other._state;
 			IN_Player.index = other._index;
+			IN_Player.level = other._level;
+			IN_Player.exp = other._exp;
 			cl.do_send(sizeof(IN_Player), &IN_Player);
 
+			// 이미 접속해 있는 플레이어들에게 현재 접속한 플레이어의 정보 전송
 			INIT_PLAYER_packet IN_Other;
 			strcpy_s(IN_Other.id, cl._id);
 			IN_Other.size = sizeof(INIT_PLAYER_packet);
 			IN_Other.type = PACKET_INIT_PLAYER;
 			IN_Other.x = cl._x;
 			IN_Other.y = cl._y;
-			IN_Other.condition = cl._state;
+			IN_Other.state = cl._state;
 			IN_Player.index = cl._index;
+			IN_Player.level = cl._level;
+			IN_Player.exp = cl._exp;
 			other.do_send(sizeof(IN_Other), &IN_Other);
 
 		}
 
 		cout << "[수신 성공] \'" << cl._id  << "\' 로그인 요청" << endl;
+		cout << "index: " << client_index << endl;
 		
 		break;
 	}
@@ -307,7 +315,7 @@ void process_packet(int client_index, char* p)
 	}
 	case PACKET_CONDITION: {
 		PLAYER_CONDITION_packet* packet = reinterpret_cast<PLAYER_CONDITION_packet*>(p);
-		switch (packet->condition) {
+		switch (packet->state) {
 		case CON_READY: {
 			bool g_start = get_ready(cl._index); 
 			if (g_start == true) {
@@ -320,7 +328,7 @@ void process_packet(int client_index, char* p)
 						strcpy_s(con_packet.id, pl._id);
 						con_packet.x = pl._x;
 						con_packet.y = pl._y;
-						con_packet.condition = CON_PLAY;
+						con_packet.state = CON_PLAY;
 						pl.do_send(sizeof(con_packet), &con_packet);
 					}
 				}
