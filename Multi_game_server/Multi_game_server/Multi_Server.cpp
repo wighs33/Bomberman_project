@@ -249,7 +249,7 @@ void process_packet(int client_index, char* p)
 			cout << "id: " << IN_Other.id << endl;*/
 		}
 
-		cout << "[수신 성공] \'" << cl._id << "\' 로그인 요청" << endl;
+		cout << "[수신 성공] \'" << cl._id << "\' (" << client_index + 1 << " 번째 플레이어) 로그인 요청" << endl;
 		//cout << "index: " << client_index << endl;
 
 		break;

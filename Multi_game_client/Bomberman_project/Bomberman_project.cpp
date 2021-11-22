@@ -238,6 +238,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		hBit_main = CreateCompatibleBitmap(hdc, bg_w + backboard_w, bg_h);
 		ReleaseDC(hwnd, hdc);
 
+		//폰트 설정
+		hFont = CreateFont(15, 10, 0, 0, FW_HEAVY, FALSE, FALSE, FALSE, HANGEUL_CHARSET,
+			3, 2, 1, VARIABLE_PITCH | FF_ROMAN, "굴림체");
+
 		hBit_bg = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP1));
 
 		hBit_issac = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP3));
@@ -499,9 +503,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			oldBit1 = (HBITMAP)SelectObject(mem1dc, hBit_main);
 
 			//폰트
-			hFont = CreateFont(15, 10, 0, 0, FW_HEAVY, FALSE, FALSE, FALSE, HANGEUL_CHARSET,
-				3, 2, 1, VARIABLE_PITCH | FF_ROMAN, "굴림체");
-		
 			oldFont = (HFONT)SelectObject(mem1dc, hFont);
 
 			SetBkMode(mem1dc, TRANSPARENT);		//폰트 배경 투명 설정
@@ -680,9 +681,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			SelectObject(mem1dc, oldBit1);
 			DeleteDC(mem1dc);
 
-			SelectObject(mem1dc, oldFont);
-			DeleteObject(hFont);
-
 			ReleaseDC(hwnd, hdc);
 
 			InvalidateRect(hwnd, NULL, false);
@@ -692,6 +690,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 	case WM_DESTROY:
 		KillTimer(hwnd, 1);
+		SelectObject(mem1dc, oldFont);
+		DeleteObject(hFont);
 		PostQuitMessage(0);
 
 		break;
