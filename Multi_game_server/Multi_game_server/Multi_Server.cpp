@@ -60,17 +60,12 @@ public:
 	{
 
 		_prev_size = 0;
-		_state = CON_ACCEPT;
+		_state = CON_NO_ACCEPT;
+		_index = -1;
 		in_use = false;
 	}
 
-	Session(istream& is)
-	{
-		is.read((char*)this, sizeof(Session));
-		_prev_size = 0;
-		_state = CON_ACCEPT;
-		in_use = false;
-	}
+
 	~Session()
 	{
 	}
@@ -176,7 +171,8 @@ void process_packet(int client_index, char* p)
 
 		for (auto& other : clients) {
 			// 플레이어가 로그인 요청
-			if (other._index == client_index) { 
+			if (other._index == client_index) {
+				cout << client_index << endl;
 				LOGIN_OK_packet L_packet;
 				L_packet.type = PACKET_LOGIN_OK;
 				L_packet.size = sizeof(packet);
