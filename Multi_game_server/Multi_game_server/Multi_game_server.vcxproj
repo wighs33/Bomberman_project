@@ -140,10 +140,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Multi_Server.cpp" />
+    <ClCompile Include="Session.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="constant_numbers.h" />
     <ClInclude Include="protocol.h" />
+    <ClInclude Include="Session.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

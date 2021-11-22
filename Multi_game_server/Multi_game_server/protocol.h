@@ -60,12 +60,12 @@ struct LOGIN_OK_packet {// 로그인 허락 패킷
 struct INIT_PLAYER_packet { // 플레이어 생성 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 2	
-	char id[BUFSIZE]; // 플레이어 아이디
 	int x, y; // 플레이어 좌표
 	int state; // 플레이어 상태
 	int index; // 플레이어의 인덱스
 	int level; // 플레이어 레벨
 	int exp; // 플레이어 경험치
+	char id[BUFSIZE]; // 플레이어 아이디
 };
 
 struct PLAYER_CONDITION_packet { // 플레이어 상태 패킷
