@@ -242,7 +242,6 @@ void process_packet(int client_index, char* p)
 		for (auto& other : clients) {
 			// 플레이어가 로그인 요청
 			if (other._index == client_index) {
-				cout << client_index << endl;
 				LOGIN_OK_packet L_packet;
 				L_packet.type = PACKET_LOGIN_OK;
 				L_packet.size = sizeof(packet);
