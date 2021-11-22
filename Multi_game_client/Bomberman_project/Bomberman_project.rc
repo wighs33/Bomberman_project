@@ -70,7 +70,7 @@ IDB_BITMAP10            BITMAP                  "objects_bmp\\bomb.bmp"
 
 IDB_BITMAP11            BITMAP                  "objects_bmp\\more_power.bmp"
 
-IDB_BITMAP12            BITMAP                  "C:\\Users\\seung\\Desktop\\네트워크 게임 프로그래밍\\팀 프로젝트\\공동 작업 git\\Multi_game_client\\Bomberman_project\\objects_bmp\\more_bomb.bmp"
+IDB_BITMAP12            BITMAP                  "objects_bmp\\more_bomb.bmp"
 
 IDB_BITMAP13            BITMAP                  "objects_bmp\\rock1.bmp"
 
@@ -78,7 +78,7 @@ IDB_BITMAP14            BITMAP                  "maps_bmp\\backboard.bmp"
 
 IDB_BITMAP5             BITMAP                  "objects_bmp\\heart_1.bmp"
 
-IDB_BITMAP15            BITMAP                  "C:\\Users\\seung\\Desktop\\네트워크 게임 프로그래밍\\팀 프로젝트\\공동 작업 git\\Multi_game_client\\Bomberman_project\\objects_bmp\\heart_2.bmp"
+IDB_BITMAP15            BITMAP                  "objects_bmp\\heart_2.bmp"
 
 IDB_BITMAP16            BITMAP                  "objects_bmp\\more_bomb.bmp"
 
@@ -94,7 +94,7 @@ IDB_BITMAP21            BITMAP                  "maps_bmp\\num_4.bmp"
 
 IDB_BITMAP22            BITMAP                  "maps_bmp\\num_5.bmp"
 
-IDB_BITMAP23            BITMAP                  "C:\\Users\\seung\\Desktop\\네트워크 게임 프로그래밍\\팀 프로젝트\\공동 작업 git\\Multi_game_client\\Bomberman_project\\maps_bmp\\al_p.bmp"
+IDB_BITMAP23            BITMAP                  "maps_bmp\\al_p.bmp"
 
 IDB_BITMAP24            BITMAP                  "maps_bmp\\empty.bmp"
 
