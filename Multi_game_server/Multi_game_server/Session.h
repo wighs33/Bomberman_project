@@ -26,6 +26,7 @@ public:
 		_state = CON_ACCEPT;
 		in_use = false;
 	}
+
 	~Session()
 	{
 	}
@@ -54,6 +55,7 @@ public:
 		memcpy(&_send_buf[0], mess, BUFSIZE);
 		send(_cl, _send_buf, BUFSIZE, 0);
 	};
+
 	void do_recv()  //recv_buf 객체 당 하나씩 배정되며, 호출 시 메모리 초기화를 통해 재활용 한다.
 	{
 		ZeroMemory(_recv_buf, sizeof(_recv_buf));

@@ -109,70 +109,6 @@ void err_quit(const char* msg)
 	exit(1);
 }
 
-//플레이어 관리
-class Session {
-
-public:
-	SOCKET _cl; //클라이언트 연결 소켓
-	char _recv_buf[BUFSIZE]; // 리시브 버퍼
-	int	  _prev_size;
-	char _id[BUFSIZE] = " "; // 플레이어 아이디
-	int _index; 
-	int _x, _y; // 플레이어 좌표
-	int _level;
-	int _exp;
-	int _state; // 접속, 레디, 게임 중, 사망
-	int _heart; // 목숨
-	int _bomb_count; // 폭탄개수
-	int _power; // 폭탄 위력
-	int _rock_count;
-	bool in_use;
-
-	Session()
-	{
-
-		_prev_size = 0;
-		_state = CON_NO_ACCEPT;
-		_index = -1;
-		in_use = false;
-	}
-
-
-	~Session()
-	{
-	}
-
-	void do_send(int num_bytes, void* mess)//send 작업은 여러 번 일어나야 하므로 함수 호출 시 새로운 send_buf를 동적 할당 하여 사용 후 작업 완료 시 메모리 해제를 실시 한다. 
-	{
-		char _send_buf[BUFSIZE];
-		ZeroMemory(_send_buf, sizeof(_send_buf));
-		memcpy(&_send_buf[0], mess, BUFSIZE);
-		send(_cl, _send_buf, BUFSIZE, 0);
-	};
-	void do_recv()  //recv_buf 객체 당 하나씩 배정되며, 호출 시 메모리 초기화를 통해 재활용 한다.
-	{
-		ZeroMemory(_recv_buf, sizeof(_recv_buf));
-        recv(_cl, _recv_buf, BUFSIZE, 0);
-		
-	}
-};
-class Session_DB {
-
-public:
-	char _id[BUFSIZE] = " "; // 플레이어 아이디
-	int _level;
-	int _exp;
-	Session_DB(istream& is)
-	{
-		is.read((char*)this, sizeof(Session));
-	}
-};
-const int MAX_Player = 4;
-array<Session, MAX_Player> clients;
-
-vector<Session_DB> clients_DB;
-char g_id_buf[BUFSIZE]=" ";
-
 void get_status(int client_index, char* id)
 {
 	strcpy_s(g_id_buf, id);
@@ -252,14 +188,14 @@ void process_packet(int client_index, char* p)
 				L_packet.exp = cl._exp;
 				cl.do_send(sizeof(L_packet), &L_packet);
 
-				cout << "L_packet" << endl;
+			/*	cout << "L_packet" << endl;
 				cout << "사이즈: " << (int)L_packet.size << endl;
 				cout << "타입: " << (int)L_packet.type << endl;
 				cout << "x: " << L_packet.x << endl;
 				cout << "y: " << L_packet.y << endl;
 				cout << "index: " << L_packet.index << endl;
 				cout << "level: " << L_packet.level << endl;
-				cout << "exp: " << L_packet.exp << endl;
+				cout << "exp: " << L_packet.exp << endl;*/
 				continue;
 			};
 			if (CON_NO_ACCEPT == other._state) continue;
@@ -277,7 +213,7 @@ void process_packet(int client_index, char* p)
 			IN_Player.exp = other._exp;
 			cl.do_send(sizeof(IN_Player), &IN_Player);
 
-			cout << "IN_Player" << endl;
+	/*		cout << "IN_Player" << endl;
 			cout << "사이즈: " << (int)IN_Player.size << endl;
 			cout << "타입: " << (int)IN_Player.type << endl;
 			cout << "x: " << IN_Player.x << endl;
@@ -286,7 +222,7 @@ void process_packet(int client_index, char* p)
 			cout << "index: " << IN_Player.index << endl;
 			cout << "level: " << IN_Player.level << endl;
 			cout << "exp: " << IN_Player.exp << endl;
-			cout << "id: " << IN_Player.id << endl;
+			cout << "id: " << IN_Player.id << endl;*/
 
 			// 이미 접속해 있는 플레이어들에게 현재 접속한 플레이어의 정보 전송
 			INIT_PLAYER_packet IN_Other;
@@ -301,7 +237,7 @@ void process_packet(int client_index, char* p)
 			IN_Other.exp = cl._exp;
 			other.do_send(sizeof(IN_Other), &IN_Other);
 
-			cout << "IN_Other" << endl;
+	/*		cout << "IN_Other" << endl;
 			cout << "사이즈: " << (int)IN_Other.size << endl;
 			cout << "타입: " << (int)IN_Other.type << endl;
 			cout << "x: " << IN_Other.x << endl;
@@ -310,11 +246,11 @@ void process_packet(int client_index, char* p)
 			cout << "index: " << IN_Other.index << endl;
 			cout << "level: " << IN_Other.level << endl;
 			cout << "exp: " << IN_Other.exp << endl;
-			cout << "id: " << IN_Other.id << endl;
+			cout << "id: " << IN_Other.id << endl;*/
 		}
 
 		cout << "[수신 성공] \'" << cl._id << "\' 로그인 요청" << endl;
-		cout << "index: " << client_index << endl;
+		//cout << "index: " << client_index << endl;
 
 		break;
 	}

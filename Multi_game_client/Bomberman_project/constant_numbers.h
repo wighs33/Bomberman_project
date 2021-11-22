@@ -86,4 +86,8 @@ const int game_mil_sec{ 30 };		//게임 프레임 시간간격 - 밀리초
 
 //에디트 박스 관련 상수들
 
-const int edit_box_max_size{ 40 };
+const int edit_box_max_size{ 40 };	//에디트 박스 최대크기
+
+//ui 관련 상수들
+
+const int h_gap = 190;				// 플레이어 ui 간 간격

@@ -108,12 +108,15 @@ void Display_Players_Info(HDC, HDC, int, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBI
 
 
 ////////////////////////////////////////////////////////////////////////////
+// --- 메인, 쓰래드, 메세지 프로시저 함수
 
+//윈도우 메인 (윈도우 클래스, 메세지 프로시저, 쓰레드함수 생성)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
 	AllocConsole();
 	freopen("CONOUT$", "wt", stdout);
 
+	//자동 리셋 이벤트 생성 (비신호 시작)
 	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (hEvent == NULL) return 1;
 
@@ -160,6 +163,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 	return Message.wParam;
 }
 
+//게임 플로우 쓰레드 (송신 역활 & 수신용 쓰래드 생성)
 DWORD WINAPI ClientMain(LPVOID arg) 
 {
 	WSADATA wsa;
@@ -175,49 +179,35 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
 	serveraddr.sin_port = htons(SERVERPORT);
 
+	//아이디 입력 대기
 	WaitForSingleObject(hEvent, INFINITE);
 
 	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("connect()");
 
+	//수신용 쓰레드 생성
 	CreateThread(NULL, 0, RecvThread, (LPVOID)sock, 0, NULL);
 
 	while (true)
 	{
-		cout << "send" << endl;
-		cout << players[my_index]._state << endl;
-		cout << players[my_index]._x << endl;
-		cout << players[my_index]._y << endl;
-		cout << players[my_index]._dir << endl;
-		cout << players[my_index]._bomb_count << endl;
-		cout << players[my_index]._bomb_power << endl;
-		cout << players[my_index]._rock_count << endl;
-		cout << players[my_index]._level << endl;
-		cout << players[my_index]._exp << endl;
-		cout << endl;
-
-		//서버에 패킷 전송
 		Send_packet(sock);
-		//서버에서 패킷 수신
-		//Recv_packet(sock);
-		//받은 패킷 판별
-		//Process_packet(recv_buf);
 
 		WaitForSingleObject(hEvent, INFINITE);
 	}
 }
 
+//수신용 쓰레드
 DWORD WINAPI RecvThread(LPVOID arg)
 {
 	while (true)
 	{
-		//서버에서 패킷 수신
 		Recv_packet(sock);
-		//받은 패킷 판별
+		
 		Process_packet(recv_buf);
 	}
 }
 
+//윈도우 메세지 프로시저
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc;
@@ -227,6 +217,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	static HBITMAP hBit_item_more_heart, hBit_item_more_power, hBit_item_more_bomb;
 	static HBITMAP hBit_backboard, hBit_num_0, hBit_num_1, hBit_num_2, hBit_num_3, hBit_num_4, hBit_num_5, hBit_al_p, hBit_empty, hBit_idle, hBit_ready, hBit_play, hBit_dead;
 	static HBITMAP oldBit1, oldBit2;
+	static HFONT hFont, oldFont;
 
 	static Object block[nTiles];
 	static Object rock[nTiles];
@@ -307,9 +298,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			GetDlgItemText(hwnd, IDC_EDIT, input_str, edit_box_max_size);
 
 			if (strcmp((char*)input_str, "-------- PLEASE INPUT ID --------")) {
-				//hdc = GetDC(hwnd);
-				//TextOut(hdc, 0, 100, str, _tcslen(str));
-				//ReleaseDC(hwnd, hdc);
 				Player temp_send_id;
 				temp_send_id.InputID(send_buf, input_str, edit_box_max_size);
 				DestroyWindow(hButton);
@@ -344,28 +332,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		switch (wParam) {
 		case VK_RIGHT:
-			players[0]._dir = 1;
+			players[my_index]._dir = 1;
 			break;
 
 		case VK_LEFT:
-			players[0]._dir = 2;
+			players[my_index]._dir = 2;
 			break;
 
 		case VK_UP:
-			players[0]._dir = 4;
+			players[my_index]._dir = 4;
 			break;
 
 		case VK_DOWN:
-			players[0]._dir = 3;
+			players[my_index]._dir = 3;
 			break;
 
 		case VK_SPACE:
 			//폭탄 생성
 			for (int i = 0; i < bomb_num; ++i) {
 				if (bomb[i].dir == 0) {
-					bomb[i].dir = players[0]._dir;
-					bomb[i].left = players[0]._x - 10;
-					bomb[i].top = players[0]._y - p_size / 3;
+					bomb[i].dir = players[my_index]._dir;
+					bomb[i].left = players[my_index]._x - 10;
+					bomb[i].top = players[my_index]._y - p_size / 3;
 					break;
 				}
 			}
@@ -412,45 +400,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			//--- 움직임
 			//플레이어
-			switch (players[0]._dir) {
+			switch (players[my_index]._dir) {
 			case 1:
-				players[0]._x += pl_speed;
+				players[my_index]._x += pl_speed;
 
-				if (Check_Collision_player(players[0], block) || Check_Collision_player(players[0], rock))
-					players[0]._x -= pl_speed;
+				if (Check_Collision_player(players[my_index], block) || Check_Collision_player(players[my_index], rock))
+					players[my_index]._x -= pl_speed;
 				break;
 
 			case 2:
-				players[0]._x -= pl_speed;
+				players[my_index]._x -= pl_speed;
 
-				if (Check_Collision_player(players[0], block) || Check_Collision_player(players[0], rock))
-					players[0]._x += pl_speed;
+				if (Check_Collision_player(players[my_index], block) || Check_Collision_player(players[my_index], rock))
+					players[my_index]._x += pl_speed;
 				break;
 
 			case 3:
-				players[0]._y += pl_speed;
+				players[my_index]._y += pl_speed;
 
-				if (Check_Collision_player(players[0], block) || Check_Collision_player(players[0], rock))
-					players[0]._y -= pl_speed;
+				if (Check_Collision_player(players[my_index], block) || Check_Collision_player(players[my_index], rock))
+					players[my_index]._y -= pl_speed;
 				break;
 
 			case 4:
-				players[0]._y -= pl_speed;
+				players[my_index]._y -= pl_speed;
 
-				if (Check_Collision_player(players[0], block) || Check_Collision_player(players[0], rock))
-					players[0]._y += pl_speed;
+				if (Check_Collision_player(players[my_index], block) || Check_Collision_player(players[my_index], rock))
+					players[my_index]._y += pl_speed;
 				break;
 			}
 
 			//플레이어 - 외벽과 충돌체크
-			if (players[0]._x >= bg_w - outer_wall_start - p_size / 3)
-				players[0]._x -= pl_speed;
-			if (players[0]._x <= outer_wall_start - p_size / 3)
-				players[0]._x += pl_speed;
-			if (players[0]._y  >= bg_h - outer_wall_start - p_size / 3)
-				players[0]._y  -= pl_speed;
-			if (players[0]._y  <= outer_wall_start - p_size / 3)
-				players[0]._y  += pl_speed;
+			if (players[my_index]._x >= bg_w - outer_wall_start - p_size / 3)
+				players[my_index]._x -= pl_speed;
+			if (players[my_index]._x <= outer_wall_start - p_size / 3)
+				players[my_index]._x += pl_speed;
+			if (players[my_index]._y  >= bg_h - outer_wall_start - p_size / 3)
+				players[my_index]._y  -= pl_speed;
+			if (players[my_index]._y  <= outer_wall_start - p_size / 3)
+				players[my_index]._y  += pl_speed;
 
 			//폭탄
 			for (int i = 0; i < bomb_num; ++i) {
@@ -507,7 +495,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			mem2dc = CreateCompatibleDC(mem1dc);
 
+			//실제 그림이 그려지는 DC (화면)
 			oldBit1 = (HBITMAP)SelectObject(mem1dc, hBit_main);
+
+			//폰트
+			hFont = CreateFont(15, 10, 0, 0, FW_HEAVY, FALSE, FALSE, FALSE, HANGEUL_CHARSET,
+				3, 2, 1, VARIABLE_PITCH | FF_ROMAN, "굴림체");
+		
+			oldFont = (HFONT)SelectObject(mem1dc, hFont);
+
+			SetBkMode(mem1dc, TRANSPARENT);		//폰트 배경 투명 설정
 			
 			//배경
 			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bg);
@@ -519,7 +516,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			StretchBlt(mem1dc, bg_w, 0, backboard_w, bg_h, mem2dc, 0, 0, backboard_img_w, backboard_img_h, SRCCOPY);
 
-			//player 정보
+			//player 정보 (ui)
 			for (int i = 0; i < MAX_USER; ++i) {
 				if (players[i]._state != CON_NO_ACCEPT) {
 					HBITMAP hBit_num = NULL, hBit_character = NULL, hBit_state = NULL;
@@ -572,8 +569,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					case 5: hBit_rock_num = hBit_num_5; break;
 					}
 
-						Display_Players_Info(mem1dc, mem2dc, i, oldBit2, hBit_num, hBit_al_p, hBit_character, hBit_state,
-							hBit_heart, hBit_heart_num, hBit_item_more_bomb, hBit_more_bomb_num, hBit_item_more_power, hBit_more_power_num, hBit_rock, hBit_rock_num);
+					Display_Players_Info(mem1dc, mem2dc, i, oldBit2, hBit_num, hBit_al_p, hBit_character, hBit_state,
+						hBit_heart, hBit_heart_num, hBit_item_more_bomb, hBit_more_bomb_num, hBit_item_more_power, hBit_more_power_num, hBit_rock, hBit_rock_num);
+
+					TextOut(mem1dc, bg_w + 10 + bb_char_img_size + 40, 25 + h_gap * i, "ID: ", _tcslen("ID: "));
+					TextOut(mem1dc, bg_w + 10 + bb_char_img_size + 75, 25 + h_gap * i, players[i]._id, _tcslen(players[i]._id));
+																				
+					TextOut(mem1dc, bg_w + 10 + bb_char_img_size + 40, 25 + h_gap * i + 25, "LV: ", _tcslen("LV: "));
+					char str_level[3];											
+					itoa(players[i]._level, str_level, 10);					
+					TextOut(mem1dc, bg_w + 10 + bb_char_img_size + 75, 25 + h_gap * i + 25, str_level, _tcslen(str_level));
 				}
 			}
 
@@ -675,6 +680,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			SelectObject(mem1dc, oldBit1);
 			DeleteDC(mem1dc);
 
+			SelectObject(mem1dc, oldFont);
+			DeleteObject(hFont);
+
 			ReleaseDC(hwnd, hdc);
 
 			InvalidateRect(hwnd, NULL, false);
@@ -735,8 +743,6 @@ int Check_Collision_player(Player source, Object target[])
 void Display_Players_Info(HDC mem1dc, HDC mem2dc, int player_num, HBITMAP old_bitmap, HBITMAP num_bitmap, HBITMAP al_p_bitmap, HBITMAP player_bitmap, HBITMAP state_bitmap,
 	HBITMAP heart_bitmap, HBITMAP h_num_bitmap, HBITMAP more_bomb_bitmap, HBITMAP mb_num_bitmap, HBITMAP more_power_bitmap, HBITMAP mp_num_bitmap, HBITMAP rock_bitmap, HBITMAP r_num_bitmap)
 {
-	int h_gap = 190;	// 플레이어 ui 간 간격
-
 	old_bitmap = (HBITMAP)SelectObject(mem2dc, num_bitmap);
 	TransparentBlt(mem1dc, bg_w + 10, 25 + h_gap * player_num, bb_char_img_size, bb_char_img_size, mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
 
@@ -805,6 +811,7 @@ void err_display(const char* msg)
 	LocalFree(lpMsgBuf);
 }
 
+//서버에 패킷 전송
 void Send_packet(SOCKET s)
 {
 	retval = send(sock, send_buf, BUFSIZE, 0);
@@ -813,6 +820,7 @@ void Send_packet(SOCKET s)
 	}
 }
 
+//서버에서 패킷 수신
 void Recv_packet(SOCKET s)
 {
 	ZeroMemory(recv_buf, sizeof(recv_buf));
@@ -867,6 +875,7 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map, const char* map
 	json_map.close();
 }
 
+//수신한 패킷 판별 함수
 void Process_packet(char* p)
 {
 	char packet_type = p[1];
@@ -880,15 +889,15 @@ void Process_packet(char* p)
 
 		strcpy_s(players[my_index]._id, input_str);
 
-		cout << "[수신 성공] \'" << players[my_index]._id << "\' 로그인 확인" << endl;
+		cout << "[수신 성공] \'" << players[my_index]._id << "\' (자기자신) 로그인 확인" << endl;
 
-		cout << "사이즈: " << (int)packet->size << endl;
+		/*cout << "사이즈: " << (int)packet->size << endl;
 		cout << "타입: " << (int)packet->type << endl;
 		cout << "x: " << packet->x << endl;
 		cout << "y: " << packet->y << endl;
 		cout << "index: " << packet->index << endl;
 		cout << "level: " << packet->level << endl;
-		cout << "exp: " << packet->exp << endl;
+		cout << "exp: " << packet->exp << endl;*/
 
 		players[my_index]._state = CON_ACCEPT;
 		players[my_index]._x = packet->x;
@@ -913,9 +922,9 @@ void Process_packet(char* p)
 
 		strcpy_s(players[index]._id, packet->id);
 
-		//cout << "[수신 성공] \'" << players[index]._id << "\' 로그인 확인" << endl;
+		cout << "[수신 성공] \'" << players[index]._id << "\' (타 플레이어) 로그인 확인" << endl;
 
-		cout << "사이즈: " << (int)packet->size << endl;
+		/*cout << "사이즈: " << (int)packet->size << endl;
 		cout << "타입: " << (int)packet->type << endl;
 		cout << "x: " << packet->x << endl;
 		cout << "y: " << packet->y << endl;
@@ -923,7 +932,7 @@ void Process_packet(char* p)
 		cout << "index: " << packet->index << endl;
 		cout << "level: " << packet->level << endl;
 		cout << "exp: " << packet->exp << endl;
-		cout << "id: " << packet->id << endl;
+		cout << "id: " << packet->id << endl;*/
 
 		players[index]._state = packet->state;
 		players[index]._x = packet->x;
