@@ -908,7 +908,8 @@ void Process_packet(char* p)
 		INIT_PLAYER_packet* packet = reinterpret_cast<INIT_PLAYER_packet*>(p);
 
 		int index = packet->index;
-		if (index != 0) break;
+
+		if (players[index]._state == CON_ACCEPT) break;
 
 		strcpy_s(players[index]._id, packet->id);
 
