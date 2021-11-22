@@ -14,7 +14,8 @@ public:
 	Session()
 	{
 		_prev_size = 0;
-		_state = CON_ACCEPT;
+		_state = CON_NO_ACCEPT;
+		_index = -1;
 		in_use = false;
 	}
 
