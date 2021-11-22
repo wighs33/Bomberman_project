@@ -6,7 +6,7 @@
 class Player
 {
 public:
-	char _id[BUFSIZE];
+	char _id[BUFSIZE] = " ";
 	int _state;
 	int _x;		//left
 	int	_y;		//top

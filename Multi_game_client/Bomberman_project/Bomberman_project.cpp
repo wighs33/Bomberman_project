@@ -93,6 +93,7 @@ enum Object_type {
 //--- 사용자 정의 함수
 
 DWORD WINAPI ClientMain(LPVOID arg);
+DWORD WINAPI RecvThread(LPVOID arg);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
 int Check_Collision_bomb(Object source, Object target[]);
 int Check_Collision_player(Player source, Object target[]);
@@ -174,21 +175,46 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
 	serveraddr.sin_port = htons(SERVERPORT);
 
+	WaitForSingleObject(hEvent, INFINITE);
+
 	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("connect()");
 
-	WaitForSingleObject(hEvent, INFINITE);
+	CreateThread(NULL, 0, RecvThread, (LPVOID)sock, 0, NULL);
 
 	while (true)
 	{
+		cout << "send" << endl;
+		cout << players[my_index]._state << endl;
+		cout << players[my_index]._x << endl;
+		cout << players[my_index]._y << endl;
+		cout << players[my_index]._dir << endl;
+		cout << players[my_index]._bomb_count << endl;
+		cout << players[my_index]._bomb_power << endl;
+		cout << players[my_index]._rock_count << endl;
+		cout << players[my_index]._level << endl;
+		cout << players[my_index]._exp << endl;
+		cout << endl;
+
 		//서버에 패킷 전송
 		Send_packet(sock);
+		//서버에서 패킷 수신
+		//Recv_packet(sock);
+		//받은 패킷 판별
+		//Process_packet(recv_buf);
+
+		WaitForSingleObject(hEvent, INFINITE);
+	}
+}
+
+DWORD WINAPI RecvThread(LPVOID arg)
+{
+	while (true)
+	{
 		//서버에서 패킷 수신
 		Recv_packet(sock);
 		//받은 패킷 판별
 		Process_packet(recv_buf);
-
-		WaitForSingleObject(hEvent, INFINITE);
 	}
 }
 
@@ -852,10 +878,17 @@ void Process_packet(char* p)
 
 		my_index = packet->index;
 
-		strcpy(players[my_index]._id, input_str);
+		strcpy_s(players[my_index]._id, input_str);
 
 		cout << "[수신 성공] \'" << players[my_index]._id << "\' 로그인 확인" << endl;
-		cout << "나의 index: " << packet->index << endl;
+
+		cout << "사이즈: " << (int)packet->size << endl;
+		cout << "타입: " << (int)packet->type << endl;
+		cout << "x: " << packet->x << endl;
+		cout << "y: " << packet->y << endl;
+		cout << "index: " << packet->index << endl;
+		cout << "level: " << packet->level << endl;
+		cout << "exp: " << packet->exp << endl;
 
 		players[my_index]._state = CON_ACCEPT;
 		players[my_index]._x = packet->x;
@@ -875,11 +908,21 @@ void Process_packet(char* p)
 		INIT_PLAYER_packet* packet = reinterpret_cast<INIT_PLAYER_packet*>(p);
 
 		int index = packet->index;
+		if (index != 0) break;
 
-		strcpy(players[index]._id, packet->id);
+		strcpy_s(players[index]._id, packet->id);
 
-		cout << "[수신 성공] \'" << players[index]._id << "\' 로그인 확인" << endl;
-		cout << "타 플레이어의 index: " << packet->index << endl;
+		//cout << "[수신 성공] \'" << players[index]._id << "\' 로그인 확인" << endl;
+
+		cout << "사이즈: " << (int)packet->size << endl;
+		cout << "타입: " << (int)packet->type << endl;
+		cout << "x: " << packet->x << endl;
+		cout << "y: " << packet->y << endl;
+		cout << "state: " << packet->state << endl;
+		cout << "index: " << packet->index << endl;
+		cout << "level: " << packet->level << endl;
+		cout << "exp: " << packet->exp << endl;
+		cout << "id: " << packet->id << endl;
 
 		players[index]._state = packet->state;
 		players[index]._x = packet->x;
