@@ -4,14 +4,14 @@
 const short SERVER_PORT = 4000;
 
 
-const int	WORLD_HEIGHT = (bg_w-10) / 65;
-const int	WORLD_WIDTH = (bg_h - 10) / 65;
+const int	WORLD_HEIGHT = (bg_w-10) / 60;
+const int	WORLD_WIDTH = (bg_h - 10) / 60;
 
 const int  MAX_NAME_SIZE = 20;
 const int  MAX_MAP_SIZE = 256;
 const int  MAX_ITEM_SIZE = 12;
 const int BUFSIZE = 256;
-
+  
 const int  MAX_USER = 4;
 
 enum Packet_Type{

@@ -1,6 +1,6 @@
 #pragma once
 
-//스프라이트 관련 상수들
+//스프라이트 관련 상수들 
 
 const int bg_img_w{ 884 };	//실제 배경 이미지 비트크기
 const int bg_img_h{ 571 };	//실제 배경 이미지 비트크기
