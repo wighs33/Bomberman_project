@@ -9,7 +9,7 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
-#include "protocol.h"
+#include "protocol.h" 
 #include "constant_numbers.h"
 #include "Session.h"
 
@@ -108,6 +108,8 @@ void err_quit(const char* msg)
 	LocalFree(lpMsgBuf);
 	exit(1);
 }
+
+
 
 void get_status(int client_index, char* id)
 {

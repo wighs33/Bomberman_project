@@ -10,7 +10,7 @@ using namespace std;
 //플레이어 관리
 class Session 
 {
-public:
+public: 
 	Session()
 	{
 		_prev_size = 0;
