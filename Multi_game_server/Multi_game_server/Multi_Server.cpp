@@ -32,7 +32,7 @@ char g_id_buf[BUFSIZE]=" ";
 //////////////////////////////////////////////////////////
 
 void err_quit(const char* msg);
-void get_status(int client_index, char* id);
+bool get_status(int client_index, char* id);
 bool get_ready(int client_index);
 void process_packet(int client_index, char* p);
 int get_new_index();
@@ -44,7 +44,11 @@ int main(int argc, char* argv[])
 {
 	clients_DB.reserve(MAX_USER);
 
-	ifstream in("플레이어_정보.txt", ios::binary);
+	ifstream in("플레이어_정보.txt");
+	if (!in) {
+		cout << "파일 읽기 실패" << endl;
+		exit(1);
+	}
 		
 	for (int i = 0; i < MAX_USER -1 ; ++i) {                         //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
 		clients_DB.push_back(Session_DB(in));                        //임시객체를 인자로 받아올 때 emplace 사용하면 바보
@@ -109,28 +113,33 @@ void err_quit(const char* msg)
 	exit(1);
 }
 
-void get_status(int client_index, char* id)
+bool get_status(int client_index, char* id)
 {
 	strcpy_s(g_id_buf, id);
 	auto b_n = find_if(clients_DB.cbegin(), clients_DB.cend(), [](const Session_DB& a) {
-		return strcmp(a._id, g_id_buf);
+		return strcmp(a._id, g_id_buf) == 0;
 		});
+	if (b_n == clients_DB.end()) {
+		return false;
+	}
 
 	clients[client_index]._level = b_n->_level;
-	clients[client_index]._level = b_n->_exp;
+	clients[client_index]._exp = b_n->_exp;
 	clients[client_index]._power = 1;
 	clients[client_index]._heart = 3;
 	clients[client_index]._bomb_count = 2;
 	clients[client_index]._rock_count = 0;
-	clients[client_index]._state = CON_ACCEPT;
+	clients[client_index]._state = ACCEPT;
+
+	return true;
 }
 
 bool get_ready(int client_index)
 {
-	clients[client_index]._state = CON_READY;
+	clients[client_index]._state = READY;
 	for (auto& cl : clients)
 	{
-		if (cl._state != CON_READY)
+		if (cl._state != READY)
 			return false;
 	}
 	return true;
@@ -168,18 +177,23 @@ void process_packet(int client_index, char* p)
 
 	switch (packet_type) {
 
-	case PACKET_LOGIN: {
+	case LOGIN: {
 		LOGIN_packet* packet = reinterpret_cast<LOGIN_packet*>(p);
 		//send_login_ok_packet(client_index);
 		strcpy_s(cl._id, packet->id);
 
-		get_status(client_index, cl._id);
+		if (!get_status(client_index, cl._id)) {
+			LOGIN_ERROR_packet login_error_packet;
+			login_error_packet.type = LOGIN_ERROR;
+			cl.do_send(sizeof(login_error_packet), &login_error_packet);
+			break;
+		}
 
 		for (auto& other : clients) {
 			// 플레이어가 로그인 요청
 			if (other._index == client_index) {
 				LOGIN_OK_packet L_packet;
-				L_packet.type = PACKET_LOGIN_OK;
+				L_packet.type = LOGIN_OK;
 				L_packet.size = sizeof(packet);
 				L_packet.x = cl._x;
 				L_packet.y = cl._y;
@@ -188,23 +202,23 @@ void process_packet(int client_index, char* p)
 				L_packet.exp = cl._exp;
 				cl.do_send(sizeof(L_packet), &L_packet);
 
-			/*	cout << "L_packet" << endl;
-				cout << "사이즈: " << (int)L_packet.size << endl;
-				cout << "타입: " << (int)L_packet.type << endl;
-				cout << "x: " << L_packet.x << endl;
-				cout << "y: " << L_packet.y << endl;
-				cout << "index: " << L_packet.index << endl;
-				cout << "level: " << L_packet.level << endl;
-				cout << "exp: " << L_packet.exp << endl;*/
+				//cout << "L_packet" << endl;
+				//cout << "사이즈: " << (int)L_packet.size << endl;
+				//cout << "타입: " << (int)L_packet.type << endl;
+				//cout << "x: " << L_packet.x << endl;
+				//cout << "y: " << L_packet.y << endl;
+				//cout << "index: " << L_packet.index << endl;
+				//cout << "level: " << L_packet.level << endl;
+				//cout << "exp: " << L_packet.exp << endl;
 				continue;
 			};
-			if (CON_NO_ACCEPT == other._state) continue;
+			if (NO_ACCEPT == other._state) continue;
 
 			// 현재 접속한 플레이어에게 이미 접속해 있는 타 플레이어들의 정보 전송
 			INIT_PLAYER_packet IN_Player;
 			strcpy_s(IN_Player.id, other._id);
 			IN_Player.size = sizeof(INIT_PLAYER_packet);
-			IN_Player.type = PACKET_INIT_PLAYER;
+			IN_Player.type = INIT_PLAYER;
 			IN_Player.x = other._x;
 			IN_Player.y = other._y;
 			IN_Player.state = other._state;
@@ -228,7 +242,7 @@ void process_packet(int client_index, char* p)
 			INIT_PLAYER_packet IN_Other;
 			strcpy_s(IN_Other.id, cl._id);
 			IN_Other.size = sizeof(INIT_PLAYER_packet);
-			IN_Other.type = PACKET_INIT_PLAYER;
+			IN_Other.type = INIT_PLAYER;
 			IN_Other.x = cl._x;
 			IN_Other.y = cl._y;
 			IN_Other.state = cl._state;
@@ -255,7 +269,7 @@ void process_packet(int client_index, char* p)
 		break;
 	}
 
-	case PACKET_MOVE: {
+	case MOVE: {
 		MOVE_PLAYER_packet* packet = reinterpret_cast<MOVE_PLAYER_packet*>(p);
 		int x = cl._x;
 		int y = cl._y;
@@ -275,7 +289,7 @@ void process_packet(int client_index, char* p)
 			{
 				MOVE_OK_packet Move_Player;
 				Move_Player.size = sizeof(Move_Player);
-				Move_Player.type = PACKET_MOVE_OK;
+				Move_Player.type = MOVE_OK;
 				strcpy_s(Move_Player.id, cl._id);
 				Move_Player.x = x;
 				Move_Player.y = y;
@@ -285,7 +299,7 @@ void process_packet(int client_index, char* p)
 		break;
 	}
 
-	case PACKET_MOVE_OK: {
+	case MOVE_OK: {
 		MOVE_OK_packet* packet = reinterpret_cast<MOVE_OK_packet*>(p);
 		cl._x = packet->x;
 		cl._y = packet->y;
@@ -298,7 +312,7 @@ void process_packet(int client_index, char* p)
 		break;
 	}
 
-	case PACKET_GET_ITEM: {
+	case GET_ITEM: {
 		GET_ITEM_packet* packet = reinterpret_cast<GET_ITEM_packet*>(p);
 		int i_index = packet->item_index;
 		cl._power++;
@@ -316,7 +330,7 @@ void process_packet(int client_index, char* p)
 			}
 			CHANGE_BUF_packet Buf_Player;
 			Buf_Player.size = sizeof(Buf_Player);
-			Buf_Player.type = PACKET_CHANGE_BUF;
+			Buf_Player.type = CHANGE_ITEMBUF;
 			Buf_Player._heart = cl._heart;
 			Buf_Player._power = cl._power;
 			Buf_Player._bomb_count = cl._bomb_count;
@@ -329,7 +343,7 @@ void process_packet(int client_index, char* p)
 				{
 					DELETE_ITEM_packet Del_item;
 					Del_item.size = sizeof(Del_item);
-					Del_item.type = PACKET_DELETE_ITEM;
+					Del_item.type = DELETE_ITEM;
 					Del_item.index = i_index;
 					pl.do_send(sizeof(Del_item), &Del_item);
 				}
@@ -338,16 +352,16 @@ void process_packet(int client_index, char* p)
 
 		break;
 	}
-	case PACKET_INIT_BOMB: {
+	case INIT_BOMB: {
 
 	}
-	case PACKET_INIT_OBJECT: {
+	case INIT_OBJECT: {
 
 	}
-	case PACKET_CONDITION: {
+	case CONDITION: {
 		PLAYER_CONDITION_packet* packet = reinterpret_cast<PLAYER_CONDITION_packet*>(p);
 		switch (packet->state) {
-		case CON_READY: {
+		case READY: {
 			bool g_start = get_ready(cl._index);
 			if (g_start == true) {
 				for (auto& pl : clients) {
@@ -355,28 +369,28 @@ void process_packet(int client_index, char* p)
 					{
 						PLAYER_CONDITION_packet con_packet;
 						con_packet.size = sizeof(con_packet);
-						con_packet.type = PACKET_CONDITION;
+						con_packet.type = CONDITION;
 						strcpy_s(con_packet.id, pl._id);
 						con_packet.x = pl._x;
 						con_packet.y = pl._y;
-						con_packet.state = CON_PLAY;
+						con_packet.state = PLAY;
 						pl.do_send(sizeof(con_packet), &con_packet);
 					}
 				}
 			}
 			break;
 		} // 준비
-		//case CON_DEAD: { 
+		//case DEAD: { 
 		//	for (auto& pl : clients) {
 		//		if (true == pl.in_use)
 		//		{
 		//			PLAYER_CONDITION_packet con_packet;
 		//			con_packet.size = sizeof(con_packet);
-		//			con_packet.type = PACKET_CONDITION;
+		//			con_packet.type = CONDITION;
 		//			strcpy_s(con_packet.id, cl._id);
 		//			con_packet.x = cl._x;
 		//			con_packet.y = cl._y;
-		//			con_packet.condition = CON_DEAD;
+		//			con_packet.condition = DEAD;
 		//			pl.do_send(sizeof(con_packet), &con_packet);
 		//		}
 		//	}

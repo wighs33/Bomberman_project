@@ -2,4 +2,3 @@ aaaaa 10 80
 bbbb 20 70
 cccc 5 50
 dddd 15 90
-

@@ -52,6 +52,8 @@ char recv_buf[BUFSIZE];
 TCHAR input_str[edit_box_max_size];
 
 int my_index;	//현재 클라이언트의 플레이어 배열에서 인덱스
+static HWND hButton, hEdit;
+bool isLogin = false;
 
 ////////////////////////////////////////////////////////////////////////////
 //--- 컨테이너
@@ -229,8 +231,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 	static bool pause{ false };
 
-	static HWND hButton, hEdit;
-
 
 	switch (iMessage) {
 	case WM_CREATE:
@@ -304,8 +304,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			if (strcmp((char*)input_str, "-------- PLEASE INPUT ID --------")) {
 				Player temp_send_id;
 				temp_send_id.InputID(send_buf, input_str, edit_box_max_size);
-				DestroyWindow(hButton);
-				DestroyWindow(hEdit);
 				SetEvent(hEvent);
 			}
 			else {
@@ -375,6 +373,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_TIMER:
+		if (isLogin) {
+			DestroyWindow(hButton);
+			DestroyWindow(hEdit);
+		}
 
 		if (pause != 1) {
 			//[연산처리]
@@ -519,7 +521,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			//player 정보 (ui)
 			for (int i = 0; i < MAX_USER; ++i) {
-				if (players[i]._state != CON_NO_ACCEPT) {
+				if (players[i]._state != NO_ACCEPT) {
 					HBITMAP hBit_num = NULL, hBit_character = NULL, hBit_state = NULL;
 					HBITMAP hBit_heart_num = NULL, hBit_more_bomb_num = NULL, hBit_more_power_num = NULL, hBit_rock_num = NULL;
 
@@ -531,10 +533,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					case 4: hBit_character = hBit_eve; hBit_num = hBit_num_5; break;
 					}
 					switch (players[i]._state) {
-					case CON_ACCEPT: hBit_state = hBit_idle; break;
-					case CON_READY: hBit_state = hBit_ready; break;
-					case CON_PLAY: hBit_state = hBit_play; break;
-					case CON_DEAD: hBit_state = hBit_dead; break;
+					case ACCEPT: hBit_state = hBit_idle; break;
+					case READY: hBit_state = hBit_ready; break;
+					case PLAY: hBit_state = hBit_play; break;
+					case DEAD: hBit_state = hBit_dead; break;
 					}
 
 					switch (players[i]._heart) {
@@ -613,7 +615,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 				//플레이어
 				for (int i = 0; i < MAX_USER; ++i) {
-					if (players[i]._state != CON_NO_ACCEPT) {
+					if (players[i]._state != NO_ACCEPT) {
 						HBITMAP hBit_character;
 
 						switch (i) {
@@ -882,7 +884,9 @@ void Process_packet(char* p)
 
 	switch (packet_type) {
 
-	case PACKET_LOGIN_OK: {
+	case LOGIN_OK: {
+		isLogin = true;
+
 		LOGIN_OK_packet* packet = reinterpret_cast<LOGIN_OK_packet*>(p);
 
 		my_index = packet->index;
@@ -899,7 +903,7 @@ void Process_packet(char* p)
 		cout << "level: " << packet->level << endl;
 		cout << "exp: " << packet->exp << endl;*/
 
-		players[my_index]._state = CON_ACCEPT;
+		players[my_index]._state = ACCEPT;
 		players[my_index]._x = packet->x;
 		players[my_index]._y = packet->y;
 		players[my_index]._dir = 0;
@@ -912,13 +916,17 @@ void Process_packet(char* p)
 
 		break;
 	}
+	case LOGIN_ERROR: {
+		cout << "로그인 정보가 일치하지 않습니다" << endl;
+		break;
+	}
 
-	case PACKET_INIT_PLAYER: {
+	case INIT_PLAYER: {
 		INIT_PLAYER_packet* packet = reinterpret_cast<INIT_PLAYER_packet*>(p);
 
 		int index = packet->index;
 
-		if (players[index]._state == CON_ACCEPT) break;
+		if (players[index]._state == ACCEPT) break;
 
 		strcpy_s(players[index]._id, packet->id);
 
@@ -948,17 +956,17 @@ void Process_packet(char* p)
 		break;
 	}
 
-	case PACKET_MOVE_OK: {
+	case MOVE_OK: {
 		break;
 	}
 
-	case PACKET_GET_ITEM: {
+	case GET_ITEM: {
 		break;
 	}
-	case PACKET_INIT_BOMB: {
+	case INIT_BOMB: {
 		break;
 	}
-	case PACKET_CONDITION: {
+	case CONDITION: {
 		break;
 	}
 	default: {

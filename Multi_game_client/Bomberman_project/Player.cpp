@@ -6,7 +6,7 @@ void Player::InputID(char send_buf[], char id[], int BUFSIZE)
 
 	LOGIN_packet login_packet;
 	login_packet.size = sizeof(LOGIN_packet);
-	login_packet.type = PACKET_LOGIN;
+	login_packet.type = LOGIN;
 	strcpy_s(login_packet.id, _id);
 
 	ZeroMemory(send_buf, sizeof(send_buf));

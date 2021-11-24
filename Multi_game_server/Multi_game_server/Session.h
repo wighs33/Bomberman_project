@@ -2,7 +2,6 @@
 #include <windows.h>
 #include <fstream>
 #include <iostream>
-#include <filesystem>
 #include "protocol.h"
 
 using namespace std;
@@ -14,7 +13,7 @@ public:
 	Session()
 	{
 		_prev_size = 0;
-		_state = CON_NO_ACCEPT;
+		_state = NO_ACCEPT;
 		_index = -1;
 		in_use = false;
 	}
@@ -23,7 +22,7 @@ public:
 	{
 		is.read((char*)this, sizeof(Session));
 		_prev_size = 0;
-		_state = CON_ACCEPT;
+		_state = ACCEPT;
 		in_use = false;
 	}
 
@@ -70,11 +69,10 @@ class Session_DB
 public:
 	Session_DB(istream& is)
 	{
-		is.read((char*)this, sizeof(Session));
+		is >> _id >> _level >> _exp;
 	}
 
-
 	char _id[BUFSIZE] = " "; // 플레이어 아이디
-	int _level;
-	int _exp;
+	int _level=0;
+	int _exp=0;
 };
