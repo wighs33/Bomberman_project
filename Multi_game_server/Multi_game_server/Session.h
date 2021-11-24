@@ -68,13 +68,19 @@ public:
 class Session_DB 
 {
 public:
-	Session_DB(istream& is)
-	{
-		is.read((char*)this, sizeof(Session));
-	}
-
-
-	char _id[BUFSIZE] = " "; // 플레이어 아이디
+	char _id[5] = " "; // 플레이어 아이디
 	int _level;
 	int _exp;
+
+	Session_DB(istream& is)
+	{
+		is.read((char*)this, sizeof(Session_DB));
+		//cout << "초기화" << endl;
+		cout << _id << endl;
+		//cout << _level << endl;
+		//cout << _exp << endl;
+	}
+
+	
+
 };
