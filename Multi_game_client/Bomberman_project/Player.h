@@ -19,7 +19,6 @@ public:
 	int _exp;
 	int _index;
 
-	void InputID(char send_buf[], char id[], int SIZE);
-	void InputDir(char send_buf[], int dir);
+	void InputID(char send_buf[], char id[], int BUFSIZE);
 };
 

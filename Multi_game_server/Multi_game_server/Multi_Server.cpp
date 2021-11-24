@@ -120,7 +120,6 @@ void get_status(int client_index, char* id)
 
 	clients[client_index]._level = b_n->_level;
 	clients[client_index]._level = b_n->_exp;
-	//cout << b_n->_level << endl;
 	clients[client_index]._power = 1;
 	clients[client_index]._heart = 3;
 	clients[client_index]._bomb_count = 2;
@@ -145,7 +144,27 @@ void process_packet(int client_index, char* p)
 
 	Session& cl = clients[client_index];
 
-	
+	switch (client_index) {
+	case 0:
+		cl._x = outer_wall_start + tile_size + 10;
+		cl._y = outer_wall_start + tile_size + 10;
+		break;
+
+	case 1:
+		cl._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 12;
+		cl._y = outer_wall_start + tile_size + 10;
+		break;
+
+	case 2:
+		cl._x = outer_wall_start + tile_size + 10;
+		cl._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
+		break;
+
+	case 3:
+		cl._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 12;
+		cl._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
+		break;
+	}
 
 	char packet_type = p[1];
 
@@ -243,18 +262,16 @@ void process_packet(int client_index, char* p)
 		int x = cl._x;
 		int y = cl._y;
 		switch (packet->dir) {
-		case 4: /*if (y > 0)*/ y -= 4; break;	//위
-		case 3: /*if (y < (WORLD_HEIGHT - 1))*/ y += 4; break;		//아래
-		case 2: /*if (x > 0)*/ x-= 4; break;		//왼쪽
-		case 1: /*if (x < (WORLD_WIDTH - 1))*/ x+=4; break;		//오른쪽
+		case 0: if (y > 0) y--; break;
+		case 1: if (y < (WORLD_HEIGHT - 1)) y++; break;
+		case 2: if (x > 0) x--; break;
+		case 3: if (x < (WORLD_WIDTH - 1)) x++; break;
 		default:
 			cout << "Invalid move in client " << cl._id << endl;
 			exit(-1);
 		}
 		cl._x = x;
 		cl._y = y;
-		cout << x << endl;
-		cout << y << endl;
 		for (auto& pl : clients) {
 			if (true == pl.in_use)
 			{
@@ -265,8 +282,6 @@ void process_packet(int client_index, char* p)
 				Move_Player.x = x;
 				Move_Player.y = y;
 				pl.do_send(sizeof(Move_Player), &Move_Player);
-
-				
 			}
 		}
 		break;
@@ -405,27 +420,7 @@ DWORD WINAPI Thread_1(LPVOID arg)
 	Session& player = clients[index];
 	player._cl = client_sock;
 	player._index = index;
-	switch (player._index) {
-	case 0:
-		player._x = outer_wall_start + tile_size + 10;
-		player._y = outer_wall_start + tile_size + 10;
-		break;
 
-	case 1:
-		player._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 12;
-		player._y = outer_wall_start + tile_size + 10;
-		break;
-
-	case 2:
-		player._x = outer_wall_start + tile_size + 10;
-		player._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
-		break;
-
-	case 3:
-		player._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 12;
-		player._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
-		break;
-	}
 
 
 	while (1) {
