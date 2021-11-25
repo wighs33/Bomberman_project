@@ -13,7 +13,7 @@ void Player::InputID(char send_buf[], char id[], int BUFSIZE)
 	memcpy(&send_buf[0], &login_packet, BUFSIZE);
 }
 
-void Player::InputDirection(char send_buf[], int dir)
+void Player::InputMoveKey(char send_buf[], int dir)
 {
 	MOVE_PLAYER_packet move_packet;
 	move_packet.size = sizeof(move_packet);

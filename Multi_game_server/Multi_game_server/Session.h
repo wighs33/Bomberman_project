@@ -37,6 +37,7 @@ public:
 	char _id[BUFSIZE] = " "; // 플레이어 아이디
 	int _index;
 	int _x, _y; // 플레이어 좌표
+	int _dir;	// 이동 방향
 	int _level;
 	int _exp;
 	int _state; // 접속, 레디, 게임 중, 사망
@@ -72,7 +73,7 @@ public:
 		is >> _id >> _level >> _exp;
 	}
 
-	char _id[BUFSIZE] = " "; // 플레이어 아이디
-	int _level=0;
-	int _exp=0;
+	char _id[BUFSIZE] = "-- unknown --"; // 플레이어 아이디
+	int _level = 0;
+	int _exp = 0;
 };

@@ -334,26 +334,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		switch (wParam) {
 		case VK_RIGHT:
-			players[my_index]._dir = 1;
-			players[my_index].InputDirection(send_buf, 1);
+			players[my_index].InputMoveKey(send_buf, 1);
 			SetEvent(hEvent);
 			break;
 
 		case VK_LEFT:
-			players[my_index]._dir = 2;
-			players[my_index].InputDirection(send_buf, 2);
+			players[my_index].InputMoveKey(send_buf, 2);
 			SetEvent(hEvent);
 			break;
 
 		case VK_UP:
-			players[my_index]._dir = 4;
-			players[my_index].InputDirection(send_buf, 4);
+			players[my_index].InputMoveKey(send_buf, 4);
 			SetEvent(hEvent);
 			break;
 
 		case VK_DOWN:
-			players[my_index]._dir = 3;
-			players[my_index].InputDirection(send_buf, 3);
+			players[my_index].InputMoveKey(send_buf, 3);
 			SetEvent(hEvent);
 			break;
 
@@ -445,14 +441,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			//}
 
 			//플레이어 - 외벽과 충돌체크
-			if (players[my_index]._x >= bg_w - outer_wall_start - p_size / 3)
+			/*if (players[my_index]._x >= bg_w - outer_wall_start - p_size / 3)
 				players[my_index]._x -= pl_speed;
 			if (players[my_index]._x <= outer_wall_start - p_size / 3)
 				players[my_index]._x += pl_speed;
 			if (players[my_index]._y  >= bg_h - outer_wall_start - p_size / 3)
 				players[my_index]._y  -= pl_speed;
 			if (players[my_index]._y  <= outer_wall_start - p_size / 3)
-				players[my_index]._y  += pl_speed;
+				players[my_index]._y  += pl_speed;*/
 
 			//폭탄
 			for (int i = 0; i < bomb_num; ++i) {
@@ -673,7 +669,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 								mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 4), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 						}
 						//이동X
-						else {
+						else if (players[i]._dir == 0) {
 							//몸통
 							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
 								mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
@@ -826,7 +822,7 @@ void Send_packet(SOCKET s)
 {
 	retval = send(sock, send_buf, BUFSIZE, 0);
 	if (retval == SOCKET_ERROR) {
-		err_display("send()");
+		err_quit("send()");
 	}
 }
 
@@ -836,7 +832,7 @@ void Recv_packet(SOCKET s)
 	ZeroMemory(recv_buf, sizeof(recv_buf));
 	int retval = recv(s, recv_buf, BUFSIZE, 0);
 	if (retval == SOCKET_ERROR) {
-		err_display("recv()");
+		err_quit("recv()");
 	}
 }
 
@@ -966,14 +962,17 @@ void Process_packet(char* p)
 
 	case MOVE_OK: {
 		MOVE_OK_packet* packet = reinterpret_cast<MOVE_OK_packet*>(p);
+		cout << "id: " << packet->id << endl;
 		cout << "이동" << endl;
 		cout << packet->x << endl;
 		cout << packet->y << endl;
-		cout << packet->id << endl << endl;
+		cout << packet->dir << endl;
+		
 		for (auto& player : players) {
 			if (strcmp(player._id, packet->id) == 0) {
 				player._x = packet->x;
 				player._y = packet->y;
+				player._dir = packet->dir;
 				break;
 			}
 		}
