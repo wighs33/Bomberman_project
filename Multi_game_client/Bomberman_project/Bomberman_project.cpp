@@ -899,14 +899,6 @@ void Process_packet(char* p)
 
 		cout << "[수신 성공] \'" << players[my_index]._id << "\' (자기자신) 로그인 확인" << endl;
 
-		/*cout << "사이즈: " << (int)packet->size << endl;
-		cout << "타입: " << (int)packet->type << endl;
-		cout << "x: " << packet->x << endl;
-		cout << "y: " << packet->y << endl;
-		cout << "index: " << packet->index << endl;
-		cout << "level: " << packet->level << endl;
-		cout << "exp: " << packet->exp << endl;*/
-
 		players[my_index]._state = ACCEPT;
 		players[my_index]._x = packet->x;
 		players[my_index]._y = packet->y;
@@ -936,16 +928,6 @@ void Process_packet(char* p)
 
 		cout << "[수신 성공] \'" << players[index]._id << "\' (타 플레이어) 로그인 확인" << endl;
 
-		/*cout << "사이즈: " << (int)packet->size << endl;
-		cout << "타입: " << (int)packet->type << endl;
-		cout << "x: " << packet->x << endl;
-		cout << "y: " << packet->y << endl;
-		cout << "state: " << packet->state << endl;
-		cout << "index: " << packet->index << endl;
-		cout << "level: " << packet->level << endl;
-		cout << "exp: " << packet->exp << endl;
-		cout << "id: " << packet->id << endl;*/
-
 		players[index]._state = packet->state;
 		players[index]._x = packet->x;
 		players[index]._y = packet->y;
@@ -962,11 +944,6 @@ void Process_packet(char* p)
 
 	case MOVE_OK: {
 		MOVE_OK_packet* packet = reinterpret_cast<MOVE_OK_packet*>(p);
-		cout << "id: " << packet->id << endl;
-		cout << "이동" << endl;
-		cout << packet->x << endl;
-		cout << packet->y << endl;
-		cout << packet->dir << endl;
 		
 		for (auto& player : players) {
 			if (strcmp(player._id, packet->id) == 0) {

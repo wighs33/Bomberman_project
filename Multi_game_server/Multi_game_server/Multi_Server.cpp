@@ -183,14 +183,6 @@ void process_packet(int client_index, char* p)
 				L_packet.exp = cl._exp;
 				cl.do_send(sizeof(L_packet), &L_packet);
 
-				//cout << "L_packet" << endl;
-				//cout << "사이즈: " << (int)L_packet.size << endl;
-				//cout << "타입: " << (int)L_packet.type << endl;
-				//cout << "x: " << L_packet.x << endl;
-				//cout << "y: " << L_packet.y << endl;
-				//cout << "index: " << L_packet.index << endl;
-				//cout << "level: " << L_packet.level << endl;
-				//cout << "exp: " << L_packet.exp << endl;
 				continue;
 			};
 			if (NO_ACCEPT == other._state) continue;
@@ -208,17 +200,6 @@ void process_packet(int client_index, char* p)
 			IN_Player.exp = other._exp;
 			cl.do_send(sizeof(IN_Player), &IN_Player);
 
-	/*		cout << "IN_Player" << endl;
-			cout << "사이즈: " << (int)IN_Player.size << endl;
-			cout << "타입: " << (int)IN_Player.type << endl;
-			cout << "x: " << IN_Player.x << endl;
-			cout << "y: " << IN_Player.y << endl;
-			cout << "state: " << IN_Player.state << endl;
-			cout << "index: " << IN_Player.index << endl;
-			cout << "level: " << IN_Player.level << endl;
-			cout << "exp: " << IN_Player.exp << endl;
-			cout << "id: " << IN_Player.id << endl;*/
-
 			// 이미 접속해 있는 플레이어들에게 현재 접속한 플레이어의 정보 전송
 			INIT_PLAYER_packet IN_Other;
 			strcpy_s(IN_Other.id, cl._id);
@@ -232,16 +213,6 @@ void process_packet(int client_index, char* p)
 			IN_Other.exp = cl._exp;
 			other.do_send(sizeof(IN_Other), &IN_Other);
 
-	/*		cout << "IN_Other" << endl;
-			cout << "사이즈: " << (int)IN_Other.size << endl;
-			cout << "타입: " << (int)IN_Other.type << endl;
-			cout << "x: " << IN_Other.x << endl;
-			cout << "y: " << IN_Other.y << endl;
-			cout << "state: " << IN_Other.state << endl;
-			cout << "index: " << IN_Other.index << endl;
-			cout << "level: " << IN_Other.level << endl;
-			cout << "exp: " << IN_Other.exp << endl;
-			cout << "id: " << IN_Other.id << endl;*/
 		}
 
 		cout << "[수신 성공] \'" << cl._id << "\' (" << client_index + 1 << " 번째 플레이어) 로그인 요청" << endl;
