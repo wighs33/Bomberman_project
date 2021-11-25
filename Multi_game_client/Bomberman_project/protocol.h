@@ -107,6 +107,7 @@ struct MOVE_OK_packet { // 플레이어 이동 확인 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 8
 	int x, y; // 플레이어 좌표
+	int dir;	// 이동 방향
 	char id[BUFSIZE]; // 플레이어 아이디
 };
 
@@ -137,7 +138,6 @@ struct DELETE_ITEM_packet { // 오브젝트 제거 패킷
 	char type; // 패킷 타입 12
 	int index; // 아이템 인덱스 번호
 };
-
 
 struct CHANGE_BUF_packet { // 플레이어 버프 변경 정보 패킷
 	unsigned char size; // 패킷 사이즈

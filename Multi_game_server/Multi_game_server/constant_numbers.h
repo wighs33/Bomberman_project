@@ -79,7 +79,7 @@ const int adj_obstacle_size_br{ 10 };
 
 //속도 관련 상수들
 
-const int pl_speed{ 4 };
-const int bomb_speed{ 8 };
+const int pl_speed{ 8 };
+const int bomb_speed{ 16 };
 
 const int game_mil_sec{ 30 };		//게임 프레임 시간간격 - 밀리초

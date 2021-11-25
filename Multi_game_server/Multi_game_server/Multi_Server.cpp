@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 		
-	for (int i = 0; i < MAX_USER -1 ; ++i) {                         //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
+	for (int i = 0; i < MAX_USER ; ++i) {                         //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
 		clients_DB.push_back(Session_DB(in));                        //임시객체를 인자로 받아올 때 emplace 사용하면 바보
 	}
 
@@ -115,6 +115,8 @@ void err_quit(const char* msg)
 
 bool get_status(int client_index, char* id)
 {
+	// 초기화
+
 	strcpy_s(g_id_buf, id);
 	auto b_n = find_if(clients_DB.cbegin(), clients_DB.cend(), [](const Session_DB& a) {
 		return strcmp(a._id, g_id_buf) == 0;
@@ -123,6 +125,7 @@ bool get_status(int client_index, char* id)
 		return false;
 	}
 
+	clients[client_index]._dir = 0;
 	clients[client_index]._level = b_n->_level;
 	clients[client_index]._exp = b_n->_exp;
 	clients[client_index]._power = 1;
@@ -180,14 +183,6 @@ void process_packet(int client_index, char* p)
 				L_packet.exp = cl._exp;
 				cl.do_send(sizeof(L_packet), &L_packet);
 
-				//cout << "L_packet" << endl;
-				//cout << "사이즈: " << (int)L_packet.size << endl;
-				//cout << "타입: " << (int)L_packet.type << endl;
-				//cout << "x: " << L_packet.x << endl;
-				//cout << "y: " << L_packet.y << endl;
-				//cout << "index: " << L_packet.index << endl;
-				//cout << "level: " << L_packet.level << endl;
-				//cout << "exp: " << L_packet.exp << endl;
 				continue;
 			};
 			if (NO_ACCEPT == other._state) continue;
@@ -205,17 +200,6 @@ void process_packet(int client_index, char* p)
 			IN_Player.exp = other._exp;
 			cl.do_send(sizeof(IN_Player), &IN_Player);
 
-	/*		cout << "IN_Player" << endl;
-			cout << "사이즈: " << (int)IN_Player.size << endl;
-			cout << "타입: " << (int)IN_Player.type << endl;
-			cout << "x: " << IN_Player.x << endl;
-			cout << "y: " << IN_Player.y << endl;
-			cout << "state: " << IN_Player.state << endl;
-			cout << "index: " << IN_Player.index << endl;
-			cout << "level: " << IN_Player.level << endl;
-			cout << "exp: " << IN_Player.exp << endl;
-			cout << "id: " << IN_Player.id << endl;*/
-
 			// 이미 접속해 있는 플레이어들에게 현재 접속한 플레이어의 정보 전송
 			INIT_PLAYER_packet IN_Other;
 			strcpy_s(IN_Other.id, cl._id);
@@ -229,16 +213,6 @@ void process_packet(int client_index, char* p)
 			IN_Other.exp = cl._exp;
 			other.do_send(sizeof(IN_Other), &IN_Other);
 
-	/*		cout << "IN_Other" << endl;
-			cout << "사이즈: " << (int)IN_Other.size << endl;
-			cout << "타입: " << (int)IN_Other.type << endl;
-			cout << "x: " << IN_Other.x << endl;
-			cout << "y: " << IN_Other.y << endl;
-			cout << "state: " << IN_Other.state << endl;
-			cout << "index: " << IN_Other.index << endl;
-			cout << "level: " << IN_Other.level << endl;
-			cout << "exp: " << IN_Other.exp << endl;
-			cout << "id: " << IN_Other.id << endl;*/
 		}
 
 		cout << "[수신 성공] \'" << cl._id << "\' (" << client_index + 1 << " 번째 플레이어) 로그인 요청" << endl;
@@ -249,19 +223,23 @@ void process_packet(int client_index, char* p)
 
 	case MOVE: {
 		MOVE_PLAYER_packet* packet = reinterpret_cast<MOVE_PLAYER_packet*>(p);
-		int x = cl._x;
-		int y = cl._y;
+
+		int x_bias{ 0 }, y_bias{ 0 };
+
 		switch (packet->dir) {
-		case 4: if (y > 0) y-=4; break;
-		case 3: /*if (y < (WORLD_HEIGHT - 1))*/ y+=4; break;
-		case 2: if (x > 0) x-=4; break;
-		case 1: /*if (x < (WORLD_WIDTH - 1))*/ x+=4; break;
+		case 4: /*if (y > 0)*/  y_bias = pl_speed * (-1); break;
+		case 3: /*if (y < (WORLD_HEIGHT - 1))*/ y_bias = pl_speed * (+1); break;
+		case 2: /*if (x > 0)*/ x_bias = pl_speed * (-1); break;
+		case 1: /*if (x < (WORLD_WIDTH - 1))*/ x_bias = pl_speed * (+1); break;
 		default:
 			cout << "Invalid move in client " << cl._id << endl;
 			exit(-1);
 		}
-		cl._x = x;
-		cl._y = y;
+
+		cl._x += x_bias;
+		cl._y += y_bias;
+		cl._dir = packet->dir;
+
 		for (auto& pl : clients) {
 			if (true == pl.in_use)
 			{
@@ -269,9 +247,15 @@ void process_packet(int client_index, char* p)
 				Move_Player.size = sizeof(Move_Player);
 				Move_Player.type = MOVE_OK;
 				strcpy_s(Move_Player.id, cl._id);
-				Move_Player.x = x;
-				Move_Player.y = y;
+				Move_Player.x = cl._x;
+				Move_Player.y = cl._y;
+				Move_Player.dir = cl._dir;
 				pl.do_send(sizeof(Move_Player), &Move_Player);
+
+				cout << Move_Player.id << endl << endl;
+				cout << "이동" << endl;
+				cout << Move_Player.x << endl;
+				cout << Move_Player.y << endl;
 			}
 		}
 		break;
@@ -281,6 +265,7 @@ void process_packet(int client_index, char* p)
 		MOVE_OK_packet* packet = reinterpret_cast<MOVE_OK_packet*>(p);
 		cl._x = packet->x;
 		cl._y = packet->y;
+		cl._dir = packet->dir;
 		for (auto& pl : clients) {
 			if (true == pl.in_use)
 			{
