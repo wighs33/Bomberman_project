@@ -272,11 +272,6 @@ void process_packet(int client_index, char* p)
 				Move_Player.x = x;
 				Move_Player.y = y;
 				pl.do_send(sizeof(Move_Player), &Move_Player);
-
-				cout << "ÀÌµ¿" << endl;
-				cout << Move_Player.x << endl;
-				cout << Move_Player.y << endl;
-				cout << Move_Player.id << endl << endl;
 			}
 		}
 		break;
