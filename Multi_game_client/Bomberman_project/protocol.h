@@ -3,10 +3,6 @@
 
 const short SERVER_PORT = 4000;
 
-
-const int	WORLD_HEIGHT = (bg_w - 10) / 65;
-const int	WORLD_WIDTH = (bg_h - 10) / 65;
-
 const int  MAX_NAME_SIZE = 20;
 const int  MAX_MAP_SIZE = 256;
 const int  MAX_ITEM_SIZE = 12;
@@ -30,7 +26,6 @@ enum Packet_Type {
 	DELETE_ITEM,
 	CHANGE_ITEMBUF
 };
-
 
 enum Player_Condition {
 	NO_ACCEPT,
@@ -99,7 +94,7 @@ struct GET_ITEM_packet {// 아이템 획득 요청 피킷
 struct MOVE_PLAYER_packet { // 플레이어 이동 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 7
-	int dir; // 이동 방향
+	int dir; // 이동 방향  ( 좌 - 2 / 우 - 1 / 상 - 4 / 하 - 3 )
 	char id[BUFSIZE]; // 플레이어 아이디
 };
 
@@ -107,7 +102,7 @@ struct MOVE_OK_packet { // 플레이어 이동 확인 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 8
 	int x, y; // 플레이어 좌표
-	int dir;	// 이동 방향
+	int dir;	// 이동 방향  ( 좌 - 2 / 우 - 1 / 상 - 4 / 하 - 3 )
 	char id[BUFSIZE]; // 플레이어 아이디
 };
 
@@ -124,7 +119,6 @@ struct INIT_BOMB_packet {// 폭탄 생성 패킷
 	int power; // 폭탄 위력
 	int x, y; // 오브젝트 좌표
 };
-
 
 struct DELETE_OBJECT_packet { // 오브젝트 제거 패킷
 	unsigned char size; // 패킷 사이즈
