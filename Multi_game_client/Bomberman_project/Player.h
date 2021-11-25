@@ -20,5 +20,6 @@ public:
 	int _index;
 
 	void InputID(char send_buf[], char id[], int BUFSIZE);
+	void InputDirection(char send_buf[], int dir);
 };
 

@@ -99,14 +99,15 @@ struct GET_ITEM_packet {// 아이템 획득 요청 피킷
 struct MOVE_PLAYER_packet { // 플레이어 이동 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 7
-	char id[BUFSIZE]; // 플레이어 아이디
 	int dir; // 이동 방향
+	char id[BUFSIZE]; // 플레이어 아이디
 };
+
 struct MOVE_OK_packet { // 플레이어 이동 확인 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 8
-	char id[BUFSIZE]; // 플레이어 아이디
 	int x, y; // 플레이어 좌표
+	char id[BUFSIZE]; // 플레이어 아이디
 };
 
 struct INIT_OBJECT_packet { // 오브젝트 생성 패킷

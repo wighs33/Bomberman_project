@@ -335,18 +335,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		switch (wParam) {
 		case VK_RIGHT:
 			players[my_index]._dir = 1;
+			players[my_index].InputDirection(send_buf, 1);
+			SetEvent(hEvent);
 			break;
 
 		case VK_LEFT:
 			players[my_index]._dir = 2;
+			players[my_index].InputDirection(send_buf, 2);
+			SetEvent(hEvent);
 			break;
 
 		case VK_UP:
 			players[my_index]._dir = 4;
+			players[my_index].InputDirection(send_buf, 4);
+			SetEvent(hEvent);
 			break;
 
 		case VK_DOWN:
 			players[my_index]._dir = 3;
+			players[my_index].InputDirection(send_buf, 3);
+			SetEvent(hEvent);
 			break;
 
 		case VK_SPACE:
@@ -406,35 +414,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			//--- 움직임
 			//플레이어
-			switch (players[my_index]._dir) {
-			case 1:
-				players[my_index]._x += pl_speed;
+			//switch (players[my_index]._dir) {
+			//case 1:
+			//	players[my_index]._x += pl_speed;
 
-				if (Check_Collision_player(players[my_index], block) || Check_Collision_player(players[my_index], rock))
-					players[my_index]._x -= pl_speed;
-				break;
+			//	if (Check_Collision_player(players[my_index], block) || Check_Collision_player(players[my_index], rock))
+			//		players[my_index]._x -= pl_speed;
+			//	break;
 
-			case 2:
-				players[my_index]._x -= pl_speed;
+			//case 2:
+			//	players[my_index]._x -= pl_speed;
 
-				if (Check_Collision_player(players[my_index], block) || Check_Collision_player(players[my_index], rock))
-					players[my_index]._x += pl_speed;
-				break;
+			//	if (Check_Collision_player(players[my_index], block) || Check_Collision_player(players[my_index], rock))
+			//		players[my_index]._x += pl_speed;
+			//	break;
 
-			case 3:
-				players[my_index]._y += pl_speed;
+			//case 3:
+			//	players[my_index]._y += pl_speed;
 
-				if (Check_Collision_player(players[my_index], block) || Check_Collision_player(players[my_index], rock))
-					players[my_index]._y -= pl_speed;
-				break;
+			//	if (Check_Collision_player(players[my_index], block) || Check_Collision_player(players[my_index], rock))
+			//		players[my_index]._y -= pl_speed;
+			//	break;
 
-			case 4:
-				players[my_index]._y -= pl_speed;
+			//case 4:
+			//	players[my_index]._y -= pl_speed;
 
-				if (Check_Collision_player(players[my_index], block) || Check_Collision_player(players[my_index], rock))
-					players[my_index]._y += pl_speed;
-				break;
-			}
+			//	if (Check_Collision_player(players[my_index], block) || Check_Collision_player(players[my_index], rock))
+			//		players[my_index]._y += pl_speed;
+			//	break;
+			//}
 
 			//플레이어 - 외벽과 충돌체크
 			if (players[my_index]._x >= bg_w - outer_wall_start - p_size / 3)
@@ -957,6 +965,19 @@ void Process_packet(char* p)
 	}
 
 	case MOVE_OK: {
+		MOVE_OK_packet* packet = reinterpret_cast<MOVE_OK_packet*>(p);
+		cout << "이동" << endl;
+		cout << packet->x << endl;
+		cout << packet->y << endl;
+		cout << packet->id << endl << endl;
+		for (auto& player : players) {
+			if (strcmp(player._id, packet->id) == 0) {
+				player._x = packet->x;
+				player._y = packet->y;
+				break;
+			}
+		}
+
 		break;
 	}
 
