@@ -7,7 +7,7 @@ class Player
 {
 public:
 	char _id[BUFSIZE] = " ";
-	int _state = CON_NO_ACCEPT;
+	int _state = NO_ACCEPT;
 	int _x;		//left
 	int	_y;		//top
 	int _dir;
@@ -20,5 +20,6 @@ public:
 	int _index;
 
 	void InputID(char send_buf[], char id[], int BUFSIZE);
+	void InputDirection(char send_buf[], int dir);
 };
 
