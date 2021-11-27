@@ -1,33 +1,66 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS // 최신 VC++ 컴파일 시 경고 방지
 #define _CRT_SECURE_NO_WARNINGS
-#pragma comment(lib, "ws2_32")
-#include <winsock2.h>
 
+#include <winsock2.h>
 #include <vector>
 #include <array>
 #include <algorithm>
 #include <thread>
 #include <mutex>
 #include <atomic>
+
+#include "json/json.h"
 #include "protocol.h"
 #include "constant_numbers.h"
 #include "Session.h"
+#include "Object.h"
+
+#pragma comment(lib, "ws2_32")
+#pragma comment(lib, "json/jsoncpp.lib")
 
 using namespace std;
 
 ///////////////////////////////////////////////////////////
 
-char g_init_map_01[MAX_MAP_SIZE];
-char g_init_map_02[MAX_MAP_SIZE];
-atomic<bool> g_item[MAX_ITEM_SIZE];
-bool g_shutdown = false;
-mutex mylock;
-
-const int MAX_Player = 4;
-array<Session, MAX_Player> clients;
+//플레이어
+array<Session, MAX_USER> clients;
 
 vector<Session_DB> clients_DB;
-char g_id_buf[BUFSIZE]=" ";
+char g_id_buf[BUFSIZE] = " ";
+
+//맵
+template<typename T, size_t X, size_t Y>
+using tileArr = array<array<T, X>, Y>;
+
+tileArr<int, tile_max_w_num, tile_max_h_num>	map_1;
+tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
+
+int map_num;	//몇 번 맵 선택?
+
+
+//블록 - [파괴 불가능]
+vector <Block>	blocks;
+
+//바위 - [파괴 가능]
+vector <Rock>	rocks;
+
+//아이템
+vector <Item>	items;
+
+//폭탄
+vector <Bomb>	bombs;
+
+//atomic<bool> g_item[MAX_ITEM_SIZE];
+
+bool g_shutdown = false;
+
+mutex mylock;
+
+
+//타일 내 정보
+enum Map_object_type {
+	M_EMPTY, M_BLOCK, M_ROCK
+};
 
 //////////////////////////////////////////////////////////
 
@@ -36,12 +69,15 @@ bool get_status(int client_index, char* id);
 bool get_ready(int client_index);
 void process_packet(int client_index, char* p);
 int get_new_index();
+void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
+void Setting_Map();
 DWORD WINAPI Thread_1(LPVOID arg);
 
 //////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
 {
+	//플레이어 DB 읽기
 	clients_DB.reserve(MAX_USER);
 
 	ifstream in("플레이어_정보.txt");
@@ -54,9 +90,28 @@ int main(int argc, char* argv[])
 		clients_DB.push_back(Session_DB(in));                        //임시객체를 인자로 받아올 때 emplace 사용하면 바보
 	}
 
-	for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                    //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
-		g_item[i] = true;                                            //임시객체를 인자로 받아올 때 emplace 사용하면 바보
+	//맵 읽기
+	Load_Map(map_1, "maps_json/map_1.json");
+	Load_Map(map_2, "maps_json/map_2.json");
+
+	while (TRUE) {
+		cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
+		scanf("%d", &map_num);
+		if (map_num == 1 || map_num == 2) {
+			cout << map_num << " 번 맵을 선택하였습니다." << endl << endl;
+			break;
+		}
+		else {
+			cout << "잘못 입력하셨습니다. (1, 2 중 하나를 선택하여 주세요.)" << endl << endl;
+		}
 	}
+
+	Setting_Map();
+
+
+	//for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                    //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
+	//	g_item[i] = true;                                            //임시객체를 인자로 받아올 때 emplace 사용하면 바보
+	//}
 
 	//윈속 초기화
 	WSADATA wsa;
@@ -125,6 +180,53 @@ bool get_status(int client_index, char* id)
 		return false;
 	}
 
+	if (map_num == 1) {
+		switch (client_index) {
+		case 0:
+			clients[client_index]._x = outer_wall_start + tile_size + 10;
+			clients[client_index]._y = outer_wall_start + tile_size + 10;
+			break;
+
+		case 1:
+			clients[client_index]._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 12;
+			clients[client_index]._y = outer_wall_start + tile_size + 10;
+			break;
+
+		case 2:
+			clients[client_index]._x = outer_wall_start + tile_size + 10;
+			clients[client_index]._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
+			break;
+
+		case 3:
+			clients[client_index]._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 12;
+			clients[client_index]._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
+			break;
+		}
+	}
+	else if (map_num == 2) {
+		switch (client_index) {
+		case 0:
+			clients[client_index]._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
+			clients[client_index]._y = outer_wall_start + tile_size + 10;
+			break;
+
+		case 1:
+			clients[client_index]._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 7;
+			clients[client_index]._y = outer_wall_start + tile_size + 10;
+			break;
+
+		case 2:
+			clients[client_index]._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
+			clients[client_index]._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
+			break;
+
+		case 3:
+			clients[client_index]._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 7;
+			clients[client_index]._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
+			break;
+		}
+	}
+
 	clients[client_index]._dir = 0;
 	clients[client_index]._level = b_n->_level;
 	clients[client_index]._exp = b_n->_exp;
@@ -147,6 +249,87 @@ bool get_ready(int client_index)
 	}
 	return true;
 
+}
+
+void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path)
+{
+	ifstream json_map;
+	Json::CharReaderBuilder builder;
+	builder["collectComments"] = false;
+	Json::Value value;
+	JSONCPP_STRING errs;
+	bool ok;
+
+	json_map.open(map_path);
+
+	ok = parseFromStream(builder, json_map, &value, &errs);
+
+	if (ok == true) {
+		for (int i = 0; i < tile_max_h_num; ++i) {
+			for (int j = 0; j < tile_max_w_num; ++j) {
+				switch (value[i][j].asInt()) {
+				case 0:
+					map[i][j] = M_EMPTY;
+					break;
+
+				case 1:
+					map[i][j] = M_BLOCK;
+					break;
+
+				case 2:
+					map[i][j] = M_ROCK;
+					break;
+				}
+			}
+		}
+	}
+	else {
+		char msg[256]{ "" };
+		char _msg[]{ " 맵을 불러오지 못하였습니다." };
+		strcat(msg, map_path);
+		strcat(msg, _msg);
+		MessageBox(NULL, (LPCWSTR)msg, L"ERROR - Parse failed", MB_ICONERROR);
+		json_map.close();
+		exit(0);
+	}
+
+	json_map.close();
+}
+
+//맵 세팅
+void Setting_Map()
+{
+	int bl_indx =  0;
+	int r_indx = 0;
+
+	tileArr<int, tile_max_w_num, tile_max_h_num> map;
+
+	switch(map_num) {
+		case 1:
+			map = map_1;
+			break;
+
+		case 2:
+			map = map_2;
+			break;
+	}
+
+	for (int i = 0; i < nTiles; ++i) {
+		if (map[i / tile_max_w_num][i % tile_max_w_num] == M_BLOCK) {
+			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
+			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
+
+			blocks.push_back(Block(X, Y, bl_indx));
+			bl_indx++;
+		}
+		else if (map[i / tile_max_w_num][i % tile_max_w_num] == M_ROCK) {
+			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
+			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
+
+			rocks.push_back(Rock(X, Y, r_indx));
+			r_indx++;
+		}
+	}
 }
 
 void process_packet(int client_index, char* p)
@@ -181,6 +364,7 @@ void process_packet(int client_index, char* p)
 				L_packet.level = cl._level;
 				L_packet.index = cl._index;
 				L_packet.exp = cl._exp;
+				L_packet.map = map_num;
 				cl.do_send(sizeof(L_packet), &L_packet);
 
 				continue;
@@ -275,39 +459,39 @@ void process_packet(int client_index, char* p)
 		GET_ITEM_packet* packet = reinterpret_cast<GET_ITEM_packet*>(p);
 		int i_index = packet->item_index;
 		cl._power++;
-		if (g_item[i_index] == true)
-		{
-			g_item[i_index] = false;
-			switch (packet->item_type) {
-			case 0: cl._power++; break; // 폭탄 세기
-			case 1:  cl._heart++; break; // 하트
-			case 2: cl._bomb_count++; break; //폭탄 개수
-			case 3: cl._rock_count; break; //블록 개수
-			default:
-				cout << "Invalid item in client " << cl._id << endl;
-				exit(-1);
-			}
-			CHANGE_BUF_packet Buf_Player;
-			Buf_Player.size = sizeof(Buf_Player);
-			Buf_Player.type = CHANGE_ITEMBUF;
-			Buf_Player._heart = cl._heart;
-			Buf_Player._power = cl._power;
-			Buf_Player._bomb_count = cl._bomb_count;
-			Buf_Player._rock_count = cl._rock_count;
-			cl.do_send(sizeof(Buf_Player), &Buf_Player);
-		}
-		else {
-			for (auto& pl : clients) {
-				if (true == pl.in_use)
-				{
-					DELETE_ITEM_packet Del_item;
-					Del_item.size = sizeof(Del_item);
-					Del_item.type = DELETE_ITEM;
-					Del_item.index = i_index;
-					pl.do_send(sizeof(Del_item), &Del_item);
-				}
-			}
-		}
+		//if (g_item[i_index] == true)
+		//{
+		//	g_item[i_index] = false;
+		//	switch (packet->item_type) {
+		//	case 0: cl._power++; break; // 폭탄 세기
+		//	case 1:  cl._heart++; break; // 하트
+		//	case 2: cl._bomb_count++; break; //폭탄 개수
+		//	case 3: cl._rock_count; break; //블록 개수
+		//	default:
+		//		cout << "Invalid item in client " << cl._id << endl;
+		//		exit(-1);
+		//	}
+		//	CHANGE_BUF_packet Buf_Player;
+		//	Buf_Player.size = sizeof(Buf_Player);
+		//	Buf_Player.type = CHANGE_ITEMBUF;
+		//	Buf_Player._heart = cl._heart;
+		//	Buf_Player._power = cl._power;
+		//	Buf_Player._bomb_count = cl._bomb_count;
+		//	Buf_Player._rock_count = cl._rock_count;
+		//	cl.do_send(sizeof(Buf_Player), &Buf_Player);
+		//}
+		//else {
+		//	for (auto& pl : clients) {
+		//		if (true == pl.in_use)
+		//		{
+		//			DELETE_ITEM_packet Del_item;
+		//			Del_item.size = sizeof(Del_item);
+		//			Del_item.type = DELETE_ITEM;
+		//			Del_item.index = i_index;
+		//			pl.do_send(sizeof(Del_item), &Del_item);
+		//		}
+		//	}
+		//}
 
 		break;
 	}
@@ -374,7 +558,7 @@ int get_new_index()
 {
 	static int g_id = 0;
 	mylock.lock();
-	for (int i = 0; i < MAX_Player; ++i)
+	for (int i = 0; i < MAX_USER; ++i)
 		if (false == clients[i].in_use) {
 			clients[i].in_use = true;
 			mylock.unlock();

@@ -4,7 +4,6 @@
 const short SERVER_PORT = 4000;
 
 const int  MAX_NAME_SIZE = 20;
-const int  MAX_MAP_SIZE = 256;
 const int  MAX_ITEM_SIZE = 12;
 const int BUFSIZE = 256;
 
@@ -50,7 +49,7 @@ struct LOGIN_OK_packet {// 로그인 허락 패킷
 	int index; // 플레이어의 인덱스
 	int level; // 플레이어 레벨
 	int exp; // 플레이어 경험치
-	char map[MAX_MAP_SIZE]; // 맵 정보
+	int map; // 맵 정보
 };
 
 struct LOGIN_ERROR_packet {

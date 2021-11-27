@@ -140,10 +140,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Multi_Server.cpp" />
+    <ClCompile Include="Object.cpp" />
     <ClCompile Include="Session.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="constant_numbers.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="protocol.h" />
     <ClInclude Include="Session.h" />
   </ItemGroup>

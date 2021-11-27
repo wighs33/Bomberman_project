@@ -52,13 +52,17 @@ char recv_buf[BUFSIZE];
 TCHAR input_str[edit_box_max_size];
 
 int my_index;	//현재 클라이언트의 플레이어 배열에서 인덱스
+
 static HWND hButton, hEdit;
+
 bool isLogin = false;
+
+int map_num;	//몇 번 맵 선택?
 
 ////////////////////////////////////////////////////////////////////////////
 //--- 컨테이너
 
-//테스트용 맵
+//맵
 template<typename T, size_t X, size_t Y>
 using tileArr = array<array<T, X>, Y>;
 
@@ -86,6 +90,7 @@ vector <Bomb>	bombs;
 ////////////////////////////////////////////////////////////////////////////
 //--- 열거형
 
+//타일 내 정보
 enum Map_object_type {
 	M_EMPTY, M_BLOCK, M_ROCK
 };
@@ -105,6 +110,7 @@ void Send_packet(SOCKET s);
 void Recv_packet(SOCKET s);
 void Process_packet(char* p);
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map,const char* map_path);
+void Setting_Map();
 void Display_Players_Info(HDC, HDC, int, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, 
 	HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP);
 
@@ -270,25 +276,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		hBit_ready = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP26));
 		hBit_play = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP27));
 		hBit_dead = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP28));
-
-		
-		//map 세팅
-		for (int i = 0; i < nTiles; ++i) {
-			if (map_1[i / tile_max_w_num][i % tile_max_w_num] == M_BLOCK) {
-				int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
-				int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
-
-				blocks.push_back(Block(X, Y, bl_indx));
-				bl_indx++;
-			}
-			else if (map_1[i / tile_max_w_num][i % tile_max_w_num] == M_ROCK) {
-				int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
-				int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
-
-				rocks.push_back(Rock(X, Y, r_indx));
-				r_indx++;
-			}
-		}
 
 		hButton = CreateWindow(_T("Button"), _T("확인"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 200, 0, 100, 25, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
 		hEdit = CreateWindow(_T("edit"), _T("-------- PLEASE INPUT ID --------"), WS_CHILD | WS_VISIBLE | WS_BORDER, 0, 0, 200, 25, hwnd, (HMENU)IDC_EDIT, g_hInst, NULL);
@@ -843,6 +830,42 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map, const char* map
 	json_map.close();
 }
 
+//맵 세팅
+void Setting_Map()
+{
+	int bl_indx = 0;
+	int r_indx = 0;
+
+	tileArr<int, tile_max_w_num, tile_max_h_num> map;
+
+	switch (map_num) {
+	case 1:
+		map = map_1;
+		break;
+
+	case 2:
+		map = map_2;
+		break;
+	}
+
+	for (int i = 0; i < nTiles; ++i) {
+		if (map[i / tile_max_w_num][i % tile_max_w_num] == M_BLOCK) {
+			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
+			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
+
+			blocks.push_back(Block(X, Y, bl_indx));
+			bl_indx++;
+		}
+		else if (map[i / tile_max_w_num][i % tile_max_w_num] == M_ROCK) {
+			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
+			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
+
+			rocks.push_back(Rock(X, Y, r_indx));
+			r_indx++;
+		}
+	}
+}
+
 //수신한 패킷 판별 함수
 void Process_packet(char* p)
 {
@@ -871,6 +894,9 @@ void Process_packet(char* p)
 		players[my_index]._rock_count = 0;
 		players[my_index]._level = packet->level;
 		players[my_index]._exp = packet->exp;
+		map_num = packet->map;
+
+		Setting_Map();
 
 		break;
 	}
