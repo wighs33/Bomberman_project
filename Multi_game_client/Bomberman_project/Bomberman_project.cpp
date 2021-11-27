@@ -1,11 +1,11 @@
 #include <winsock2.h>	// windows.h 보다 위에 두어야 재정의 빌드 에러 안 생김
 #include <windows.h>	
 #include <tchar.h>
-#include <random>
+//#include <random>
 #include <array>
 #include <vector>
 #include <fstream>
-//#include <iostream>	//콘솔 출력용
+#include <iostream>	//콘솔 출력용
 
 #include "resource.h"
 #include "Player.h"
@@ -37,9 +37,9 @@ HINSTANCE g_hInst;
 LPCTSTR lpszClass = "Window Class Name";
 LPCTSTR lpszWindowName = "테러맨";
 
-random_device rd;
-default_random_engine dre{ rd() };
-uniform_int_distribution<> uid{ 1,100 };
+//random_device rd;
+//default_random_engine dre{ rd() };
+//uniform_int_distribution<> uid{ 1,100 };
 
 HANDLE hEvent;
 SOCKET sock;
@@ -55,7 +55,8 @@ int my_index;	//현재 클라이언트의 플레이어 배열에서 인덱스
 
 int map_num;	//몇 번 맵 선택?
 
-bool isLogin{ 0 };
+bool isLogin =  FALSE;
+bool isReady = FALSE;
 
 ////////////////////////////////////////////////////////////////////////////
 //--- 컨테이너
@@ -114,14 +115,13 @@ void Display_Players_Info(HDC, HDC, int, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBI
 
 
 ////////////////////////////////////////////////////////////////////////////
-// --- 메인, 쓰래드, 메세지 프로시저 함수
+//--- 윈도우 메인 (윈도우 클래스, 메세지 프로시저, 쓰레드함수 생성)
 
-//윈도우 메인 (윈도우 클래스, 메세지 프로시저, 쓰레드함수 생성)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
-	/*AllocConsole();
-	freopen("CONOUT$", "wt", stdout);*/
-
+	AllocConsole();
+	freopen("CONOUT$", "wt", stdout);
+	
 	//자동 리셋 이벤트 생성 (비신호 시작)
 	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (hEvent == NULL) return 1;
@@ -169,6 +169,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 	return Message.wParam;
 }
 
+
+////////////////////////////////////////////////////////////////////////////
+//--- 통신용 쓰레드 함수들
+
 //게임 플로우 쓰레드 (송신 역활 & 수신용 쓰래드 생성)
 DWORD WINAPI ClientMain(LPVOID arg) 
 {
@@ -212,6 +216,10 @@ DWORD WINAPI RecvThread(LPVOID arg)
 		Process_packet(recv_buf);
 	}
 }
+
+
+////////////////////////////////////////////////////////////////////////////
+//--- 메세지 프로시저
 
 //로그인 대화상자 메세지 프로시저
 BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
@@ -286,12 +294,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	static int p_head_idx{ 0 };
 	static int p_body_idx{ 0 };
 
-	int bl_indx{ 0 };
-	int r_indx{ 0 };
+	static HWND hButton;
+	static char* str_ready{ (char*)"레디를 눌러주세요..." };
+	static int str_ready_x{ 0 };
 
 
 	switch (iMessage) {
 	case WM_CREATE:
+
+		//대화상자 생성
+		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG1), hwnd, (DLGPROC)LoginDlgProc);
+
+
 		hdc = GetDC(hwnd);
 		hBit_main = CreateCompatibleBitmap(hdc, bg_w + backboard_w, bg_h);
 		ReleaseDC(hwnd, hdc);
@@ -331,7 +345,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		hBit_play = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP27));
 		hBit_dead = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP28));
 
-		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG1), hwnd, (DLGPROC)LoginDlgProc);
+		hButton = CreateWindow(_T("Button"), _T("READY"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 
+			bg_w + 5 + 25 * 2 + 20, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * my_index + 30, 60, 30, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
 
 		SetTimer(hwnd, 1, game_mil_sec, NULL);
 		break;
@@ -349,6 +364,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		DeleteDC(mem1dc);
 
 		EndPaint(hwnd, &ps);
+		break;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case IDC_BUTTON:
+			if (!isReady) {
+				isReady = TRUE;
+				players[my_index].ChangeState(send_buf, READY);
+				SetEvent(hEvent);
+				DestroyWindow(hButton);
+				hButton = CreateWindow(_T("Button"), _T("UNREADY"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+					bg_w + 5 + 25 * 2 + 20 - 10, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * my_index + 30, 80, 30, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
+			}
+			else {
+				isReady = FALSE;
+				players[my_index].ChangeState(send_buf, ACCEPT);
+				SetEvent(hEvent);
+				DestroyWindow(hButton);
+				hButton = CreateWindow(_T("Button"), _T("READY"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+					bg_w + 5 + 25 * 2 + 20, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * my_index + 30, 60, 30, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
+			}
+			break;
+		}
 		break;
 
 	case WM_KEYDOWN:
@@ -401,11 +440,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		//[연산처리]
 		//--- 애니메이션
 		timecnt++;
-		if (timecnt >= 100) {
+		if (timecnt >= 100) 
 			timecnt = 0;
+		
 
-			int a = uid(dre) % 4 + 1;
-		}
+		str_ready_x++;
+		if (str_ready_x > bg_w)
+			str_ready_x = 0;
 
 		//플레이어
 		//몸 스프라이트 교체
@@ -849,6 +890,7 @@ void Process_packet(char* p)
 		players[my_index]._rock_count = 0;
 		players[my_index]._level = packet->level;
 		players[my_index]._exp = packet->exp;
+		players[my_index]._index = packet->index;
 		map_num = packet->map;
 
 		Setting_Map();
@@ -857,7 +899,7 @@ void Process_packet(char* p)
 	}
 
 	case LOGIN_ERROR: {
-		MessageBox(NULL, "로그인 정보가 일치하지 않습니다.", "오류", MB_ICONWARNING);
+		MessageBox(NULL, "로그인 정보가 일치하지 않습니다.", "로그인 실패", MB_ICONWARNING);
 		break;
 	}
 
@@ -882,6 +924,7 @@ void Process_packet(char* p)
 		players[index]._rock_count = 0;
 		players[index]._level = packet->level;
 		players[index]._exp = packet->exp;
+		players[index]._index = packet->index;
 
 		break;
 	}
@@ -905,16 +948,32 @@ void Process_packet(char* p)
 	case GET_ITEM: {
 		break;
 	}
+
 	case INIT_BOMB: {
 		break;
 	}
-	case CONDITION: {
+
+	case CHANGE_STATE: {
+		PLAYER_CHANGE_STATE_packet* packet = reinterpret_cast<PLAYER_CHANGE_STATE_packet*>(p);
+
+		for (auto& player : players) {
+			if (strcmp(packet->id, player._id)) {
+				player._x = packet->x;
+				player._y = packet->y;
+				player._state = packet->state;
+				break;
+			}
+		}
+
 		break;
 	}
+					
+
 	default: {
 		MessageBox(NULL, "[에러] UnKnown Packet", "에러", MB_ICONERROR);
-		break;
+		err_quit("UnKnown Packet");
 	}
+
 	}
 
 }
