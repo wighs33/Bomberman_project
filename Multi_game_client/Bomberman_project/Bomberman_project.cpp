@@ -102,8 +102,6 @@ enum Map_object_type {
 DWORD WINAPI ClientMain(LPVOID arg);
 DWORD WINAPI RecvThread(LPVOID arg);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
-int Check_Collision_bomb(Object source, Object target[]);
-int Check_Collision(int source_type, int source_index, int target_type);
 void err_quit(const char* msg);
 void err_display(const char* msg);
 void Send_packet(SOCKET s);
@@ -323,46 +321,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		switch (wParam) {
 		case VK_RIGHT:
 			//충동체크
-			players[my_index]._x += pl_speed;
-			if (!Check_Collision(0, my_index, 1) && !Check_Collision(0, my_index, 2)) {
 				players[my_index].InputMoveKey(send_buf, 1);
 				SetEvent(hEvent);
-			}
-			else
-				players[my_index]._x -= pl_speed;
 			break;
 
 		case VK_LEFT:
 			//충동체크
-			players[my_index]._x -= pl_speed;
-			if (!Check_Collision(0, my_index, 1) && !Check_Collision(0, my_index, 2)) {
 				players[my_index].InputMoveKey(send_buf, 2);
 				SetEvent(hEvent);
-			}
-			else
-				players[my_index]._x += pl_speed;
 			break;
 
 		case VK_UP:
 			//충동체크
-			players[my_index]._y -= pl_speed;
-			if (!Check_Collision(0, my_index, 1) && !Check_Collision(0, my_index, 2)) {
 				players[my_index].InputMoveKey(send_buf, 4);
 				SetEvent(hEvent);
-			}
-			else
-				players[my_index]._y += pl_speed;
 			break;
 
 		case VK_DOWN:
 			//충동체크
-			players[my_index]._y += pl_speed;
-			if (!Check_Collision(0, my_index, 1) && !Check_Collision(0, my_index, 2)) {
 				players[my_index].InputMoveKey(send_buf, 3);
 				SetEvent(hEvent);
-			}
-			else
-				players[my_index]._y -= pl_speed;
 			break;
 
 		case VK_SPACE:
@@ -627,74 +605,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 ////////////////////////////////////////////////////////////////////////////
 //--- 사용자 정의 함수 정의
 
-//type: 0 - player / 1 - block / 2 - rock / 3 - item / 4 - bomb / 5 - explode
-//충돌 발생시 해당 오브젝트 인덱스 번호 + 1 리턴 / 충돌이 없으면 0 리턴
-//따라서!! 충돌이 안일어날시 0을 리턴하므로, 0번째 인덱스를 구분하기 위해서 + 1을 해준다.
-int Check_Collision(int source_type, int source_index, int target_type)
-{
-	int s_x{ 0 }, s_y{ 0 };
-	int s_x_bias{ 0 }, s_y_bias{ 0 };
-
-	switch (source_type) {
-	case 0:	//플레이어
-		s_x = players[source_index]._x;
-		s_y = players[source_index]._y;
-		s_x_bias = p_size;
-		s_y_bias = p_size;
-		break;
-
-	}
-
-	RECT temp;
-	RECT source_rt{ s_x, s_y, s_x + s_x_bias, s_y + s_y_bias };
-
-	switch (target_type) {
-	case 1:	//블록
-		for (int i = 0; i < blocks.size(); ++i) {
-			if (blocks[i].active) {
-				RECT target_rt{ blocks[i].x + adj_obstacle_size_tl, blocks[i].y + adj_obstacle_size_tl, blocks[i].x + tile_size - adj_obstacle_size_br,blocks[i].y + tile_size - adj_obstacle_size_br };
-
-				if (IntersectRect(&temp, &source_rt, &target_rt)) {
-					//if(source_type == 0)
-
-					return (i + 1);
-				}
-			}
-		}
-		break;
-
-	case 2:	//바위
-		for (int i = 0; i < rocks.size(); ++i) {
-			if (rocks[i].active) {
-				RECT target_rt{ rocks[i].x + adj_obstacle_size_tl, rocks[i].y + adj_obstacle_size_tl, rocks[i].x + tile_size - adj_obstacle_size_br,rocks[i].y + tile_size - adj_obstacle_size_br };
-
-				if (IntersectRect(&temp, &source_rt, &target_rt)) {
-					return (i + 1);
-				}
-			}
-		}
-		break;
-	}
-
-	//외벽과 충돌체크
-	/*if (source_type == 0) {
-		if (s_x >= bg_w - outer_wall_start - p_size / 3) {
-			players[source_index]._x -= pl_speed; return 1;
-		}
-		if (s_x <= outer_wall_start - p_size / 3) {
-			players[source_index]._x += pl_speed; return 1;
-		}
-		if (s_y >= bg_h - outer_wall_start - p_size / 3) {
-			players[source_index]._y -= pl_speed; return 1;
-		}
-		if (s_y <= outer_wall_start - p_size / 3) {
-			players[source_index]._y += pl_speed; return 1;
-		}
-	}*/
-
-	return 0;	//충돌X
-}
-
 void Display_Players_Info(HDC mem1dc, HDC mem2dc, int player_num, HBITMAP old_bitmap, HBITMAP num_bitmap, HBITMAP al_p_bitmap, HBITMAP player_bitmap, HBITMAP state_bitmap,
 	HBITMAP heart_bitmap, HBITMAP h_num_bitmap, HBITMAP more_bomb_bitmap, HBITMAP mb_num_bitmap, HBITMAP more_power_bitmap, HBITMAP mp_num_bitmap, HBITMAP rock_bitmap, HBITMAP r_num_bitmap)
 {
@@ -900,6 +810,7 @@ void Process_packet(char* p)
 
 		break;
 	}
+
 	case LOGIN_ERROR: {
 		cout << "로그인 정보가 일치하지 않습니다" << endl;
 		break;
@@ -960,6 +871,5 @@ void Process_packet(char* p)
 		break;
 	}
 	}
-
 
 }

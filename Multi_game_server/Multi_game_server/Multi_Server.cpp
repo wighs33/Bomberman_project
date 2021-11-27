@@ -71,6 +71,7 @@ void process_packet(int client_index, char* p);
 int get_new_index();
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
+int Check_Collision(int source_type, int source_index, int target_type);
 DWORD WINAPI Thread_1(LPVOID arg);
 
 //////////////////////////////////////////////////////////
@@ -82,7 +83,8 @@ int main(int argc, char* argv[])
 
 	ifstream in("플레이어_정보.txt");
 	if (!in) {
-		cout << "파일 읽기 실패" << endl;
+		cout << "DB 파일 읽기 실패" << endl;
+		getchar();
 		exit(1);
 	}
 		
@@ -170,8 +172,7 @@ void err_quit(const char* msg)
 
 bool get_status(int client_index, char* id)
 {
-	// 초기화
-
+	//아이디 검색
 	strcpy_s(g_id_buf, id);
 	auto b_n = find_if(clients_DB.cbegin(), clients_DB.cend(), [](const Session_DB& a) {
 		return strcmp(a._id, g_id_buf) == 0;
@@ -179,7 +180,10 @@ bool get_status(int client_index, char* id)
 	if (b_n == clients_DB.end()) {
 		return false;
 	}
+	
+	//-- 초기화
 
+	//맵별 위치 지정
 	if (map_num == 1) {
 		switch (client_index) {
 		case 0:
@@ -332,6 +336,67 @@ void Setting_Map()
 	}
 }
 
+//충돌체크
+//type: 0 - player / 1 - block / 2 - rock / 3 - item / 4 - bomb / 5 - explode / 6 - wall
+//충돌 발생시 해당 오브젝트 인덱스 번호 + 1 리턴 / 충돌이 없으면 0 리턴
+//따라서!! 충돌이 안일어날시 0을 리턴하므로, 0번째 인덱스를 구분하기 위해서 + 1을 해준다.
+int Check_Collision(int source_type, int source_index, int target_type)
+{
+	int s_x{ 0 }, s_y{ 0 };
+	int s_x_bias{ 0 }, s_y_bias{ 0 };
+
+	switch (source_type) {
+	case 0:	//플레이어
+		s_x = clients[source_index]._x;
+		s_y = clients[source_index]._y;
+		s_x_bias = p_size;
+		s_y_bias = p_size;
+		break;
+
+	}
+
+	RECT temp;
+	RECT source_rt{ s_x, s_y, s_x + s_x_bias, s_y + s_y_bias };
+
+	switch (target_type) {
+	case 1:	//블록
+		for (int i = 0; i < blocks.size(); ++i) {
+			if (blocks[i].active) {
+				RECT target_rt{ blocks[i].x + adj_obstacle_size_tl, blocks[i].y + adj_obstacle_size_tl, blocks[i].x + tile_size - adj_obstacle_size_br,blocks[i].y + tile_size - adj_obstacle_size_br };
+
+				if (IntersectRect(&temp, &source_rt, &target_rt)) 
+					return (i + 1);
+			}
+		}
+		break;
+
+	case 2:	//바위
+		for (int i = 0; i < rocks.size(); ++i) {
+			if (rocks[i].active) {
+				RECT target_rt{ rocks[i].x + adj_obstacle_size_tl, rocks[i].y + adj_obstacle_size_tl, rocks[i].x + tile_size - adj_obstacle_size_br,rocks[i].y + tile_size - adj_obstacle_size_br };
+
+				if (IntersectRect(&temp, &source_rt, &target_rt)) 
+					return (i + 1);
+			}
+		}
+		break;
+
+	case 6:	//외벽
+		if (s_x >= bg_w - outer_wall_start - p_size / 3) 
+			return 1;
+		if (s_x <= outer_wall_start - p_size / 3) 
+			return 1;
+		if (s_y >= bg_h - outer_wall_start - p_size / 3) 
+			return 1;
+		if (s_y <= outer_wall_start - p_size / 3) 
+			return 1;
+		
+		break;
+	}
+
+	return 0;	//충돌X
+}
+
 void process_packet(int client_index, char* p)
 {
 
@@ -417,12 +482,31 @@ void process_packet(int client_index, char* p)
 		case 1: x_bias = pl_speed * (+1); break;
 		default:
 			cout << "Invalid move in client " << cl._id << endl;
+			getchar();
 			exit(-1);
 		}
 
 		cl._x += x_bias;
 		cl._y += y_bias;
 		cl._dir = packet->dir;
+
+		//블록과 충돌체크
+		if (Check_Collision(0, cl._index, 1)) {
+			cl._x -= x_bias;
+			cl._y -= y_bias;
+		}
+
+		//바위와 충돌체크
+		if (Check_Collision(0, cl._index, 2)) {
+			cl._x -= x_bias;
+			cl._y -= y_bias;
+		}
+
+		//외벽과 충돌체크
+		if (Check_Collision(0, cl._index, 6)) {
+			cl._x -= x_bias;
+			cl._y -= y_bias;
+		}
 
 		for (auto& pl : clients) {
 			if (true == pl.in_use)
@@ -469,6 +553,7 @@ void process_packet(int client_index, char* p)
 		//	case 3: cl._rock_count; break; //블록 개수
 		//	default:
 		//		cout << "Invalid item in client " << cl._id << endl;
+		//		getchar();
 		//		exit(-1);
 		//	}
 		//	CHANGE_BUF_packet Buf_Player;
@@ -541,6 +626,7 @@ void process_packet(int client_index, char* p)
 		//}// 하트
 		default:
 			cout << "Invalid condition in client " << cl._id << endl;
+			getchar();
 			exit(-1);
 		}
 		break;
