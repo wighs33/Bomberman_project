@@ -53,7 +53,7 @@ TCHAR input_str[edit_box_max_size];
 
 int my_index;	//현재 클라이언트의 플레이어 배열에서 인덱스
 
-static HWND hButton, hEdit;
+HWND hButton, hEdit, hText;
 
 bool isLogin = false;
 
@@ -275,8 +275,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		hBit_play = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP27));
 		hBit_dead = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP28));
 
-		hButton = CreateWindow(_T("Button"), _T("확인"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 200, 0, 100, 25, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
-		hEdit = CreateWindow(_T("edit"), _T("-------- PLEASE INPUT ID --------"), WS_CHILD | WS_VISIBLE | WS_BORDER, 0, 0, 200, 25, hwnd, (HMENU)IDC_EDIT, g_hInst, NULL);
+		hText = CreateWindow(_T("Static"), _T("아이디"), WS_CHILD | WS_VISIBLE | SS_CENTER | WS_DLGFRAME, (bg_w / 2 - backboard_w + 75) - 60, bg_h / 2 - 25, 60, 25, hwnd, (HMENU)-1, g_hInst, NULL);
+		hEdit = CreateWindow(_T("Edit"), _T(""), WS_CHILD | WS_VISIBLE | WS_BORDER, bg_w / 2 - backboard_w + 75, bg_h / 2 - 25, 200, 25, hwnd, (HMENU)IDC_EDIT, g_hInst, NULL);
+		hButton = CreateWindow(_T("Button"), _T("로그인"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, (bg_w / 2 - backboard_w + 75) + 200 + 10, bg_h / 2 - 25, 60, 25, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
+
+		SetFocus(hEdit);
 
 		SetTimer(hwnd, 1, game_mil_sec, NULL);
 		break;
@@ -287,13 +290,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		case IDC_BUTTON:
 			GetDlgItemText(hwnd, IDC_EDIT, input_str, edit_box_max_size);
 
-			if (strcmp((char*)input_str, "-------- PLEASE INPUT ID --------")) {
+			if (strcmp((char*)input_str, "")) {
 				Player temp_send_id;
 				temp_send_id.InputID(send_buf, input_str, edit_box_max_size);
 				SetEvent(hEvent);
 			}
 			else {
-				MessageBox(NULL, "이름을 입력해주세요.", "주의", MB_ICONWARNING);
+				MessageBox(NULL, "아이디를 입력해주세요.", "주의", MB_ICONWARNING);
 				SetFocus(hEdit);
 				SendMessage(hEdit, EM_SETSEL, 0, -1);
 			}
@@ -366,6 +369,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		if (isLogin) {
 			DestroyWindow(hButton);
 			DestroyWindow(hEdit);
+			DestroyWindow(hText);
 		}
 
 		//[연산처리]
@@ -812,7 +816,7 @@ void Process_packet(char* p)
 	}
 
 	case LOGIN_ERROR: {
-		cout << "로그인 정보가 일치하지 않습니다" << endl;
+		cout << "로그인 정보가 일치하지 않습니다." << endl;
 		break;
 	}
 
@@ -830,7 +834,7 @@ void Process_packet(char* p)
 		players[index]._state = packet->state;
 		players[index]._x = packet->x;
 		players[index]._y = packet->y;
-		players[index]._dir = 0;
+		players[index]._dir = packet->dir;
 		players[index]._heart = 3;
 		players[index]._bomb_count = 2;
 		players[index]._bomb_power = 1;

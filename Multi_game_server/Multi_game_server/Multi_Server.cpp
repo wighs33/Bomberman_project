@@ -443,6 +443,7 @@ void process_packet(int client_index, char* p)
 			IN_Player.type = INIT_PLAYER;
 			IN_Player.x = other._x;
 			IN_Player.y = other._y;
+			IN_Player.dir = other._dir;
 			IN_Player.state = other._state;
 			IN_Player.index = other._index;
 			IN_Player.level = other._level;
