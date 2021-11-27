@@ -5,6 +5,7 @@
 #include <array>
 #include <vector>
 #include <fstream>
+//#include <iostream>	//콘솔 출력용
 
 #include "resource.h"
 #include "Player.h"
@@ -25,8 +26,7 @@
 #define IDC_BUTTON 100
 #define IDC_EDIT 101
 
-//콘솔 출력용
-#include <iostream>
+
 using namespace std;
 
 
@@ -49,15 +49,13 @@ int retval;
 char send_buf[BUFSIZE];
 char recv_buf[BUFSIZE];
 
-TCHAR input_str[edit_box_max_size];
+TCHAR input_id_str[edit_box_max_size];
 
 int my_index;	//현재 클라이언트의 플레이어 배열에서 인덱스
 
-HWND hButton, hEdit, hText;
-
-bool isLogin = false;
-
 int map_num;	//몇 번 맵 선택?
+
+bool isLogin{ 0 };
 
 ////////////////////////////////////////////////////////////////////////////
 //--- 컨테이너
@@ -102,6 +100,8 @@ enum Map_object_type {
 DWORD WINAPI ClientMain(LPVOID arg);
 DWORD WINAPI RecvThread(LPVOID arg);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
+void DisplayText(HWND hEdit, const char* fmt, ...);
 void err_quit(const char* msg);
 void err_display(const char* msg);
 void Send_packet(SOCKET s);
@@ -119,8 +119,8 @@ void Display_Players_Info(HDC, HDC, int, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBI
 //윈도우 메인 (윈도우 클래스, 메세지 프로시저, 쓰레드함수 생성)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
-	AllocConsole();
-	freopen("CONOUT$", "wt", stdout);
+	/*AllocConsole();
+	freopen("CONOUT$", "wt", stdout);*/
 
 	//자동 리셋 이벤트 생성 (비신호 시작)
 	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -213,12 +213,68 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	}
 }
 
+//로그인 대화상자 메세지 프로시저
+BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
+{
+	static HWND hEdit_ID, hEdit_PW, hEdit_ID_T, hEdit_PW_T;
+
+	switch (iMessage)
+	{
+	case WM_INITDIALOG:
+		hEdit_ID = GetDlgItem(hwnd, IDC_EDIT1);
+		hEdit_PW = GetDlgItem(hwnd, IDC_EDIT2);
+		hEdit_ID_T = GetDlgItem(hwnd, IDC_EDIT3);
+		DisplayText(hEdit_ID_T, "아이디");
+		hEdit_PW_T = GetDlgItem(hwnd, IDC_EDIT4);
+		DisplayText(hEdit_PW_T, "패스워드");
+		SetFocus(hEdit_ID);
+		SetTimer(hwnd, 1, game_mil_sec, NULL);
+		return TRUE;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDOK:
+			GetDlgItemText(hwnd, IDC_EDIT1, input_id_str, edit_box_max_size);
+
+			if (strcmp((char*)input_id_str, "")) {
+				Player temp_send_id;
+				temp_send_id.InputID(send_buf, input_id_str, edit_box_max_size);
+				SetEvent(hEvent);
+			}
+			else {
+				MessageBox(NULL, "아이디를 입력해주세요.", "주의", MB_ICONWARNING);
+				SetFocus(hEdit_ID);
+				SendMessage(hEdit_ID, EM_SETSEL, 0, -1);
+			}
+			return TRUE;
+
+		case IDCANCEL:
+			EndDialog(hwnd, IDCANCEL);
+			exit(1);
+			return TRUE;
+		}
+		return FALSE;
+
+	case WM_TIMER:
+		if (isLogin) {
+			KillTimer(hwnd, 1);
+			EndDialog(hwnd, IDCANCEL);
+		}
+
+		return TRUE;
+
+	}
+
+	return  FALSE;
+}
+
 //윈도우 메세지 프로시저
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc;
 	PAINTSTRUCT ps;
 	HDC mem1dc, mem2dc;
+
 	static HBITMAP hBit_main, hBit_bg, hBit_issac, hBit_magdalene, hBit_lazarus, hBit_samson, hBit_eve, hBit_block, hBit_bomb, hBit_rock, hBit_heart;
 	static HBITMAP hBit_item_more_heart, hBit_item_more_power, hBit_item_more_bomb;
 	static HBITMAP hBit_backboard, hBit_num_0, hBit_num_1, hBit_num_2, hBit_num_3, hBit_num_4, hBit_num_5, hBit_al_p, hBit_empty, hBit_idle, hBit_ready, hBit_play, hBit_dead;
@@ -275,34 +331,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		hBit_play = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP27));
 		hBit_dead = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP28));
 
-		hText = CreateWindow(_T("Static"), _T("아이디"), WS_CHILD | WS_VISIBLE | SS_CENTER | WS_DLGFRAME, (bg_w / 2 - backboard_w + 75) - 60, bg_h / 2 - 25, 60, 25, hwnd, (HMENU)-1, g_hInst, NULL);
-		hEdit = CreateWindow(_T("Edit"), _T(""), WS_CHILD | WS_VISIBLE | WS_BORDER, bg_w / 2 - backboard_w + 75, bg_h / 2 - 25, 200, 25, hwnd, (HMENU)IDC_EDIT, g_hInst, NULL);
-		hButton = CreateWindow(_T("Button"), _T("로그인"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, (bg_w / 2 - backboard_w + 75) + 200 + 10, bg_h / 2 - 25, 60, 25, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
-
-		SetFocus(hEdit);
+		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG1), hwnd, (DLGPROC)LoginDlgProc);
 
 		SetTimer(hwnd, 1, game_mil_sec, NULL);
-		break;
-
-	case WM_COMMAND:
-		switch (LOWORD(wParam))
-		{
-		case IDC_BUTTON:
-			GetDlgItemText(hwnd, IDC_EDIT, input_str, edit_box_max_size);
-
-			if (strcmp((char*)input_str, "")) {
-				Player temp_send_id;
-				temp_send_id.InputID(send_buf, input_str, edit_box_max_size);
-				SetEvent(hEvent);
-			}
-			else {
-				MessageBox(NULL, "아이디를 입력해주세요.", "주의", MB_ICONWARNING);
-				SetFocus(hEdit);
-				SendMessage(hEdit, EM_SETSEL, 0, -1);
-			}
-			break;
-
-		}
 		break;
 
 	case WM_PAINT:
@@ -324,26 +355,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		switch (wParam) {
 		case VK_RIGHT:
 			//충동체크
-				players[my_index].InputMoveKey(send_buf, 1);
-				SetEvent(hEvent);
+			players[my_index].InputMoveKey(send_buf, 1);
+			SetEvent(hEvent);
 			break;
 
 		case VK_LEFT:
 			//충동체크
-				players[my_index].InputMoveKey(send_buf, 2);
-				SetEvent(hEvent);
+			players[my_index].InputMoveKey(send_buf, 2);
+			SetEvent(hEvent);
 			break;
 
 		case VK_UP:
 			//충동체크
-				players[my_index].InputMoveKey(send_buf, 4);
-				SetEvent(hEvent);
+			players[my_index].InputMoveKey(send_buf, 4);
+			SetEvent(hEvent);
 			break;
 
 		case VK_DOWN:
 			//충동체크
-				players[my_index].InputMoveKey(send_buf, 3);
-				SetEvent(hEvent);
+			players[my_index].InputMoveKey(send_buf, 3);
+			SetEvent(hEvent);
 			break;
 
 		case VK_SPACE:
@@ -366,11 +397,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_TIMER:
-		if (isLogin) {
-			DestroyWindow(hButton);
-			DestroyWindow(hEdit);
-			DestroyWindow(hText);
-		}
 
 		//[연산처리]
 		//--- 애니메이션
@@ -655,6 +681,21 @@ void Display_Players_Info(HDC mem1dc, HDC mem2dc, int player_num, HBITMAP old_bi
 		mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
 }
 
+void DisplayText(HWND hEdit, const char* fmt, ...)
+{
+	va_list arg;
+	va_start(arg, fmt);
+
+	char cbuf[edit_box_max_size + 256];
+	vsprintf(cbuf, fmt, arg);
+
+	int nLength = GetWindowTextLength(hEdit);
+	SendMessage(hEdit, EM_SETSEL, nLength, nLength);
+	SendMessage(hEdit, EM_REPLACESEL, FALSE, (LPARAM)cbuf);
+
+	va_end(arg);
+}
+
 void err_quit(const char* msg)
 {
 	LPVOID lpMsgBuf;
@@ -676,7 +717,7 @@ void err_display(const char* msg)
 		NULL, WSAGetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR)&lpMsgBuf, 0, NULL);
-	cout << msg << (char*)lpMsgBuf << endl;
+	MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONWARNING);
 	LocalFree(lpMsgBuf);
 }
 
@@ -788,15 +829,15 @@ void Process_packet(char* p)
 	switch (packet_type) {
 
 	case LOGIN_OK: {
-		isLogin = true;
+		isLogin = TRUE;
 
 		LOGIN_OK_packet* packet = reinterpret_cast<LOGIN_OK_packet*>(p);
 
 		my_index = packet->index;
 
-		strcpy_s(players[my_index]._id, input_str);
+		strcpy_s(players[my_index]._id, input_id_str);
 
-		cout << "[수신 성공] \'" << players[my_index]._id << "\' (자기자신) 로그인 확인" << endl;
+		//cout << "[수신 성공] \'" << players[my_index]._id << "\' (자기자신) 로그인 확인" << endl;
 
 		players[my_index]._state = ACCEPT;
 		players[my_index]._x = packet->x;
@@ -816,7 +857,7 @@ void Process_packet(char* p)
 	}
 
 	case LOGIN_ERROR: {
-		cout << "로그인 정보가 일치하지 않습니다." << endl;
+		MessageBox(NULL, "로그인 정보가 일치하지 않습니다.", "오류", MB_ICONWARNING);
 		break;
 	}
 
@@ -829,7 +870,7 @@ void Process_packet(char* p)
 
 		strcpy_s(players[index]._id, packet->id);
 
-		cout << "[수신 성공] \'" << players[index]._id << "\' (타 플레이어) 로그인 확인" << endl;
+		//cout << "[수신 성공] \'" << players[index]._id << "\' (타 플레이어) 로그인 확인" << endl;
 
 		players[index]._state = packet->state;
 		players[index]._x = packet->x;
@@ -871,7 +912,7 @@ void Process_packet(char* p)
 		break;
 	}
 	default: {
-		cout << "[에러] UnKnown Packet" << endl;
+		MessageBox(NULL, "[에러] UnKnown Packet", "에러", MB_ICONERROR);
 		break;
 	}
 	}
