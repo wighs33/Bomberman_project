@@ -37,7 +37,7 @@ public:
 	char _id[BUFSIZE] = " "; // 플레이어 아이디
 	int _index;
 	int _x, _y; // 플레이어 좌표
-	int _dir;	// 이동 방향
+	int _dir;	// 이동 방향 ( 좌 - 2 / 우 - 1 / 상 - 4 / 하 - 3 )
 	int _level;
 	int _exp;
 	int _state; // 접속, 레디, 게임 중, 사망

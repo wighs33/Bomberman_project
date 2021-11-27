@@ -290,10 +290,10 @@ void process_packet(int client_index, char* p)
 		int x_bias{ 0 }, y_bias{ 0 };
 
 		switch (packet->dir) {
-		case 4: /*if (y > 0)*/  y_bias = pl_speed * (-1); break;
-		case 3: /*if (y < (WORLD_HEIGHT - 1))*/ y_bias = pl_speed * (+1); break;
-		case 2: /*if (x > 0)*/ x_bias = pl_speed * (-1); break;
-		case 1: /*if (x < (WORLD_WIDTH - 1))*/ x_bias = pl_speed * (+1); break;
+		case 4: y_bias = pl_speed * (-1); break;
+		case 3: y_bias = pl_speed * (+1); break;
+		case 2: x_bias = pl_speed * (-1); break;
+		case 1: x_bias = pl_speed * (+1); break;
 		default:
 			cout << "Invalid move in client " << cl._id << endl;
 			exit(-1);
@@ -315,10 +315,6 @@ void process_packet(int client_index, char* p)
 				Move_Player.dir = cl._dir;
 				pl.do_send(sizeof(Move_Player), &Move_Player);
 
-				cout << Move_Player.id << endl << endl;
-				cout << "ÀÌµ¿" << endl;
-				cout << Move_Player.x << endl;
-				cout << Move_Player.y << endl;
 			}
 		}
 		break;

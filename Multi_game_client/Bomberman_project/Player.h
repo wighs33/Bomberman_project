@@ -10,7 +10,7 @@ public:
 	int _state = NO_ACCEPT;
 	int _x;		//left
 	int	_y;		//top
-	int _dir;
+	int _dir;	//이동 방향 ( 좌 - 2 / 우 - 1 / 상 - 4 / 하 - 3 )
 	int _heart;
 	int _bomb_count;
 	int _bomb_power;

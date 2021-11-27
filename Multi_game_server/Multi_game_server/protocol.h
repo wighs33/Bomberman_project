@@ -1,5 +1,4 @@
 #pragma once
-#include "constant_numbers.h"
 
 const short SERVER_PORT = 4000;
 
@@ -28,7 +27,6 @@ enum Packet_Type {
 	DELETE_ITEM,
 	CHANGE_ITEMBUF
 };
-
 
 enum Player_Condition {
 	NO_ACCEPT,
@@ -97,7 +95,7 @@ struct GET_ITEM_packet {// 아이템 획득 요청 피킷
 struct MOVE_PLAYER_packet { // 플레이어 이동 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 
-	int dir; // 이동 방향
+	int dir; // 이동 방향  ( 좌 - 2 / 우 - 1 / 상 - 4 / 하 - 3 )
 	char id[BUFSIZE]; // 플레이어 아이디
 };
 
@@ -105,7 +103,7 @@ struct MOVE_OK_packet { // 플레이어 이동 확인 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 8
 	int x, y; // 플레이어 좌표
-	int dir;	// 이동 방향
+	int dir;	// 이동 방향  ( 좌 - 2 / 우 - 1 / 상 - 4 / 하 - 3 )
 	char id[BUFSIZE]; // 플레이어 아이디
 };
 
