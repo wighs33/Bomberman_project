@@ -208,7 +208,7 @@ void do_bomb(int id) {
 		if (obj.active != true) continue;
 		if (true == is_bomb(obj.object_index)) continue;
 		//¶ô
-		if (true == is_near(id, obj.object_index)); {
+		if (true == is_near(id, obj.object_index)) {
 			obj.active = false;
 		}
 		//¾ð¶ô
@@ -898,3 +898,4 @@ DWORD WINAPI Thread_1(LPVOID arg)
 		}
 	}
 }
+

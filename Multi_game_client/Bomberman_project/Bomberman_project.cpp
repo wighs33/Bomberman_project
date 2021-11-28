@@ -5,7 +5,7 @@
 #include <array>
 #include <vector>
 #include <fstream>
-#include <iostream>	//콘솔 출력용
+//#include <iostream>	//콘솔 출력용
 
 #include "resource.h"
 #include "Player.h"
@@ -33,6 +33,7 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////
 //--- 전역 변수
 
+HWND g_hwnd;
 HINSTANCE g_hInst;
 LPCTSTR lpszClass = "Window Class Name";
 LPCTSTR lpszWindowName = "테러맨";
@@ -57,6 +58,11 @@ int map_num;	//몇 번 맵 선택?
 
 bool isLogin =  FALSE;
 bool isReady = FALSE;
+
+bool destroyButton = FALSE;
+
+bool setfocus_idedit = FALSE;
+
 
 ////////////////////////////////////////////////////////////////////////////
 //--- 컨테이너
@@ -85,6 +91,7 @@ vector <Item>	items;
 
 //폭탄
 vector <Bomb>	bombs;
+
 
 ////////////////////////////////////////////////////////////////////////////
 //--- 열거형
@@ -119,8 +126,8 @@ void Display_Players_Info(HDC, HDC, int, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBI
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
-	AllocConsole();
-	freopen("CONOUT$", "wt", stdout);
+	/*AllocConsole();
+	freopen("CONOUT$", "wt", stdout);*/
 	
 	//자동 리셋 이벤트 생성 (비신호 시작)
 	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -133,7 +140,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 	Load_Map(map_1, "maps_json/map_1.json");
 	Load_Map(map_2, "maps_json/map_2.json");
 
-	HWND hwnd;
 	MSG Message;
 	WNDCLASSEX WndClass;
 	g_hInst = hInstance;
@@ -152,10 +158,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 	WndClass.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
 	RegisterClassEx(&WndClass);
 
-	hwnd = CreateWindow(lpszClass, lpszWindowName, WS_OVERLAPPEDWINDOW, 0, 0, bg_w + 15 + backboard_w, bg_h + 39, NULL, (HMENU)NULL, hInstance, NULL);
+	g_hwnd = CreateWindow(lpszClass, lpszWindowName, WS_OVERLAPPEDWINDOW, 0, 0, bg_w + 15 + backboard_w, bg_h + 39, NULL, (HMENU)NULL, hInstance, NULL);
 
-	ShowWindow(hwnd, nCmdShow);
-	UpdateWindow(hwnd);
+	ShowWindow(g_hwnd, nCmdShow);
+	UpdateWindow(g_hwnd);
 
 	while (GetMessage(&Message, 0, 0, 0)) {
 		TranslateMessage(&Message);
@@ -201,6 +207,7 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	while (true)
 	{
 		Send_packet(sock);
+
 		WaitForSingleObject(hEvent, INFINITE);
 	}
 }
@@ -236,7 +243,8 @@ BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lPara
 		DisplayText(hEdit_PW_T, "패스워드");
 		SetFocus(hEdit_ID);
 		SetTimer(hwnd, 1, game_mil_sec, NULL);
-		return TRUE;
+		return FALSE;
+		//return TRUE; 로 하면 포커스가 기본적으로 IDOK 버튼으로 옮겨간다.
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
@@ -245,13 +253,12 @@ BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lPara
 
 			if (strcmp((char*)input_id_str, "")) {
 				Player temp_send_id;
-				temp_send_id.InputID(send_buf, input_id_str, edit_box_max_size);
+				temp_send_id.InputID(send_buf, input_id_str);
 				SetEvent(hEvent);
 			}
 			else {
-				MessageBox(NULL, "아이디를 입력해주세요.", "주의", MB_ICONWARNING);
+				MessageBox(NULL, "아이디를 입력해주세요.", "오류", MB_ICONWARNING);
 				SetFocus(hEdit_ID);
-				SendMessage(hEdit_ID, EM_SETSEL, 0, -1);
 			}
 			return TRUE;
 
@@ -259,16 +266,22 @@ BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lPara
 			EndDialog(hwnd, IDCANCEL);
 			exit(1);
 			return TRUE;
+
 		}
 		return FALSE;
 
 	case WM_TIMER:
+		if (setfocus_idedit) {
+			SetFocus(hEdit_ID);
+			SendMessage(hEdit_ID, EM_SETSEL, 0, -1);
+			setfocus_idedit = FALSE;
+		}
+
 		if (isLogin) {
 			KillTimer(hwnd, 1);
 			EndDialog(hwnd, IDCANCEL);
 		}
-
-		return TRUE;
+		return FALSE;
 
 	}
 
@@ -286,16 +299,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	static HBITMAP hBit_item_more_heart, hBit_item_more_power, hBit_item_more_bomb;
 	static HBITMAP hBit_backboard, hBit_num_0, hBit_num_1, hBit_num_2, hBit_num_3, hBit_num_4, hBit_num_5, hBit_al_p, hBit_empty, hBit_idle, hBit_ready, hBit_play, hBit_dead;
 	static HBITMAP oldBit1, oldBit2;
-	static HFONT hFont, oldFont;
+	static HFONT hFont_name, oldFont_name, hFont_msg, oldFont_msg;
 
 	//애니메이션 관련 변수들
 	static int timecnt{ 0 };
 	static int p_head_idx{ 0 };
 	static int p_body_idx{ 0 };
 
-	static HWND hButton;
 	static char* str_ready{ (char*)"레디를 눌러주세요..." };
-	static int str_ready_x{ 0 };
+	static int str_ready_x{ -100 };
+
+	static HWND hButton;
 
 
 	switch (iMessage) {
@@ -304,13 +318,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		//대화상자 생성
 		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG1), hwnd, (DLGPROC)LoginDlgProc);
 
-
 		hdc = GetDC(hwnd);
 		hBit_main = CreateCompatibleBitmap(hdc, bg_w + backboard_w, bg_h);
 		ReleaseDC(hwnd, hdc);
 
 		//폰트 설정
-		hFont = CreateFont(15, 10, 0, 0, FW_HEAVY, FALSE, FALSE, FALSE, HANGEUL_CHARSET,
+		hFont_name = CreateFont(15, 10, 0, 0, FW_HEAVY, FALSE, FALSE, FALSE, HANGEUL_CHARSET,
+			3, 2, 1, VARIABLE_PITCH | FF_ROMAN, "굴림체");
+
+		hFont_msg = CreateFont(40, 0, 0, 0, FW_HEAVY, FALSE, FALSE, FALSE, HANGEUL_CHARSET,
 			3, 2, 1, VARIABLE_PITCH | FF_ROMAN, "굴림체");
 
 		hBit_bg = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP1));
@@ -374,8 +390,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				players[my_index].ChangeState(send_buf, READY);
 				SetEvent(hEvent);
 				DestroyWindow(hButton);
-				hButton = CreateWindow(_T("Button"), _T("UNREADY"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-					bg_w + 5 + 25 * 2 + 20 - 10, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * my_index + 30, 80, 30, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
+					hButton = CreateWindow(_T("Button"), _T("UNREADY"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+						bg_w + 5 + 25 * 2 + 20 - 10, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * my_index + 30, 80, 30, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
 			}
 			else {
 				isReady = FALSE;
@@ -392,25 +408,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		switch (wParam) {
 		case VK_RIGHT:
-			//충동체크
 			players[my_index].InputMoveKey(send_buf, 1);
 			SetEvent(hEvent);
 			break;
 
 		case VK_LEFT:
-			//충동체크
 			players[my_index].InputMoveKey(send_buf, 2);
 			SetEvent(hEvent);
 			break;
 
 		case VK_UP:
-			//충동체크
 			players[my_index].InputMoveKey(send_buf, 4);
 			SetEvent(hEvent);
 			break;
 
 		case VK_DOWN:
-			//충동체크
 			players[my_index].InputMoveKey(send_buf, 3);
 			SetEvent(hEvent);
 			break;
@@ -437,15 +449,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_TIMER:
 
 		//[연산처리]
+		//--- 레디 텍스트 이동
+		if (!isReady) {
+			str_ready_x += 3;
+			if (str_ready_x > bg_w + backboard_w)
+				str_ready_x = -500;
+		}
+		
+		//버튼 비활성화
+		if (destroyButton) {
+			DestroyWindow(hButton);
+			destroyButton = FALSE;
+		}
+
 		//--- 애니메이션
 		timecnt++;
 		if (timecnt >= 100) 
 			timecnt = 0;
-		
-
-		str_ready_x++;
-		if (str_ready_x > bg_w)
-			str_ready_x = 0;
 
 		//플레이어
 		//몸 스프라이트 교체
@@ -475,7 +495,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		oldBit1 = (HBITMAP)SelectObject(mem1dc, hBit_main);
 
 		//폰트
-		oldFont = (HFONT)SelectObject(mem1dc, hFont);
+		oldFont_name = (HFONT)SelectObject(mem1dc, hFont_name);
 
 		SetBkMode(mem1dc, TRANSPARENT);		//폰트 배경 투명 설정
 
@@ -646,6 +666,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				}
 			}
 
+			//플레이어 상태가 대기(IDLE) 상태일 시
+			if (!isReady) {
+				oldFont_msg = (HFONT)SelectObject(mem1dc, hFont_msg);
+
+				SetBkMode(mem1dc, TRANSPARENT);		//폰트 배경 투명 설정
+
+				SetTextColor(mem1dc, RGB(255, 255, 0));	//폰트 색 노랑 설정
+
+				TextOut(mem1dc, str_ready_x, bg_h / 2, "READY 버튼를 눌러주세요...", _tcslen("READY 버튼를 눌러주세요..."));
+			}
+
 		}
 
 		SelectObject(mem2dc, oldBit2);
@@ -661,8 +692,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 	case WM_DESTROY:
 		KillTimer(hwnd, 1);
-		SelectObject(mem1dc, oldFont);
-		DeleteObject(hFont);
+		SelectObject(mem1dc, oldFont_name);
+		DeleteObject(hFont_name);
+		SelectObject(mem1dc, oldFont_msg);
+		DeleteObject(hFont_msg);
 		PostQuitMessage(0);
 
 		break;
@@ -899,6 +932,7 @@ void Process_packet(char* p)
 
 	case LOGIN_ERROR: {
 		MessageBox(NULL, "로그인 정보가 일치하지 않습니다.", "로그인 실패", MB_ICONWARNING);
+		setfocus_idedit = TRUE;
 		break;
 	}
 
@@ -907,6 +941,7 @@ void Process_packet(char* p)
 
 		int index = packet->index;
 
+		//중복 초기화 방지
 		if (players[index]._state == ACCEPT) break;
 
 		strcpy_s(players[index]._id, packet->id);
@@ -956,11 +991,16 @@ void Process_packet(char* p)
 		PLAYER_CHANGE_STATE_packet* packet = reinterpret_cast<PLAYER_CHANGE_STATE_packet*>(p);
 
 		for (auto& player : players) {
-			if (strcmp(packet->id, player._id)) {
+			if (strcmp(player._id, packet->id) == 0) 
+			{
 				player._x = packet->x;
 				player._y = packet->y;
 				player._state = packet->state;
-				break;
+
+				if (player._state == PLAY) {
+					player._dir = 0;
+					destroyButton = true;
+				}
 			}
 		}
 
