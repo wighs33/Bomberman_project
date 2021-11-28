@@ -3,9 +3,13 @@
 const short SERVER_PORT = 4000;
 
 const int  MAX_NAME_SIZE = 20;
+<<<<<<< HEAD
 const int  MAX_MAP_SIZE = 256;
 const int  MAX_ITEM_COUNT = 12;
 const int  MAX_BOMB = 12;
+=======
+const int  MAX_ITEM_SIZE = 12;
+>>>>>>> main
 const int BUFSIZE = 256;
   
 const int  MAX_USER = 4;
@@ -51,7 +55,7 @@ struct LOGIN_OK_packet {// 로그인 허락 패킷
 	int index; // 플레이어의 인덱스
 	int level; // 플레이어 레벨
 	int exp; // 플레이어 경험치
-	char map[MAX_MAP_SIZE]; // 맵 정보
+	int map; // 맵 정보
 };
 
 struct LOGIN_ERROR_packet {
@@ -63,6 +67,7 @@ struct INIT_PLAYER_packet { // 플레이어 생성 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 3	
 	int x, y; // 플레이어 좌표
+	int dir; // 이동 방향  ( 좌 - 2 / 우 - 1 / 상 - 4 / 하 - 3 )
 	int state; // 플레이어 상태
 	int index; // 플레이어의 인덱스
 	int level; // 플레이어 레벨
