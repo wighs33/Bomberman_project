@@ -13,6 +13,9 @@
 #include "protocol.h"
 #include "constant_numbers.h"
 #include "Session.h"
+
+#include <concurrent_priority_queue.h>
+
 #include "Object.h"
 
 #pragma comment(lib, "ws2_32")
@@ -62,6 +65,8 @@ enum Map_object_type {
 	M_EMPTY, M_BLOCK, M_ROCK
 };
 
+
+
 //////////////////////////////////////////////////////////
 
 void err_quit(const char* msg);
@@ -69,12 +74,38 @@ bool get_status(int client_index, char* id);
 bool get_ready(int client_index);
 void process_packet(int client_index, char* p);
 int get_new_index();
+
+void do_bomb(int id);
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
 int Check_Collision(int source_type, int source_index, int target_type);
+
 DWORD WINAPI Thread_1(LPVOID arg);
 
 //////////////////////////////////////////////////////////
+
+enum EVENT_TYPE { EVENT_DO_BOMB };
+
+struct timer_event {
+	int obj_id;
+	chrono::system_clock::time_point	start_time;
+	EVENT_TYPE ev;
+	int target_id;
+	constexpr bool operator < (const timer_event& _Left) const
+	{
+		return (start_time > _Left.start_time);
+	}
+
+};
+
+concurrency::concurrent_priority_queue <timer_event> timer_queue;
+
+class object {
+
+};
+
+array <object, MAX_BOMB> objects;
+
 
 int main(int argc, char* argv[])
 {
@@ -133,7 +164,7 @@ int main(int argc, char* argv[])
 	bind(listen_socket, (SOCKADDR*)&server_addr, sizeof(server_addr));
 	listen(listen_socket, SOMAXCONN);
 	
-	for (int i = 0; ; ++i) {
+	for (int i = 0; i < MAX_USER; ++i) {
 		// 데이터 통신에 사용할 변수
 		SOCKET client_sock;
 		SOCKADDR_IN clientaddr;
@@ -151,11 +182,46 @@ int main(int argc, char* argv[])
 		
 	}
 
+	while (1)
+	{
+
+
+	}
+
 	closesocket(listen_socket);
 	WSACleanup();
 	
 	return 0;
 }
+
+void do_bomb(int id)
+{
+
+}
+
+void do_timer() {
+
+	while (true) {
+		timer_event ev;
+		timer_queue.try_pop(ev);
+		//auto t = ev.start_time - chrono::system_clock::now();
+		int bomb_id = ev.obj_id;
+		//if (false == is_bomb(bomb_id)) continue;
+		//if (objects[bomb_id]._is_active == false) continue;
+		if (ev.start_time <= chrono::system_clock::now()) {
+			
+		}
+		else {
+			timer_queue.push(ev);
+			this_thread::sleep_for(10ms);
+
+		}
+
+
+	}
+
+}
+
 
 void err_quit(const char* msg)
 {
