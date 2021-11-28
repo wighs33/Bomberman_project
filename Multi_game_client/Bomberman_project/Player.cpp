@@ -36,11 +36,8 @@ void Player::ChangeState(char send_buf[], int state)
 	state_packet.y = _y;
 	state_packet.state = state;
 
-	std::cout << state_packet.id << std::endl;
-	std::cout << state_packet.x << std::endl;
-	std::cout << state_packet.y << std::endl;
-	std::cout << state_packet.state << std::endl;
-
 	ZeroMemory(send_buf, sizeof(send_buf));
-	memcpy(&send_buf[0], &state_packet, BUFSIZE);
+	memcpy(&send_buf[0], &state_packet, sizeof(state_packet));
+	
+
 }

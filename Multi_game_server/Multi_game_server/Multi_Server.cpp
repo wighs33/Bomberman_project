@@ -40,6 +40,7 @@ tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
 
 int map_num;	//몇 번 맵 선택?
 
+atomic<bool> g_item[MAX_ITEM_SIZE];
 
 //블록 - [파괴 불가능]
 vector <Block>	blocks;
@@ -128,8 +129,9 @@ int main(int argc, char* argv[])
 	Load_Map(map_2, "maps_json/map_2.json");
 
 	while (TRUE) {
-		cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
-		scanf("%d", &map_num);
+		//cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
+		//scanf("%d", &map_num);
+		map_num = 1;
 		if (map_num == 1 || map_num == 2) {
 			cout << map_num << " 번 맵을 선택하였습니다." << endl << endl;
 			break;
@@ -473,6 +475,7 @@ void process_packet(int client_index, char* p)
 	switch (packet_type) {
 
 	case LOGIN: {
+		cout << "login" << endl;
 		LOGIN_packet* packet = reinterpret_cast<LOGIN_packet*>(p);
 		//send_login_ok_packet(client_index);
 		strcpy_s(cl._id, packet->id);
@@ -537,6 +540,7 @@ void process_packet(int client_index, char* p)
 	}
 
 	case MOVE: {
+		cout << "move" << endl;
 		MOVE_PLAYER_packet* packet = reinterpret_cast<MOVE_PLAYER_packet*>(p);
 
 		int x_bias{ 0 }, y_bias{ 0 };
@@ -656,26 +660,32 @@ void process_packet(int client_index, char* p)
 	}
 
 	case CHANGE_STATE: {
+		cout << "change_state" << endl;
+		//LOGIN_packet* packet = reinterpret_cast<LOGIN_packet*>(p);
 		PLAYER_CHANGE_STATE_packet* packet = reinterpret_cast<PLAYER_CHANGE_STATE_packet*>(p);
-
 		switch (packet->state) {
 
 		case READY: {
 			cl._x = packet->x;
-			cl._x = packet->x;
-			cl._state = packet->state;
-
-			for (auto& pl : clients) {
-				if (true == pl.in_use)
-				{
-					PLAYER_CHANGE_STATE_packet state_packet;
-					state_packet.size = sizeof(state_packet);
-					state_packet.type = CHANGE_STATE;
-					strcpy_s(state_packet.id, cl._id);
-					state_packet.x = cl._x;
-					state_packet.y = cl._y;
-					state_packet.state = cl._state;
-					pl.do_send(sizeof(state_packet), &state_packet);
+			cl._y = packet->y;
+			cout << "packet's x: " << cl._x << endl;
+			cout << "packet's y: " << cl._y << endl;
+			cl._state = READY;
+			//bool g_start = get_ready(cl._index);
+			bool g_start = true;
+			if (g_start == true) {
+				for (auto& pl : clients) {
+					if (true == pl.in_use)
+					{
+						PLAYER_CHANGE_STATE_packet state_packet;
+						state_packet.size = sizeof(state_packet);
+						state_packet.type = CHANGE_STATE;
+						strcpy_s(state_packet.id, pl._id);
+						state_packet.x = pl._x;
+						state_packet.y = pl._y;
+						state_packet.state = PLAY;
+						pl.do_send(sizeof(state_packet), &state_packet);
+					}
 				}
 			}
 			break;
@@ -717,12 +727,12 @@ void process_packet(int client_index, char* p)
 		//	break; 
 		//}// 하트
 		default: {
-			cout << "packet's id: " << packet->id << endl;
+			/*cout << "packet's id: " << packet->id << endl;
 			cout << "packet's x: " << packet->x << endl;
 			cout << "packet's y: " << packet->y << endl;
 			cout << "packet's state: " << packet->state << endl;
 
-			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;
+			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;*/
 			//getchar();
 			//exit(-1);
 			break;
