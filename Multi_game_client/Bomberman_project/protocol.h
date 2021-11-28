@@ -79,8 +79,8 @@ struct PLAYER_CHANGE_STATE_packet { // 플레이어 상태 패킷
 struct PLAYER_BUF_packet {// 플레이어 버프 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 5
-	char id[BUFSIZE]; // 플레이어 아이디
 	int power; // 폭탄 위력
+	char id[BUFSIZE]; // 플레이어 아이디
 };
 
 struct GET_ITEM_packet {// 아이템 획득 요청 피킷
