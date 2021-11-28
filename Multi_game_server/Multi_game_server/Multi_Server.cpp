@@ -42,6 +42,7 @@ int map_num;	//¸î ¹ø ¸Ê ¼±ÅÃ?
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 atomic<bool> g_item[MAX_ITEM_SIZE];
 
 //ºí·Ï - [ÆÄ±« ºÒ°¡´É]
@@ -51,6 +52,13 @@ atomic<bool> g_item[MAX_ITEM_SIZE];
 =======
 //ºí·Ï - [ÆÄ±« ºÒ°¡´É]
 >>>>>>> parent of e57e735 (Merge pull request #25 from wighs33/YUNTAE_protocol_and_packet_second_commit)
+=======
+=======
+atomic<bool> g_item[MAX_ITEM_SIZE];
+
+>>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
+//ºí·Ï - [ÆÄ±« ºÒ°¡´É]
+>>>>>>> main
 vector <Block>	blocks;
 
 //¹ÙÀ§ - [ÆÄ±« °¡´É]
@@ -70,6 +78,7 @@ mutex mylock;
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 //Å¸ÀÏ ³» Á¤º¸
 =======
@@ -78,6 +87,12 @@ mutex mylock;
 =======
 //Å¸ÀÏ ³» Á¤º¸
 >>>>>>> parent of e57e735 (Merge pull request #25 from wighs33/YUNTAE_protocol_and_packet_second_commit)
+=======
+=======
+
+>>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
+//Å¸ÀÏ ³» Á¤º¸
+>>>>>>> main
 enum Map_object_type {
 	M_EMPTY, M_BLOCK, M_ROCK
 };
@@ -93,6 +108,7 @@ void process_packet(int client_index, char* p);
 int get_new_index();
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -109,6 +125,13 @@ void do_bomb(int id);
 =======
 void do_bomb(int id);
 >>>>>>> parent of 01b6a80 (power ìˆ˜ì •)
+=======
+void do_bomb(int id);
+=======
+
+
+>>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
+>>>>>>> main
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
 int Check_Collision(int source_type, int source_index, int target_type);
@@ -162,6 +185,7 @@ int main(int argc, char* argv[])
 	while (TRUE) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 		//cout << "¸î¹ø ¸ÊÀ» ÇÃ·¹ÀÌ ÇÏ½Ç²«°¡¿ä?(1, 2 Áß ¼±ÅÃ): ";
 		//scanf("%d", &map_num);
 		map_num = 1;
@@ -174,6 +198,17 @@ int main(int argc, char* argv[])
 		//map_num = 1;
 
 >>>>>>> a367ccd12336c6648a264fae1663e95b4f4a69b2
+=======
+		cout << "¸î¹ø ¸ÊÀ» ÇÃ·¹ÀÌ ÇÏ½Ç²«°¡¿ä?(1, 2 Áß ¼±ÅÃ): ";
+		scanf("%d", &map_num);
+		//map_num = 1;
+
+=======
+		//cout << "¸î¹ø ¸ÊÀ» ÇÃ·¹ÀÌ ÇÏ½Ç²«°¡¿ä?(1, 2 Áß ¼±ÅÃ): ";
+		//scanf("%d", &map_num);
+		map_num = 1;
+>>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
+>>>>>>> main
 		if (map_num == 1 || map_num == 2) {
 			cout << map_num << " ¹ø ¸ÊÀ» ¼±ÅÃÇÏ¿´½À´Ï´Ù." << endl << endl;
 			break;
@@ -255,6 +290,7 @@ void do_bomb(int id, int power) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 		//ë½
 		if (true == is_near(id, obj.object_index)); {
 =======
@@ -269,6 +305,14 @@ void do_bomb(int id, int power) {
 		//¶ô
 		if (true == is_near(id, obj.object_index, power)); {
 >>>>>>> parent of 01b6a80 (power ìˆ˜ì •)
+=======
+		//¶ô
+<<<<<<< HEAD
+		if (true == is_near(id, obj.object_index, power)); {
+=======
+		if (true == is_near(id, obj.object_index)); {
+>>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
+>>>>>>> main
 			obj.active = false;
 		}
 		//¾ð¶ô
@@ -328,6 +372,7 @@ bool get_status(int client_index, char* id)
 	
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	//-- ÃÊ±âÈ­
 
 	//¸Êº° À§Ä¡ ÁöÁ¤
@@ -336,6 +381,9 @@ bool get_status(int client_index, char* id)
 =======
 	//·¹º§, °æÇèÄ¡ DB¿ë µ¥ÀÌÅÍ ÃÊ±âÈ­
 >>>>>>> parent of e57e735 (Merge pull request #25 from wighs33/YUNTAE_protocol_and_packet_second_commit)
+=======
+	//·¹º§, °æÇèÄ¡ DB¿ë µ¥ÀÌÅÍ ÃÊ±âÈ­
+>>>>>>> main
 	strcpy_s(clients[client_index]._id, id);
 	clients[client_index]._level = b_n->_level;
 	clients[client_index]._exp = b_n->_exp;
@@ -350,11 +398,19 @@ bool get_status(int client_index, char* id)
 void init_client(int client_index) 
 {
 <<<<<<< HEAD
+<<<<<<< HEAD
 	//ë§µë³„ ìœ„ì¹˜ ì§€ì •
 >>>>>>> a367ccd12336c6648a264fae1663e95b4f4a69b2
 =======
 	//¸Êº° À§Ä¡ ÁöÁ¤
 >>>>>>> parent of e57e735 (Merge pull request #25 from wighs33/YUNTAE_protocol_and_packet_second_commit)
+=======
+=======
+	//-- ÃÊ±âÈ­
+
+>>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
+	//¸Êº° À§Ä¡ ÁöÁ¤
+>>>>>>> main
 	if (map_num == 1) {
 		switch (client_index) {
 		case 0:
@@ -416,6 +472,7 @@ void init_client(int client_index)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 bool get_ready(int client_index)
 =======
 //ëª¨ë“  í”Œë ˆì´ì–´ê°€ READY ìƒíƒœì¸ì§€ ê²€ì‚¬
@@ -426,6 +483,14 @@ bool get_ready(int client_index)
 >>>>>>> parent of e57e735 (Merge pull request #25 from wighs33/YUNTAE_protocol_and_packet_second_commit)
 bool check_all_ready()
 >>>>>>> a367ccd12336c6648a264fae1663e95b4f4a69b2
+=======
+//¸ðµç ÇÃ·¹ÀÌ¾î°¡ READY »óÅÂÀÎÁö °Ë»ç
+//¸ðµÎ READY »óÅÂ¶ó¸é PLAY »óÅÂ·Î º¯°æ
+bool check_all_ready()
+=======
+bool get_ready(int client_index)
+>>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
+>>>>>>> main
 {
 	clients[client_index]._state = READY;
 	for (auto& cl : clients)
@@ -434,7 +499,10 @@ bool check_all_ready()
 			return false;
 	}
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> main
 
 	cout << endl;
 	cout << "<<°ÔÀÓ ½ºÅ¸Æ®>>" << endl;
@@ -449,7 +517,12 @@ bool check_all_ready()
 		}
 	}
 
+<<<<<<< HEAD
 >>>>>>> a367ccd12336c6648a264fae1663e95b4f4a69b2
+=======
+=======
+>>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
+>>>>>>> main
 	return true;
 
 }
@@ -783,7 +856,15 @@ void process_packet(int client_index, char* p)
 	}
 
 	case INIT_BOMB: {
+<<<<<<< HEAD
 		//if (ÆøÅº »ý¼º Çß´Ù¸é)
+=======
+<<<<<<< HEAD
+		//if (ÆøÅº »ý¼º Çß´Ù¸é)
+=======
+		//if (ÆøÅº »ý¼º Çß´Ù¸é){
+>>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
+>>>>>>> main
 		timer_event ev;
 		//¶ô
 		g_b_count++;
@@ -808,6 +889,7 @@ void process_packet(int client_index, char* p)
 			cl._x = packet->x;
 			cl._y = packet->y;
 <<<<<<< HEAD
+<<<<<<< HEAD
 			cout << "packet's x: " << cl._x << endl;
 			cout << "packet's y: " << cl._y << endl;
 			cl._state = READY;
@@ -817,6 +899,8 @@ void process_packet(int client_index, char* p)
 				for (auto& pl : clients) {
 					if (true == pl.in_use)
 =======
+=======
+>>>>>>> main
 			cl._state = packet->state;
 			cout << "Å¬¶óÀÌ¾ðÆ® \'" << cl._id << "\' - ÁØºñ »óÅÂ" << endl;
 
@@ -828,7 +912,20 @@ void process_packet(int client_index, char* p)
 			for (auto& other : clients) {
 				if (true == other.in_use) {
 					if (strcmp(other._id, cl._id) != 0)
+<<<<<<< HEAD
 >>>>>>> a367ccd12336c6648a264fae1663e95b4f4a69b2
+=======
+=======
+			cout << "packet's x: " << cl._x << endl;
+			cout << "packet's y: " << cl._y << endl;
+			cl._state = READY;
+			//bool g_start = get_ready(cl._index);
+			bool g_start = true;
+			if (g_start == true) {
+				for (auto& pl : clients) {
+					if (true == pl.in_use)
+>>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
+>>>>>>> main
 					{
 						PLAYER_CHANGE_STATE_packet state_packet;
 						state_packet.size = sizeof(state_packet);
@@ -845,12 +942,15 @@ void process_packet(int client_index, char* p)
 		}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 		/*case READY: {
 			bool g_start = get_ready(cl._index);
 			if (g_start == true) {
 				for (auto& pl : clients) {
 					if (true == pl.in_use)
 =======
+=======
+>>>>>>> main
 		case ACCEPT: {
 			cl._x = packet->x;
 			cl._y = packet->y;
@@ -860,7 +960,17 @@ void process_packet(int client_index, char* p)
 			for (auto& other : clients) {
 				if (true == other.in_use) {
 					if (strcmp(other._id, cl._id) != 0)
+<<<<<<< HEAD
 >>>>>>> a367ccd12336c6648a264fae1663e95b4f4a69b2
+=======
+=======
+		/*case READY: {
+			bool g_start = get_ready(cl._index);
+			if (g_start == true) {
+				for (auto& pl : clients) {
+					if (true == pl.in_use)
+>>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
+>>>>>>> main
 					{
 						PLAYER_CHANGE_STATE_packet state_packet;
 						state_packet.size = sizeof(state_packet);
@@ -874,6 +984,7 @@ void process_packet(int client_index, char* p)
 				}
 			}
 			break;
+<<<<<<< HEAD
 <<<<<<< HEAD
 		}*/ // ÁØºñ
 =======
@@ -886,6 +997,15 @@ void process_packet(int client_index, char* p)
 =======
 		// ÁØºñ
 >>>>>>> parent of e57e735 (Merge pull request #25 from wighs33/YUNTAE_protocol_and_packet_second_commit)
+=======
+		}
+
+
+		// ÁØºñ
+=======
+		}*/ // ÁØºñ
+>>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
+>>>>>>> main
 		//case DEAD: { 
 		//	for (auto& pl : clients) {
 		//		if (true == pl.in_use)
