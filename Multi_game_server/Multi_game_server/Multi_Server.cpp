@@ -671,7 +671,7 @@ void process_packet(int client_index, char* p)
 	}
 
 	case INIT_BOMB: {
-		//if (ÆøÅº »ý¼º Çß´Ù¸é)
+		//if (ÆøÅº »ý¼º Çß´Ù¸é){
 		timer_event ev;
 		//¶ô
 		g_b_count++;
@@ -679,6 +679,7 @@ void process_packet(int client_index, char* p)
 		//¾ð¶ô
 		ev.start_time = chrono::system_clock::now() + 3000ms;
 		timer_queue.push(ev);
+		//}
 		break;
 	}
 
