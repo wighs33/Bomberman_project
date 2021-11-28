@@ -40,11 +40,6 @@ tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
 
 int map_num;	//몇 번 맵 선택?
 
-<<<<<<< HEAD
-=======
-atomic<bool> g_item[MAX_ITEM_SIZE];
-
->>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
 //블록 - [파괴 불가능]
 vector <Block>	blocks;
 
@@ -63,30 +58,21 @@ bool g_shutdown = false;
 
 mutex mylock;
 
-<<<<<<< HEAD
-=======
-
->>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
 //타일 내 정보
 enum Map_object_type {
 	M_EMPTY, M_BLOCK, M_ROCK
 };
 
-
-
 //////////////////////////////////////////////////////////
 
 void err_quit(const char* msg);
 bool get_status(int client_index, char* id);
-bool get_ready(int client_index);
+void init_client(int client_index);
+bool check_all_ready();
+void send_all_play_start();
 void process_packet(int client_index, char* p);
 int get_new_index();
-<<<<<<< HEAD
 void do_bomb(int id);
-=======
-
-
->>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
 int Check_Collision(int source_type, int source_index, int target_type);
@@ -128,8 +114,8 @@ int main(int argc, char* argv[])
 		getchar();
 		exit(1);
 	}
-		
-	for (int i = 0; i < MAX_USER ; ++i) {                         //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
+
+	for (int i = 0; i < MAX_USER; ++i) {                         //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
 		clients_DB.push_back(Session_DB(in));                        //임시객체를 인자로 받아올 때 emplace 사용하면 바보
 	}
 
@@ -138,16 +124,10 @@ int main(int argc, char* argv[])
 	Load_Map(map_2, "maps_json/map_2.json");
 
 	while (TRUE) {
-<<<<<<< HEAD
 		cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
 		scanf("%d", &map_num);
 		//map_num = 1;
 
-=======
-		//cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
-		//scanf("%d", &map_num);
-		map_num = 1;
->>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
 		if (map_num == 1 || map_num == 2) {
 			cout << map_num << " 번 맵을 선택하였습니다." << endl << endl;
 			break;
@@ -168,7 +148,7 @@ int main(int argc, char* argv[])
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 		return 1;
-	
+
 	//리슨 소켓 생성
 	SOCKET listen_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (listen_socket == INVALID_SOCKET) err_quit("socket()");
@@ -181,7 +161,7 @@ int main(int argc, char* argv[])
 	server_addr.sin_port = htons(SERVER_PORT);
 	bind(listen_socket, (SOCKADDR*)&server_addr, sizeof(server_addr));
 	listen(listen_socket, SOMAXCONN);
-	
+
 	for (int i = 0; i < MAX_USER; ++i) {
 		// 데이터 통신에 사용할 변수
 		SOCKET client_sock;
@@ -190,14 +170,14 @@ int main(int argc, char* argv[])
 		addrlen = sizeof(clientaddr);
 		client_sock = accept(listen_socket, (SOCKADDR*)&clientaddr, &addrlen);
 
-		
+
 		// 접속한 클라이언트 정보 출력
 		std::cout << "[TCP 서버] 클라이언트 접속: IP 주소 " <<
 			inet_ntoa(clientaddr.sin_addr) << "  포트 번호 : " << ntohs(clientaddr.sin_port) << endl;
-			
-		
+
+
 		CreateThread(NULL, 0, Thread_1, (LPVOID)client_sock, 0, NULL);
-		
+
 	}
 
 	while (1)
@@ -208,7 +188,7 @@ int main(int argc, char* argv[])
 
 	closesocket(listen_socket);
 	WSACleanup();
-	
+
 	return 0;
 }
 
@@ -227,11 +207,7 @@ void do_bomb(int id, int power) {
 		if (obj.active != true) continue;
 		if (true == is_bomb(obj.object_index)) continue;
 		//락
-<<<<<<< HEAD
 		if (true == is_near(id, obj.object_index, power)); {
-=======
-		if (true == is_near(id, obj.object_index)); {
->>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
 			obj.active = false;
 		}
 		//언락
@@ -288,8 +264,7 @@ bool get_status(int client_index, char* id)
 	if (b_n == clients_DB.end()) {
 		return false;
 	}
-	
-<<<<<<< HEAD
+
 	//레벨, 경험치 DB용 데이터 초기화
 	strcpy_s(clients[client_index]._id, id);
 	clients[client_index]._level = b_n->_level;
@@ -302,12 +277,8 @@ bool get_status(int client_index, char* id)
 }
 
 //인게임 데이터 초기화
-void init_client(int client_index) 
+void init_client(int client_index)
 {
-=======
-	//-- 초기화
-
->>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
 	//맵별 위치 지정
 	if (map_num == 1) {
 		switch (client_index) {
@@ -357,32 +328,22 @@ void init_client(int client_index)
 	}
 
 	clients[client_index]._dir = 0;
-	clients[client_index]._level = b_n->_level;
-	clients[client_index]._exp = b_n->_exp;
 	clients[client_index]._power = 1;
 	clients[client_index]._heart = 3;
 	clients[client_index]._bomb_count = 2;
 	clients[client_index]._rock_count = 0;
 	clients[client_index]._state = ACCEPT;
-
-	return true;
 }
 
-<<<<<<< HEAD
 //모든 플레이어가 READY 상태인지 검사
 //모두 READY 상태라면 PLAY 상태로 변경
 bool check_all_ready()
-=======
-bool get_ready(int client_index)
->>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
 {
-	clients[client_index]._state = READY;
 	for (auto& cl : clients)
 	{
-		if (cl._state != READY)
+		if (cl.in_use == TRUE && cl._state != READY)
 			return false;
 	}
-<<<<<<< HEAD
 
 	cout << endl;
 	cout << "<<게임 스타트>>" << endl;
@@ -397,10 +358,30 @@ bool get_ready(int client_index)
 		}
 	}
 
-=======
->>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
 	return true;
+}
 
+void send_all_play_start()
+{
+	for (auto& other : clients)
+	{
+		if (other.in_use) {
+			PLAYER_CHANGE_STATE_packet state_packet;
+			state_packet.size = sizeof(state_packet);
+			state_packet.type = CHANGE_STATE;
+
+			for (auto& another : clients) {
+				if (another.in_use) {
+					state_packet.x = another._x;
+					state_packet.y = another._y;
+					state_packet.state = another._state;
+					strcpy_s(state_packet.id, another._id);
+
+					other.do_send(sizeof(state_packet), &state_packet);
+				}
+			}
+		}
+	}
 }
 
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path)
@@ -451,19 +432,19 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map
 //맵 세팅
 void Setting_Map()
 {
-	int bl_indx =  0;
+	int bl_indx = 0;
 	int r_indx = 0;
 
 	tileArr<int, tile_max_w_num, tile_max_h_num> map;
 
-	switch(map_num) {
-		case 1:
-			map = map_1;
-			break;
+	switch (map_num) {
+	case 1:
+		map = map_1;
+		break;
 
-		case 2:
-			map = map_2;
-			break;
+	case 2:
+		map = map_2;
+		break;
 	}
 
 	for (int i = 0; i < nTiles; ++i) {
@@ -512,7 +493,7 @@ int Check_Collision(int source_type, int source_index, int target_type)
 			if (blocks[i].active) {
 				RECT target_rt{ blocks[i].x + adj_obstacle_size_tl, blocks[i].y + adj_obstacle_size_tl, blocks[i].x + tile_size - adj_obstacle_size_br,blocks[i].y + tile_size - adj_obstacle_size_br };
 
-				if (IntersectRect(&temp, &source_rt, &target_rt)) 
+				if (IntersectRect(&temp, &source_rt, &target_rt))
 					return (i + 1);
 			}
 		}
@@ -523,22 +504,22 @@ int Check_Collision(int source_type, int source_index, int target_type)
 			if (rocks[i].active) {
 				RECT target_rt{ rocks[i].x + adj_obstacle_size_tl, rocks[i].y + adj_obstacle_size_tl, rocks[i].x + tile_size - adj_obstacle_size_br,rocks[i].y + tile_size - adj_obstacle_size_br };
 
-				if (IntersectRect(&temp, &source_rt, &target_rt)) 
+				if (IntersectRect(&temp, &source_rt, &target_rt))
 					return (i + 1);
 			}
 		}
 		break;
 
 	case 6:	//외벽
-		if (s_x >= bg_w - outer_wall_start - p_size / 3) 
+		if (s_x >= bg_w - outer_wall_start - p_size / 3)
 			return 1;
-		if (s_x <= outer_wall_start - p_size / 3) 
+		if (s_x <= outer_wall_start - p_size / 3)
 			return 1;
-		if (s_y >= bg_h - outer_wall_start - p_size / 3) 
+		if (s_y >= bg_h - outer_wall_start - p_size / 3)
 			return 1;
-		if (s_y <= outer_wall_start - p_size / 3) 
+		if (s_y <= outer_wall_start - p_size / 3)
 			return 1;
-		
+
 		break;
 	}
 
@@ -555,12 +536,10 @@ void process_packet(int client_index, char* p)
 	switch (packet_type) {
 
 	case LOGIN: {
-		cout << "login" << endl;
 		LOGIN_packet* packet = reinterpret_cast<LOGIN_packet*>(p);
 		//send_login_ok_packet(client_index);
-		strcpy_s(cl._id, packet->id);
 
-		if (!get_status(client_index, cl._id)) {
+		if (!get_status(client_index, packet->id)) {
 			LOGIN_ERROR_packet login_error_packet;
 			login_error_packet.type = LOGIN_ERROR;
 			cl.do_send(sizeof(login_error_packet), &login_error_packet);
@@ -587,7 +566,6 @@ void process_packet(int client_index, char* p)
 
 			// 현재 접속한 플레이어에게 이미 접속해 있는 타 플레이어들의 정보 전송
 			INIT_PLAYER_packet IN_Player;
-			strcpy_s(IN_Player.id, other._id);
 			IN_Player.size = sizeof(INIT_PLAYER_packet);
 			IN_Player.type = INIT_PLAYER;
 			IN_Player.x = other._x;
@@ -597,19 +575,21 @@ void process_packet(int client_index, char* p)
 			IN_Player.index = other._index;
 			IN_Player.level = other._level;
 			IN_Player.exp = other._exp;
+			strcpy_s(IN_Player.id, other._id);
 			cl.do_send(sizeof(IN_Player), &IN_Player);
 
 			// 이미 접속해 있는 플레이어들에게 현재 접속한 플레이어의 정보 전송
 			INIT_PLAYER_packet IN_Other;
-			strcpy_s(IN_Other.id, cl._id);
 			IN_Other.size = sizeof(INIT_PLAYER_packet);
 			IN_Other.type = INIT_PLAYER;
 			IN_Other.x = cl._x;
 			IN_Other.y = cl._y;
+			IN_Other.dir = cl._dir;
 			IN_Other.state = cl._state;
 			IN_Other.index = cl._index;
 			IN_Other.level = cl._level;
 			IN_Other.exp = cl._exp;
+			strcpy_s(IN_Other.id, cl._id);
 			other.do_send(sizeof(IN_Other), &IN_Other);
 
 		}
@@ -620,7 +600,6 @@ void process_packet(int client_index, char* p)
 	}
 
 	case MOVE: {
-		cout << "move" << endl;
 		MOVE_PLAYER_packet* packet = reinterpret_cast<MOVE_PLAYER_packet*>(p);
 
 		int x_bias{ 0 }, y_bias{ 0 };
@@ -664,10 +643,10 @@ void process_packet(int client_index, char* p)
 				MOVE_OK_packet Move_Player;
 				Move_Player.size = sizeof(Move_Player);
 				Move_Player.type = MOVE_OK;
-				strcpy_s(Move_Player.id, cl._id);
 				Move_Player.x = cl._x;
 				Move_Player.y = cl._y;
 				Move_Player.dir = cl._dir;
+				strcpy_s(Move_Player.id, cl._id);
 				pl.do_send(sizeof(Move_Player), &Move_Player);
 
 			}
@@ -732,18 +711,14 @@ void process_packet(int client_index, char* p)
 	}
 
 	case INIT_BOMB: {
-<<<<<<< HEAD
 		//if (폭탄 생성 했다면)
-=======
-		//if (폭탄 생성 했다면){
->>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
 		timer_event ev;
 		//락
 		g_b_count++;
-		ev.obj_id =g_b_count;
+		ev.obj_id = g_b_count;
 		//언락
 		ev.start_time = chrono::system_clock::now() + 3000ms;
-		//timer_queue.push(ev);
+		timer_queue.push(ev);
 		break;
 	}
 
@@ -752,15 +727,12 @@ void process_packet(int client_index, char* p)
 	}
 
 	case CHANGE_STATE: {
-		cout << "change_state" << endl;
-		//LOGIN_packet* packet = reinterpret_cast<LOGIN_packet*>(p);
 		PLAYER_CHANGE_STATE_packet* packet = reinterpret_cast<PLAYER_CHANGE_STATE_packet*>(p);
 		switch (packet->state) {
 
 		case READY: {
 			cl._x = packet->x;
 			cl._y = packet->y;
-<<<<<<< HEAD
 			cl._state = packet->state;
 			cout << "클라이언트 \'" << cl._id << "\' - 준비 상태" << endl;
 
@@ -772,32 +744,33 @@ void process_packet(int client_index, char* p)
 			for (auto& other : clients) {
 				if (true == other.in_use) {
 					if (strcmp(other._id, cl._id) != 0)
-=======
-			cout << "packet's x: " << cl._x << endl;
-			cout << "packet's y: " << cl._y << endl;
-			cl._state = READY;
-			//bool g_start = get_ready(cl._index);
-			bool g_start = true;
-			if (g_start == true) {
-				for (auto& pl : clients) {
-					if (true == pl.in_use)
->>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
 					{
 						PLAYER_CHANGE_STATE_packet state_packet;
 						state_packet.size = sizeof(state_packet);
 						state_packet.type = CHANGE_STATE;
-						strcpy_s(state_packet.id, pl._id);
-						state_packet.x = pl._x;
-						state_packet.y = pl._y;
-						state_packet.state = PLAY;
-						pl.do_send(sizeof(state_packet), &state_packet);
+						state_packet.x = cl._x;
+						state_packet.y = cl._y;
+						state_packet.state = cl._state;
+						strcpy_s(state_packet.id, cl._id);
+						other.do_send(sizeof(state_packet), &state_packet);
+					}
+					else
+					{
+						PLAYER_CHANGE_STATE_packet state_packet;
+						state_packet.size = sizeof(state_packet);
+						state_packet.type = CHANGE_STATE;
+						state_packet.x = other._x;
+						state_packet.y = other._y;
+						state_packet.state = other._state;
+						strcpy_s(state_packet.id, other._id);
+						cl.do_send(sizeof(state_packet), &state_packet);
 					}
 				}
 			}
+
 			break;
 		}
 
-<<<<<<< HEAD
 		case ACCEPT: {
 			cl._x = packet->x;
 			cl._y = packet->y;
@@ -807,59 +780,56 @@ void process_packet(int client_index, char* p)
 			for (auto& other : clients) {
 				if (true == other.in_use) {
 					if (strcmp(other._id, cl._id) != 0)
-=======
-		/*case READY: {
-			bool g_start = get_ready(cl._index);
-			if (g_start == true) {
-				for (auto& pl : clients) {
-					if (true == pl.in_use)
->>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
 					{
 						PLAYER_CHANGE_STATE_packet state_packet;
 						state_packet.size = sizeof(state_packet);
 						state_packet.type = CHANGE_STATE;
-						strcpy_s(state_packet.id, pl._id);
-						state_packet.x = pl._x;
-						state_packet.y = pl._y;
-						state_packet.state = PLAY;
-						pl.do_send(sizeof(state_packet), &state_packet);
+						state_packet.x = cl._x;
+						state_packet.y = cl._y;
+						state_packet.state = cl._state;
+						strcpy_s(state_packet.id, cl._id);
+						other.do_send(sizeof(state_packet), &state_packet);
+					}
+					else
+					{
+						PLAYER_CHANGE_STATE_packet state_packet;
+						state_packet.size = sizeof(state_packet);
+						state_packet.type = CHANGE_STATE;
+						state_packet.x = other._x;
+						state_packet.y = other._y;
+						state_packet.state = other._state;
+						strcpy_s(state_packet.id, other._id);
+						cl.do_send(sizeof(state_packet), &state_packet);
 					}
 				}
 			}
+
 			break;
-<<<<<<< HEAD
 		}
 
 
-		// 준비
-=======
-		}*/ // 준비
->>>>>>> parent of a367ccd (Merge branch 'main' into YUNTAE_protocol_and_packet_second_commit)
-		//case DEAD: { 
-		//	for (auto& pl : clients) {
-		//		if (true == pl.in_use)
-		//		{
-		//			PLAYER_CHANGE_STATE_packet con_packet;
-		//			con_packet.size = sizeof(con_packet);
-		//			con_packet.type = CHANGE_STATE;
-		//			strcpy_s(con_packet.id, cl._id);
-		//			con_packet.x = cl._x;
-		//			con_packet.y = cl._y;
-		//			con_packet.state = DEAD;
-		//			pl.do_send(sizeof(con_packet), &con_packet);
-		//		}
-		//	}
-		//	break; 
-		//}// 하트
+				   // 준비
+				   //case DEAD: { 
+				   //	for (auto& pl : clients) {
+				   //		if (true == pl.in_use)
+				   //		{
+				   //			PLAYER_CHANGE_STATE_packet con_packet;
+				   //			con_packet.size = sizeof(con_packet);
+				   //			con_packet.type = CHANGE_STATE;
+				   //			strcpy_s(con_packet.id, cl._id);
+				   //			con_packet.x = cl._x;
+				   //			con_packet.y = cl._y;
+				   //			con_packet.state = DEAD;
+				   //			pl.do_send(sizeof(con_packet), &con_packet);
+				   //		}
+				   //	}
+				   //	break; 
+				   //}// 하트
 		default: {
-			/*cout << "packet's id: " << packet->id << endl;
-			cout << "packet's x: " << packet->x << endl;
-			cout << "packet's y: " << packet->y << endl;
-			cout << "packet's state: " << packet->state << endl;
-
-			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;*/
-			//getchar();
-			//exit(-1);
+			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;
+			cout << "packet state number: " << packet->state << endl;
+			getchar();
+			exit(-1);
 			break;
 		}
 
@@ -926,4 +896,8 @@ DWORD WINAPI Thread_1(LPVOID arg)
 			return 0;
 		}
 	}
+}
+
+void do_bomb(int id) {
+
 }
