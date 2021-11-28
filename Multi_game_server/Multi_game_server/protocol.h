@@ -18,7 +18,7 @@ enum Packet_Type {
 	LOGIN_OK,
 	LOGIN_ERROR,
 	INIT_PLAYER,
-	CONDITION,
+	CHANGE_STATE,
 	ITEMBUF,
 	GET_ITEM,
 	MOVE,
@@ -73,7 +73,7 @@ struct INIT_PLAYER_packet { // 플레이어 생성 패킷
 	char id[BUFSIZE]; // 플레이어 아이디
 };
 
-struct PLAYER_CONDITION_packet { // 플레이어 상태 패킷
+struct PLAYER_CHANGE_STATE_packet { // 플레이어 상태 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 4
 	char id[BUFSIZE]; // 플레이어 아이디
@@ -97,7 +97,7 @@ struct GET_ITEM_packet {// 아이템 획득 요청 피킷
 
 struct MOVE_PLAYER_packet { // 플레이어 이동 패킷
 	unsigned char size; // 패킷 사이즈
-	char type; // 패킷 타입 
+	char type; // 패킷 타입 7
 	int dir; // 이동 방향  ( 좌 - 2 / 우 - 1 / 상 - 4 / 하 - 3 )
 	char id[BUFSIZE]; // 플레이어 아이디
 };
@@ -139,7 +139,7 @@ struct DELETE_ITEM_packet { // 오브젝트 제거 패킷
 
 struct CHANGE_BUF_packet { // 플레이어 버프 변경 정보 패킷
 	unsigned char size; // 패킷 사이즈
-	char type; // 패킷 사이즈13
+	char type; // 패킷 타입 13
 	int _power; // 폭탄 위력
 	int _bomb_count; // 폭탄개수
 	int _rock_count;

@@ -532,7 +532,6 @@ void process_packet(int client_index, char* p)
 		}
 
 		cout << "[수신 성공] \'" << cl._id << "\' (" << client_index + 1 << " 번째 플레이어) 로그인 요청" << endl;
-		//cout << "index: " << client_index << endl;
 
 		break;
 	}
@@ -647,61 +646,97 @@ void process_packet(int client_index, char* p)
 
 		break;
 	}
+
 	case INIT_BOMB: {
-
+		break;
 	}
+
 	case INIT_OBJECT: {
-
+		break;
 	}
-	case CONDITION: {
-		PLAYER_CONDITION_packet* packet = reinterpret_cast<PLAYER_CONDITION_packet*>(p);
+
+	case CHANGE_STATE: {
+		PLAYER_CHANGE_STATE_packet* packet = reinterpret_cast<PLAYER_CHANGE_STATE_packet*>(p);
+
 		switch (packet->state) {
+
 		case READY: {
+			cl._x = packet->x;
+			cl._x = packet->x;
+			cl._state = packet->state;
+
+			for (auto& pl : clients) {
+				if (true == pl.in_use)
+				{
+					PLAYER_CHANGE_STATE_packet state_packet;
+					state_packet.size = sizeof(state_packet);
+					state_packet.type = CHANGE_STATE;
+					strcpy_s(state_packet.id, cl._id);
+					state_packet.x = cl._x;
+					state_packet.y = cl._y;
+					state_packet.state = cl._state;
+					pl.do_send(sizeof(state_packet), &state_packet);
+				}
+			}
+			break;
+		}
+
+		/*case READY: {
 			bool g_start = get_ready(cl._index);
 			if (g_start == true) {
 				for (auto& pl : clients) {
 					if (true == pl.in_use)
 					{
-						PLAYER_CONDITION_packet con_packet;
-						con_packet.size = sizeof(con_packet);
-						con_packet.type = CONDITION;
-						strcpy_s(con_packet.id, pl._id);
-						con_packet.x = pl._x;
-						con_packet.y = pl._y;
-						con_packet.state = PLAY;
-						pl.do_send(sizeof(con_packet), &con_packet);
+						PLAYER_CHANGE_STATE_packet state_packet;
+						state_packet.size = sizeof(state_packet);
+						state_packet.type = CHANGE_STATE;
+						strcpy_s(state_packet.id, pl._id);
+						state_packet.x = pl._x;
+						state_packet.y = pl._y;
+						state_packet.state = PLAY;
+						pl.do_send(sizeof(state_packet), &state_packet);
 					}
 				}
 			}
 			break;
-		} // 준비
+		}*/ // 준비
 		//case DEAD: { 
 		//	for (auto& pl : clients) {
 		//		if (true == pl.in_use)
 		//		{
-		//			PLAYER_CONDITION_packet con_packet;
+		//			PLAYER_CHANGE_STATE_packet con_packet;
 		//			con_packet.size = sizeof(con_packet);
-		//			con_packet.type = CONDITION;
+		//			con_packet.type = CHANGE_STATE;
 		//			strcpy_s(con_packet.id, cl._id);
 		//			con_packet.x = cl._x;
 		//			con_packet.y = cl._y;
-		//			con_packet.condition = DEAD;
+		//			con_packet.state = DEAD;
 		//			pl.do_send(sizeof(con_packet), &con_packet);
 		//		}
 		//	}
 		//	break; 
 		//}// 하트
-		default:
-			cout << "Invalid condition in client " << cl._id << endl;
-			getchar();
-			exit(-1);
+		default: {
+			cout << "packet's id: " << packet->id << endl;
+			cout << "packet's x: " << packet->x << endl;
+			cout << "packet's y: " << packet->y << endl;
+			cout << "packet's state: " << packet->state << endl;
+
+			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;
+			//getchar();
+			//exit(-1);
+			break;
+		}
+
 		}
 		break;
 	}
+
 	default: {
 		cout << "[에러] UnKnown Packet" << endl;
-		break;
+		err_quit("UnKnown Packet");
 	}
+
 	}
 
 
@@ -728,28 +763,6 @@ DWORD WINAPI Thread_1(LPVOID arg)
 	Session& player = clients[index];
 	player._cl = client_sock;
 	player._index = index;
-
-	switch (index) {
-	case 0:
-		player._x = outer_wall_start + tile_size + 10;
-		player._y = outer_wall_start + tile_size + 10;
-		break;
-
-	case 1:
-		player._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 12;
-		player._y = outer_wall_start + tile_size + 10;
-		break;
-
-	case 2:
-		player._x = outer_wall_start + tile_size + 10;
-		player._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
-		break;
-
-	case 3:
-		player._x = outer_wall_start + tile_size + 10 + (block_size + 1) * 12;
-		player._y = outer_wall_start + tile_size + 10 + (block_size + 1) * 5;
-		break;
-	}
 
 	while (1) {
 		// 데이터 받기

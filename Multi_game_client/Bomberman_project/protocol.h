@@ -1,5 +1,4 @@
 #pragma once
-#include "constant_numbers.h"
 
 const short SERVER_PORT = 4000;
 
@@ -14,7 +13,7 @@ enum Packet_Type {
 	LOGIN_OK,
 	LOGIN_ERROR,
 	INIT_PLAYER,
-	CONDITION,
+	CHANGE_STATE,
 	ITEMBUF,
 	GET_ITEM,
 	MOVE,
@@ -69,7 +68,7 @@ struct INIT_PLAYER_packet { // 플레이어 생성 패킷
 	char id[BUFSIZE]; // 플레이어 아이디
 };
 
-struct PLAYER_CONDITION_packet { // 플레이어 상태 패킷
+struct PLAYER_CHANGE_STATE_packet { // 플레이어 상태 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 4
 	char id[BUFSIZE]; // 플레이어 아이디
@@ -135,7 +134,7 @@ struct DELETE_ITEM_packet { // 오브젝트 제거 패킷
 
 struct CHANGE_BUF_packet { // 플레이어 버프 변경 정보 패킷
 	unsigned char size; // 패킷 사이즈
-	char type; // 패킷 사이즈13
+	char type; // 패킷 타입 13
 	int _power; // 폭탄 위력
 	int _bomb_count; // 폭탄개수
 	int _rock_count;
