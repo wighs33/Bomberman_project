@@ -19,7 +19,7 @@ public:
 	int _exp;
 	int _index;
 
-	void InputID(char send_buf[], char id[]);
+	void InputID(char send_buf[], char id[], int BUFSIZE);
 	void InputMoveKey(char send_buf[], int dir);
 	void ChangeState(char send_buf[], int state);
 };
