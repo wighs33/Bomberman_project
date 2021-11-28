@@ -81,6 +81,8 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map
 void Setting_Map();
 int Check_Collision(int source_type, int source_index, int target_type);
 
+atomic<int> g_b_count = 0;
+
 DWORD WINAPI Thread_1(LPVOID arg);
 
 //////////////////////////////////////////////////////////
@@ -101,11 +103,8 @@ struct timer_event {
 
 concurrency::concurrent_priority_queue <timer_event> timer_queue;
 
-class object {
 
-};
-
-array <object, MAX_BOMB> objects;
+array <Object, MAX_BOMB> objects;
 
 
 int main(int argc, char* argv[])
@@ -196,10 +195,29 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-void do_bomb(int id)
-{
-
+bool is_bomb(int id) {
+	return (id >= 0) && (id <= MAX_BOMB);
 }
+bool is_near(int a, int b, int power)
+{
+	if (power < abs(objects[a].x - objects[b].x)) return false;
+	if (power < abs(objects[a].y - objects[b].y)) return false;
+	return true;
+}
+
+void do_bomb(int id, int power) {
+	for (auto& obj : objects) {
+		if (obj.active != true) continue;
+		if (true == is_bomb(obj.object_index)) continue;
+		//락
+		if (true == is_near(id, obj.object_index, power)); {
+			obj.active = false;
+		}
+		//언락
+	}
+}
+
+
 
 void do_timer() {
 
@@ -208,10 +226,11 @@ void do_timer() {
 		timer_queue.try_pop(ev);
 		//auto t = ev.start_time - chrono::system_clock::now();
 		int bomb_id = ev.obj_id;
-		//if (false == is_bomb(bomb_id)) continue;
-		//if (objects[bomb_id]._is_active == false) continue;
+		if (false == is_bomb(bomb_id)) continue;
+		if (objects[bomb_id].active == false) continue;
 		if (ev.start_time <= chrono::system_clock::now()) {
-			
+			do_bomb(bomb_id);
+			this_thread::sleep_for(10ms);
 		}
 		else {
 			timer_queue.push(ev);
@@ -652,6 +671,14 @@ void process_packet(int client_index, char* p)
 	}
 
 	case INIT_BOMB: {
+		//if (폭탄 생성 했다면)
+		timer_event ev;
+		//락
+		g_b_count++;
+		ev.obj_id =g_b_count;
+		//언락
+		ev.start_time = chrono::system_clock::now() + 3000ms;
+		timer_queue.push(ev);
 		break;
 	}
 
