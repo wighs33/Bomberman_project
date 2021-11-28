@@ -201,7 +201,6 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	while (true)
 	{
 		Send_packet(sock);
-
 		WaitForSingleObject(hEvent, INFINITE);
 	}
 }
