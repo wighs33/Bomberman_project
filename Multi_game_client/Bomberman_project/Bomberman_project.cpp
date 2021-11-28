@@ -78,7 +78,7 @@ tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
 template<typename T, size_t N>
 using playerArr = array<T, N>;
 
-playerArr<Player, 4>	players;
+playerArr<Player, MAX_USER>	players;
 
 //블록 - [파괴 불가능]
 vector <Block>	blocks;

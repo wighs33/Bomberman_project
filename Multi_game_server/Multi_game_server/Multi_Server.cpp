@@ -63,25 +63,9 @@ enum Map_object_type {
 	M_EMPTY, M_BLOCK, M_ROCK
 };
 
-//////////////////////////////////////////////////////////
-
-void err_quit(const char* msg);
-bool get_status(int client_index, char* id);
-void init_client(int client_index);
-bool check_all_ready();
-void send_all_play_start();
-void process_packet(int client_index, char* p);
-int get_new_index();
-void do_bomb(int id);
-void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
-void Setting_Map();
-int Check_Collision(int source_type, int source_index, int target_type);
+// ====================================================================
 
 atomic<int> g_b_count = 0;
-
-DWORD WINAPI Thread_1(LPVOID arg);
-
-//////////////////////////////////////////////////////////
 
 enum EVENT_TYPE { EVENT_DO_BOMB };
 
@@ -97,11 +81,30 @@ struct timer_event {
 
 };
 
+
 concurrency::concurrent_priority_queue <timer_event> timer_queue;
 
+//array <Object, MAX_BOMB> objects;
 
-array <Object, MAX_BOMB> objects;
+// ====================================================================
 
+//////////////////////////////////////////////////////////
+
+void err_quit(const char* msg);
+bool get_status(int client_index, char* id);
+void init_client(int client_index);
+bool check_all_ready();
+void send_all_play_start();
+void process_packet(int client_index, char* p);
+int get_new_index();
+void do_bomb(int id);
+void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
+void Setting_Map();
+int Check_Collision(int source_type, int source_index, int target_type);
+
+DWORD WINAPI Thread_1(LPVOID arg);
+
+//////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
 {
@@ -195,52 +198,50 @@ int main(int argc, char* argv[])
 bool is_bomb(int id) {
 	return (id >= 0) && (id <= MAX_BOMB);
 }
+
 bool is_near(int a, int b)
 {
-	int power = objects[a].power;
+	/*int power = objects[a].power;
 	if (power < abs(objects[a].x - objects[b].x)) return false;
-	if (power < abs(objects[a].y - objects[b].y)) return false;
+	if (power < abs(objects[a].y - objects[b].y)) return false;*/
 	return true;
 }
 
 void do_bomb(int id) {
-	for (auto& obj : objects) {
-		if (obj.active != true) continue;
-		if (true == is_bomb(obj.object_index)) continue;
-		//락
-		if (true == is_near(id, obj.object_index)) {
-			obj.active = false;
-		}
-		//언락
-	}
+	//for (auto& obj : objects) {
+	//	if (obj.active != true) continue;
+	//	if (true == is_bomb(obj.object_index)) continue;
+	//	//락
+	//	if (true == is_near(id, obj.object_index)) {
+	//		obj.active = false;
+	//	}
+	//	//언락
+	//}
 }
-
-
 
 void do_timer() {
 
-	while (true) {
-		timer_event ev;
-		timer_queue.try_pop(ev);
-		//auto t = ev.start_time - chrono::system_clock::now();
-		int bomb_id = ev.obj_id;
-		if (false == is_bomb(bomb_id)) continue;
-		if (objects[bomb_id].active == false) continue;
-		if (ev.start_time <= chrono::system_clock::now()) {
-			do_bomb(bomb_id);
-			this_thread::sleep_for(10ms);
-		}
-		else {
-			timer_queue.push(ev);
-			this_thread::sleep_for(10ms);
+	//while (true) {
+	//	timer_event ev;
+	//	timer_queue.try_pop(ev);
+	//	//auto t = ev.start_time - chrono::system_clock::now();
+	//	int bomb_id = ev.obj_id;
+	//	if (false == is_bomb(bomb_id)) continue;
+	//	if (objects[bomb_id].active == false) continue;
+	//	if (ev.start_time <= chrono::system_clock::now()) {
+	//		do_bomb(bomb_id);
+	//		this_thread::sleep_for(10ms);
+	//	}
+	//	else {
+	//		timer_queue.push(ev);
+	//		this_thread::sleep_for(10ms);
 
-		}
+	//	}
 
 
-	}
+	//}
 
 }
-
 
 void err_quit(const char* msg)
 {

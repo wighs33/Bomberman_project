@@ -17,7 +17,6 @@ class Object
 {
 public:
 	bool active;
-	int power;
 	int x, y;
 	int object_index;	// 오브젝트 인덱스 값
 
@@ -66,6 +65,7 @@ class Bomb: public Object
 {
 public:
 	int timer;		// '폭탄 대기 시간 + 후폭풍 유지 시간' 을 모두 더한 값에서 시작 [ex) 6 = 5(폭탄 대기 시간) + 1(후폭풍 지속시간)]
+	int power;
 
 	Bomb(int X, int Y, int OBJ_INDX, int timer) : Object(X, Y, OBJ_INDX)
 	{
