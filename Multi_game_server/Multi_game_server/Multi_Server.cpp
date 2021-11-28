@@ -85,11 +85,15 @@ void process_packet(int client_index, char* p);
 int get_new_index();
 <<<<<<< HEAD
 
+<<<<<<< HEAD
 
 =======
 
 void do_bomb(int id);
 >>>>>>> a367ccd12336c6648a264fae1663e95b4f4a69b2
+=======
+void do_bomb(int id);
+>>>>>>> parent of 01b6a80 (power 수정)
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
 int Check_Collision(int source_type, int source_index, int target_type);
@@ -218,20 +222,24 @@ int main(int argc, char* argv[])
 bool is_bomb(int id) {
 	return (id >= 0) && (id <= MAX_BOMB);
 }
-bool is_near(int a, int b)
+bool is_near(int a, int b, int power)
 {
-	int power = objects[a].power;
 	if (power < abs(objects[a].x - objects[b].x)) return false;
 	if (power < abs(objects[a].y - objects[b].y)) return false;
 	return true;
 }
 
-void do_bomb(int id) {
+void do_bomb(int id, int power) {
 	for (auto& obj : objects) {
 		if (obj.active != true) continue;
 		if (true == is_bomb(obj.object_index)) continue;
+<<<<<<< HEAD
 		//락
 		if (true == is_near(id, obj.object_index)); {
+=======
+		//��
+		if (true == is_near(id, obj.object_index, power)); {
+>>>>>>> parent of 01b6a80 (power 수정)
 			obj.active = false;
 		}
 		//언락

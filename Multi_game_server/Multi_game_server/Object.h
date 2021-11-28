@@ -18,7 +18,6 @@ class Object
 public:
 	bool active;
 	int x, y;
-	int power;
 	int object_index;	// 오브젝트 인덱스 값
 
 	Object()
