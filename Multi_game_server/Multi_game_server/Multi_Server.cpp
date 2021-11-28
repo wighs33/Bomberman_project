@@ -14,7 +14,7 @@
 #include "constant_numbers.h"
 #include "Session.h"
 
-#include <concurrent_priority_queue.h>
+//#include <concurrent_priority_queue.h>
 
 #include "Object.h"
 
@@ -97,7 +97,7 @@ struct timer_event {
 
 };
 
-concurrency::concurrent_priority_queue <timer_event> timer_queue;
+//concurrency::concurrent_priority_queue <timer_event> timer_queue;
 
 
 array <Object, MAX_BOMB> objects;
@@ -218,25 +218,25 @@ void do_bomb(int id, int power) {
 
 void do_timer() {
 
-	while (true) {
-		timer_event ev;
-		timer_queue.try_pop(ev);
-		//auto t = ev.start_time - chrono::system_clock::now();
-		int bomb_id = ev.obj_id;
-		if (false == is_bomb(bomb_id)) continue;
-		if (objects[bomb_id].active == false) continue;
-		if (ev.start_time <= chrono::system_clock::now()) {
-			do_bomb(bomb_id);
-			this_thread::sleep_for(10ms);
-		}
-		else {
-			timer_queue.push(ev);
-			this_thread::sleep_for(10ms);
+	//while (true) {
+	//	timer_event ev;
+	//	timer_queue.try_pop(ev);
+	//	//auto t = ev.start_time - chrono::system_clock::now();
+	//	int bomb_id = ev.obj_id;
+	//	if (false == is_bomb(bomb_id)) continue;
+	//	if (objects[bomb_id].active == false) continue;
+	//	if (ev.start_time <= chrono::system_clock::now()) {
+	//		do_bomb(bomb_id);
+	//		this_thread::sleep_for(10ms);
+	//	}
+	//	else {
+	//		timer_queue.push(ev);
+	//		this_thread::sleep_for(10ms);
 
-		}
+	//	}
 
 
-	}
+	//}
 
 }
 
@@ -718,7 +718,7 @@ void process_packet(int client_index, char* p)
 		ev.obj_id =g_b_count;
 		//¾ð¶ô
 		ev.start_time = chrono::system_clock::now() + 3000ms;
-		timer_queue.push(ev);
+		//timer_queue.push(ev);
 		break;
 	}
 
