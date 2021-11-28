@@ -1,4 +1,4 @@
-#define _WINSOCK_DEPRECATED_NO_WARNINGS // ÃÖ½Å VC++ ÄÄÆÄÀÏ ½Ã °æ°í ¹æÁö
+#define _WINSOCK_DEPRECATED_NO_WARNINGS // ìµœì‹  VC++ ì»´íŒŒì¼ ì‹œ ê²½ê³  ë°©ì§€
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <winsock2.h>
@@ -14,7 +14,7 @@
 #include "constant_numbers.h"
 #include "Session.h"
 
-#include <concurrent_priority_queue.h>
+//#include <concurrent_priority_queue.h>
 
 #include "Object.h"
 
@@ -25,33 +25,31 @@ using namespace std;
 
 ///////////////////////////////////////////////////////////
 
-//ÇÃ·¹ÀÌ¾î
+//í”Œë ˆì´ì–´
 array<Session, MAX_USER> clients;
 
 vector<Session_DB> clients_DB;
 char g_id_buf[BUFSIZE] = " ";
 
-//¸Ê
+//ë§µ
 template<typename T, size_t X, size_t Y>
 using tileArr = array<array<T, X>, Y>;
 
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_1;
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
 
-int map_num;	//¸î ¹ø ¸Ê ¼±ÅÃ?
+int map_num;	//ëª‡ ë²ˆ ë§µ ì„ íƒ?
 
-atomic<bool> g_item[MAX_ITEM_SIZE];
-
-//ºí·Ï - [ÆÄ±« ºÒ°¡´É]
+//ë¸”ë¡ - [íŒŒê´´ ë¶ˆê°€ëŠ¥]
 vector <Block>	blocks;
 
-//¹ÙÀ§ - [ÆÄ±« °¡´É]
+//ë°”ìœ„ - [íŒŒê´´ ê°€ëŠ¥]
 vector <Rock>	rocks;
 
-//¾ÆÀÌÅÛ
+//ì•„ì´í…œ
 vector <Item>	items;
 
-//ÆøÅº
+//í­íƒ„
 vector <Bomb>	bombs;
 
 //atomic<bool> g_item[MAX_ITEM_SIZE];
@@ -60,23 +58,22 @@ bool g_shutdown = false;
 
 mutex mylock;
 
-
-//Å¸ÀÏ ³» Á¤º¸
+//íƒ€ì¼ ë‚´ ì •ë³´
 enum Map_object_type {
 	M_EMPTY, M_BLOCK, M_ROCK
 };
-
-
 
 //////////////////////////////////////////////////////////
 
 void err_quit(const char* msg);
 bool get_status(int client_index, char* id);
-bool get_ready(int client_index);
+void init_client(int client_index);
+bool check_all_ready();
+void send_all_play_start();
 void process_packet(int client_index, char* p);
 int get_new_index();
 
-
+void do_bomb(int id);
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
 int Check_Collision(int source_type, int source_index, int target_type);
@@ -101,7 +98,7 @@ struct timer_event {
 
 };
 
-concurrency::concurrent_priority_queue <timer_event> timer_queue;
+//concurrency::concurrent_priority_queue <timer_event> timer_queue;
 
 
 array <Object, MAX_BOMB> objects;
@@ -109,50 +106,51 @@ array <Object, MAX_BOMB> objects;
 
 int main(int argc, char* argv[])
 {
-	//ÇÃ·¹ÀÌ¾î DB ÀĞ±â
+	//í”Œë ˆì´ì–´ DB ì½ê¸°
 	clients_DB.reserve(MAX_USER);
 
-	ifstream in("ÇÃ·¹ÀÌ¾î_Á¤º¸.txt");
+	ifstream in("í”Œë ˆì´ì–´_ì •ë³´.txt");
 	if (!in) {
-		cout << "DB ÆÄÀÏ ÀĞ±â ½ÇÆĞ" << endl;
+		cout << "DB íŒŒì¼ ì½ê¸° ì‹¤íŒ¨" << endl;
 		getchar();
 		exit(1);
 	}
 		
-	for (int i = 0; i < MAX_USER ; ++i) {                         //v_idÀÇ º¤ÅÍ´Â ºñ¿öÁ® ÀÖ°í iÀÇ Ä«¿îÆ®´ç ¿ø¼Ò°¡ Ã¤¿öÁö¹Ç·Î i°ªÀ» º¤ÅÍÀÇ ÀÎµ¦½º·Î »ı°¢ÇÏ¸ç µÎ°³ÀÇ map¿¡ v_id[i]ÀÇ °ªÀ» ³Ö¾îÁÜ 
-		clients_DB.push_back(Session_DB(in));                        //ÀÓ½Ã°´Ã¼¸¦ ÀÎÀÚ·Î ¹Ş¾Æ¿Ã ¶§ emplace »ç¿ëÇÏ¸é ¹Ùº¸
+	for (int i = 0; i < MAX_USER ; ++i) {                         //v_idì˜ ë²¡í„°ëŠ” ë¹„ì›Œì ¸ ìˆê³  iì˜ ì¹´ìš´íŠ¸ë‹¹ ì›ì†Œê°€ ì±„ì›Œì§€ë¯€ë¡œ iê°’ì„ ë²¡í„°ì˜ ì¸ë±ìŠ¤ë¡œ ìƒê°í•˜ë©° ë‘ê°œì˜ mapì— v_id[i]ì˜ ê°’ì„ ë„£ì–´ì¤Œ 
+		clients_DB.push_back(Session_DB(in));                        //ì„ì‹œê°ì²´ë¥¼ ì¸ìë¡œ ë°›ì•„ì˜¬ ë•Œ emplace ì‚¬ìš©í•˜ë©´ ë°”ë³´
 	}
 
-	//¸Ê ÀĞ±â
+	//ë§µ ì½ê¸°
 	Load_Map(map_1, "maps_json/map_1.json");
 	Load_Map(map_2, "maps_json/map_2.json");
 
 	while (TRUE) {
-		//cout << "¸î¹ø ¸ÊÀ» ÇÃ·¹ÀÌ ÇÏ½Ç²«°¡¿ä?(1, 2 Áß ¼±ÅÃ): ";
-		//scanf("%d", &map_num);
-		map_num = 1;
+		cout << "ëª‡ë²ˆ ë§µì„ í”Œë ˆì´ í•˜ì‹¤ê»€ê°€ìš”?(1, 2 ì¤‘ ì„ íƒ): ";
+		scanf("%d", &map_num);
+		//map_num = 1;
+
 		if (map_num == 1 || map_num == 2) {
-			cout << map_num << " ¹ø ¸ÊÀ» ¼±ÅÃÇÏ¿´½À´Ï´Ù." << endl << endl;
+			cout << map_num << " ë²ˆ ë§µì„ ì„ íƒí•˜ì˜€ìŠµë‹ˆë‹¤." << endl << endl;
 			break;
 		}
 		else {
-			cout << "Àß¸ø ÀÔ·ÂÇÏ¼Ì½À´Ï´Ù. (1, 2 Áß ÇÏ³ª¸¦ ¼±ÅÃÇÏ¿© ÁÖ¼¼¿ä.)" << endl << endl;
+			cout << "ì˜ëª» ì…ë ¥í•˜ì…¨ìŠµë‹ˆë‹¤. (1, 2 ì¤‘ í•˜ë‚˜ë¥¼ ì„ íƒí•˜ì—¬ ì£¼ì„¸ìš”.)" << endl << endl;
 		}
 	}
 
 	Setting_Map();
 
 
-	//for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                    //v_idÀÇ º¤ÅÍ´Â ºñ¿öÁ® ÀÖ°í iÀÇ Ä«¿îÆ®´ç ¿ø¼Ò°¡ Ã¤¿öÁö¹Ç·Î i°ªÀ» º¤ÅÍÀÇ ÀÎµ¦½º·Î »ı°¢ÇÏ¸ç µÎ°³ÀÇ map¿¡ v_id[i]ÀÇ °ªÀ» ³Ö¾îÁÜ 
-	//	g_item[i] = true;                                            //ÀÓ½Ã°´Ã¼¸¦ ÀÎÀÚ·Î ¹Ş¾Æ¿Ã ¶§ emplace »ç¿ëÇÏ¸é ¹Ùº¸
+	//for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                    //v_idì˜ ë²¡í„°ëŠ” ë¹„ì›Œì ¸ ìˆê³  iì˜ ì¹´ìš´íŠ¸ë‹¹ ì›ì†Œê°€ ì±„ì›Œì§€ë¯€ë¡œ iê°’ì„ ë²¡í„°ì˜ ì¸ë±ìŠ¤ë¡œ ìƒê°í•˜ë©° ë‘ê°œì˜ mapì— v_id[i]ì˜ ê°’ì„ ë„£ì–´ì¤Œ 
+	//	g_item[i] = true;                                            //ì„ì‹œê°ì²´ë¥¼ ì¸ìë¡œ ë°›ì•„ì˜¬ ë•Œ emplace ì‚¬ìš©í•˜ë©´ ë°”ë³´
 	//}
 
-	//À©¼Ó ÃÊ±âÈ­
+	//ìœˆì† ì´ˆê¸°í™”
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 		return 1;
 	
-	//¸®½¼ ¼ÒÄÏ »ı¼º
+	//ë¦¬ìŠ¨ ì†Œì¼“ ìƒì„±
 	SOCKET listen_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (listen_socket == INVALID_SOCKET) err_quit("socket()");
 
@@ -166,7 +164,7 @@ int main(int argc, char* argv[])
 	listen(listen_socket, SOMAXCONN);
 	
 	for (int i = 0; i < MAX_USER; ++i) {
-		// µ¥ÀÌÅÍ Åë½Å¿¡ »ç¿ëÇÒ º¯¼ö
+		// ë°ì´í„° í†µì‹ ì— ì‚¬ìš©í•  ë³€ìˆ˜
 		SOCKET client_sock;
 		SOCKADDR_IN clientaddr;
 		int addrlen;
@@ -174,9 +172,9 @@ int main(int argc, char* argv[])
 		client_sock = accept(listen_socket, (SOCKADDR*)&clientaddr, &addrlen);
 
 		
-		// Á¢¼ÓÇÑ Å¬¶óÀÌ¾ğÆ® Á¤º¸ Ãâ·Â
-		std::cout << "[TCP ¼­¹ö] Å¬¶óÀÌ¾ğÆ® Á¢¼Ó: IP ÁÖ¼Ò " <<
-			inet_ntoa(clientaddr.sin_addr) << "  Æ÷Æ® ¹øÈ£ : " << ntohs(clientaddr.sin_port) << endl;
+		// ì ‘ì†í•œ í´ë¼ì´ì–¸íŠ¸ ì •ë³´ ì¶œë ¥
+		std::cout << "[TCP ì„œë²„] í´ë¼ì´ì–¸íŠ¸ ì ‘ì†: IP ì£¼ì†Œ " <<
+			inet_ntoa(clientaddr.sin_addr) << "  í¬íŠ¸ ë²ˆí˜¸ : " << ntohs(clientaddr.sin_port) << endl;
 			
 		
 		CreateThread(NULL, 0, Thread_1, (LPVOID)client_sock, 0, NULL);
@@ -210,11 +208,11 @@ void do_bomb(int id) {
 	for (auto& obj : objects) {
 		if (obj.active != true) continue;
 		if (true == is_bomb(obj.object_index)) continue;
-		//¶ô
+		//ë½
 		if (true == is_near(id, obj.object_index)); {
 			obj.active = false;
 		}
-		//¾ğ¶ô
+		//ì–¸ë½
 	}
 }
 
@@ -222,25 +220,25 @@ void do_bomb(int id) {
 
 void do_timer() {
 
-	while (true) {
-		timer_event ev;
-		timer_queue.try_pop(ev);
-		//auto t = ev.start_time - chrono::system_clock::now();
-		int bomb_id = ev.obj_id;
-		if (false == is_bomb(bomb_id)) continue;
-		if (objects[bomb_id].active == false) continue;
-		if (ev.start_time <= chrono::system_clock::now()) {
-			do_bomb(bomb_id);
-			this_thread::sleep_for(10ms);
-		}
-		else {
-			timer_queue.push(ev);
-			this_thread::sleep_for(10ms);
+	//while (true) {
+	//	timer_event ev;
+	//	timer_queue.try_pop(ev);
+	//	//auto t = ev.start_time - chrono::system_clock::now();
+	//	int bomb_id = ev.obj_id;
+	//	if (false == is_bomb(bomb_id)) continue;
+	//	if (objects[bomb_id].active == false) continue;
+	//	if (ev.start_time <= chrono::system_clock::now()) {
+	//		do_bomb(bomb_id);
+	//		this_thread::sleep_for(10ms);
+	//	}
+	//	else {
+	//		timer_queue.push(ev);
+	//		this_thread::sleep_for(10ms);
 
-		}
+	//	}
 
 
-	}
+	//}
 
 }
 
@@ -260,7 +258,7 @@ void err_quit(const char* msg)
 
 bool get_status(int client_index, char* id)
 {
-	//¾ÆÀÌµğ °Ë»ö
+	//ì•„ì´ë”” ê²€ìƒ‰
 	strcpy_s(g_id_buf, id);
 	auto b_n = find_if(clients_DB.cbegin(), clients_DB.cend(), [](const Session_DB& a) {
 		return strcmp(a._id, g_id_buf) == 0;
@@ -269,9 +267,21 @@ bool get_status(int client_index, char* id)
 		return false;
 	}
 	
-	//-- ÃÊ±âÈ­
+	//ë ˆë²¨, ê²½í—˜ì¹˜ DBìš© ë°ì´í„° ì´ˆê¸°í™”
+	strcpy_s(clients[client_index]._id, id);
+	clients[client_index]._level = b_n->_level;
+	clients[client_index]._exp = b_n->_exp;
 
-	//¸Êº° À§Ä¡ ÁöÁ¤
+	//ê¸°íƒ€ ì¸ê²Œì„ ë°ì´í„° ì´ˆê¸°í™”
+	init_client(client_index);
+
+	return true;
+}
+
+//ì¸ê²Œì„ ë°ì´í„° ì´ˆê¸°í™”
+void init_client(int client_index) 
+{
+	//ë§µë³„ ìœ„ì¹˜ ì§€ì •
 	if (map_num == 1) {
 		switch (client_index) {
 		case 0:
@@ -320,27 +330,60 @@ bool get_status(int client_index, char* id)
 	}
 
 	clients[client_index]._dir = 0;
-	clients[client_index]._level = b_n->_level;
-	clients[client_index]._exp = b_n->_exp;
 	clients[client_index]._power = 1;
 	clients[client_index]._heart = 3;
 	clients[client_index]._bomb_count = 2;
 	clients[client_index]._rock_count = 0;
 	clients[client_index]._state = ACCEPT;
+}
+
+//ëª¨ë“  í”Œë ˆì´ì–´ê°€ READY ìƒíƒœì¸ì§€ ê²€ì‚¬
+//ëª¨ë‘ READY ìƒíƒœë¼ë©´ PLAY ìƒíƒœë¡œ ë³€ê²½
+bool check_all_ready()
+{
+	for (auto& cl : clients)
+	{
+		if (cl.in_use == TRUE && cl._state != READY)
+			return false;
+	}
+
+	cout << endl;
+	cout << "<<ê²Œì„ ìŠ¤íƒ€íŠ¸>>" << endl;
+
+	for (auto& cl : clients)
+	{
+		if (cl.in_use == TRUE) {
+			cout << "í´ë¼ì´ì–¸íŠ¸ \'" << cl._id << "\' - í”Œë ˆì´ ìƒíƒœ" << endl;
+			//ì¸ê²Œì„ ë°ì´í„° ì´ˆê¸°í™” - ìœ„ì¹˜ ë“±ë“±...
+			init_client(cl._index);
+			cl._state = PLAY;
+		}
+	}
 
 	return true;
 }
 
-bool get_ready(int client_index)
+void send_all_play_start()
 {
-	clients[client_index]._state = READY;
-	for (auto& cl : clients)
+	for (auto& other : clients)
 	{
-		if (cl._state != READY)
-			return false;
-	}
-	return true;
+		if (other.in_use) {
+			PLAYER_CHANGE_STATE_packet state_packet;
+			state_packet.size = sizeof(state_packet);
+			state_packet.type = CHANGE_STATE;
 
+			for (auto& another : clients) {
+				if (another.in_use) {
+					state_packet.x = another._x;
+					state_packet.y = another._y;
+					state_packet.state = another._state;
+					strcpy_s(state_packet.id, another._id);
+
+					other.do_send(sizeof(state_packet), &state_packet);
+				}
+			}
+		}
+	}
 }
 
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path)
@@ -377,7 +420,7 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map
 	}
 	else {
 		char msg[256]{ "" };
-		char _msg[]{ " ¸ÊÀ» ºÒ·¯¿ÀÁö ¸øÇÏ¿´½À´Ï´Ù." };
+		char _msg[]{ " ë§µì„ ë¶ˆëŸ¬ì˜¤ì§€ ëª»í•˜ì˜€ìŠµë‹ˆë‹¤." };
 		strcat(msg, map_path);
 		strcat(msg, _msg);
 		MessageBox(NULL, (LPCWSTR)msg, L"ERROR - Parse failed", MB_ICONERROR);
@@ -388,7 +431,7 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map
 	json_map.close();
 }
 
-//¸Ê ¼¼ÆÃ
+//ë§µ ì„¸íŒ…
 void Setting_Map()
 {
 	int bl_indx =  0;
@@ -424,17 +467,17 @@ void Setting_Map()
 	}
 }
 
-//Ãæµ¹Ã¼Å©
+//ì¶©ëŒì²´í¬
 //type: 0 - player / 1 - block / 2 - rock / 3 - item / 4 - bomb / 5 - explode / 6 - wall
-//Ãæµ¹ ¹ß»ı½Ã ÇØ´ç ¿ÀºêÁ§Æ® ÀÎµ¦½º ¹øÈ£ + 1 ¸®ÅÏ / Ãæµ¹ÀÌ ¾øÀ¸¸é 0 ¸®ÅÏ
-//µû¶ó¼­!! Ãæµ¹ÀÌ ¾ÈÀÏ¾î³¯½Ã 0À» ¸®ÅÏÇÏ¹Ç·Î, 0¹øÂ° ÀÎµ¦½º¸¦ ±¸ºĞÇÏ±â À§ÇØ¼­ + 1À» ÇØÁØ´Ù.
+//ì¶©ëŒ ë°œìƒì‹œ í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ ì¸ë±ìŠ¤ ë²ˆí˜¸ + 1 ë¦¬í„´ / ì¶©ëŒì´ ì—†ìœ¼ë©´ 0 ë¦¬í„´
+//ë”°ë¼ì„œ!! ì¶©ëŒì´ ì•ˆì¼ì–´ë‚ ì‹œ 0ì„ ë¦¬í„´í•˜ë¯€ë¡œ, 0ë²ˆì§¸ ì¸ë±ìŠ¤ë¥¼ êµ¬ë¶„í•˜ê¸° ìœ„í•´ì„œ + 1ì„ í•´ì¤€ë‹¤.
 int Check_Collision(int source_type, int source_index, int target_type)
 {
 	int s_x{ 0 }, s_y{ 0 };
 	int s_x_bias{ 0 }, s_y_bias{ 0 };
 
 	switch (source_type) {
-	case 0:	//ÇÃ·¹ÀÌ¾î
+	case 0:	//í”Œë ˆì´ì–´
 		s_x = clients[source_index]._x;
 		s_y = clients[source_index]._y;
 		s_x_bias = p_size;
@@ -447,7 +490,7 @@ int Check_Collision(int source_type, int source_index, int target_type)
 	RECT source_rt{ s_x, s_y, s_x + s_x_bias, s_y + s_y_bias };
 
 	switch (target_type) {
-	case 1:	//ºí·Ï
+	case 1:	//ë¸”ë¡
 		for (int i = 0; i < blocks.size(); ++i) {
 			if (blocks[i].active) {
 				RECT target_rt{ blocks[i].x + adj_obstacle_size_tl, blocks[i].y + adj_obstacle_size_tl, blocks[i].x + tile_size - adj_obstacle_size_br,blocks[i].y + tile_size - adj_obstacle_size_br };
@@ -458,7 +501,7 @@ int Check_Collision(int source_type, int source_index, int target_type)
 		}
 		break;
 
-	case 2:	//¹ÙÀ§
+	case 2:	//ë°”ìœ„
 		for (int i = 0; i < rocks.size(); ++i) {
 			if (rocks[i].active) {
 				RECT target_rt{ rocks[i].x + adj_obstacle_size_tl, rocks[i].y + adj_obstacle_size_tl, rocks[i].x + tile_size - adj_obstacle_size_br,rocks[i].y + tile_size - adj_obstacle_size_br };
@@ -469,7 +512,7 @@ int Check_Collision(int source_type, int source_index, int target_type)
 		}
 		break;
 
-	case 6:	//¿Üº®
+	case 6:	//ì™¸ë²½
 		if (s_x >= bg_w - outer_wall_start - p_size / 3) 
 			return 1;
 		if (s_x <= outer_wall_start - p_size / 3) 
@@ -482,7 +525,7 @@ int Check_Collision(int source_type, int source_index, int target_type)
 		break;
 	}
 
-	return 0;	//Ãæµ¹X
+	return 0;	//ì¶©ëŒX
 }
 
 void process_packet(int client_index, char* p)
@@ -495,12 +538,10 @@ void process_packet(int client_index, char* p)
 	switch (packet_type) {
 
 	case LOGIN: {
-		cout << "login" << endl;
 		LOGIN_packet* packet = reinterpret_cast<LOGIN_packet*>(p);
 		//send_login_ok_packet(client_index);
-		strcpy_s(cl._id, packet->id);
 
-		if (!get_status(client_index, cl._id)) {
+		if (!get_status(client_index, packet->id)) {
 			LOGIN_ERROR_packet login_error_packet;
 			login_error_packet.type = LOGIN_ERROR;
 			cl.do_send(sizeof(login_error_packet), &login_error_packet);
@@ -508,7 +549,7 @@ void process_packet(int client_index, char* p)
 		}
 
 		for (auto& other : clients) {
-			// ÇÃ·¹ÀÌ¾î°¡ ·Î±×ÀÎ ¿äÃ»
+			// í”Œë ˆì´ì–´ê°€ ë¡œê·¸ì¸ ìš”ì²­
 			if (other._index == client_index) {
 				LOGIN_OK_packet L_packet;
 				L_packet.type = LOGIN_OK;
@@ -525,9 +566,8 @@ void process_packet(int client_index, char* p)
 			};
 			if (NO_ACCEPT == other._state) continue;
 
-			// ÇöÀç Á¢¼ÓÇÑ ÇÃ·¹ÀÌ¾î¿¡°Ô ÀÌ¹Ì Á¢¼ÓÇØ ÀÖ´Â Å¸ ÇÃ·¹ÀÌ¾îµéÀÇ Á¤º¸ Àü¼Û
+			// í˜„ì¬ ì ‘ì†í•œ í”Œë ˆì´ì–´ì—ê²Œ ì´ë¯¸ ì ‘ì†í•´ ìˆëŠ” íƒ€ í”Œë ˆì´ì–´ë“¤ì˜ ì •ë³´ ì „ì†¡
 			INIT_PLAYER_packet IN_Player;
-			strcpy_s(IN_Player.id, other._id);
 			IN_Player.size = sizeof(INIT_PLAYER_packet);
 			IN_Player.type = INIT_PLAYER;
 			IN_Player.x = other._x;
@@ -537,30 +577,31 @@ void process_packet(int client_index, char* p)
 			IN_Player.index = other._index;
 			IN_Player.level = other._level;
 			IN_Player.exp = other._exp;
+			strcpy_s(IN_Player.id, other._id);
 			cl.do_send(sizeof(IN_Player), &IN_Player);
 
-			// ÀÌ¹Ì Á¢¼ÓÇØ ÀÖ´Â ÇÃ·¹ÀÌ¾îµé¿¡°Ô ÇöÀç Á¢¼ÓÇÑ ÇÃ·¹ÀÌ¾îÀÇ Á¤º¸ Àü¼Û
+			// ì´ë¯¸ ì ‘ì†í•´ ìˆëŠ” í”Œë ˆì´ì–´ë“¤ì—ê²Œ í˜„ì¬ ì ‘ì†í•œ í”Œë ˆì´ì–´ì˜ ì •ë³´ ì „ì†¡
 			INIT_PLAYER_packet IN_Other;
-			strcpy_s(IN_Other.id, cl._id);
 			IN_Other.size = sizeof(INIT_PLAYER_packet);
 			IN_Other.type = INIT_PLAYER;
 			IN_Other.x = cl._x;
 			IN_Other.y = cl._y;
+			IN_Other.dir = cl._dir;
 			IN_Other.state = cl._state;
 			IN_Other.index = cl._index;
 			IN_Other.level = cl._level;
 			IN_Other.exp = cl._exp;
+			strcpy_s(IN_Other.id, cl._id);
 			other.do_send(sizeof(IN_Other), &IN_Other);
 
 		}
 
-		cout << "[¼ö½Å ¼º°ø] \'" << cl._id << "\' (" << client_index + 1 << " ¹øÂ° ÇÃ·¹ÀÌ¾î) ·Î±×ÀÎ ¿äÃ»" << endl;
+		cout << "[ìˆ˜ì‹  ì„±ê³µ] \'" << cl._id << "\' (" << client_index + 1 << " ë²ˆì§¸ í”Œë ˆì´ì–´) ë¡œê·¸ì¸ ìš”ì²­" << endl;
 
 		break;
 	}
 
 	case MOVE: {
-		cout << "move" << endl;
 		MOVE_PLAYER_packet* packet = reinterpret_cast<MOVE_PLAYER_packet*>(p);
 
 		int x_bias{ 0 }, y_bias{ 0 };
@@ -580,19 +621,19 @@ void process_packet(int client_index, char* p)
 		cl._y += y_bias;
 		cl._dir = packet->dir;
 
-		//ºí·Ï°ú Ãæµ¹Ã¼Å©
+		//ë¸”ë¡ê³¼ ì¶©ëŒì²´í¬
 		if (Check_Collision(0, cl._index, 1)) {
 			cl._x -= x_bias;
 			cl._y -= y_bias;
 		}
 
-		//¹ÙÀ§¿Í Ãæµ¹Ã¼Å©
+		//ë°”ìœ„ì™€ ì¶©ëŒì²´í¬
 		if (Check_Collision(0, cl._index, 2)) {
 			cl._x -= x_bias;
 			cl._y -= y_bias;
 		}
 
-		//¿Üº®°ú Ãæµ¹Ã¼Å©
+		//ì™¸ë²½ê³¼ ì¶©ëŒì²´í¬
 		if (Check_Collision(0, cl._index, 6)) {
 			cl._x -= x_bias;
 			cl._y -= y_bias;
@@ -604,10 +645,10 @@ void process_packet(int client_index, char* p)
 				MOVE_OK_packet Move_Player;
 				Move_Player.size = sizeof(Move_Player);
 				Move_Player.type = MOVE_OK;
-				strcpy_s(Move_Player.id, cl._id);
 				Move_Player.x = cl._x;
 				Move_Player.y = cl._y;
 				Move_Player.dir = cl._dir;
+				strcpy_s(Move_Player.id, cl._id);
 				pl.do_send(sizeof(Move_Player), &Move_Player);
 
 			}
@@ -637,10 +678,10 @@ void process_packet(int client_index, char* p)
 		//{
 		//	g_item[i_index] = false;
 		//	switch (packet->item_type) {
-		//	case 0: cl._power++; break; // ÆøÅº ¼¼±â
-		//	case 1:  cl._heart++; break; // ÇÏÆ®
-		//	case 2: cl._bomb_count++; break; //ÆøÅº °³¼ö
-		//	case 3: cl._rock_count; break; //ºí·Ï °³¼ö
+		//	case 0: cl._power++; break; // í­íƒ„ ì„¸ê¸°
+		//	case 1:  cl._heart++; break; // í•˜íŠ¸
+		//	case 2: cl._bomb_count++; break; //í­íƒ„ ê°œìˆ˜
+		//	case 3: cl._rock_count; break; //ë¸”ë¡ ê°œìˆ˜
 		//	default:
 		//		cout << "Invalid item in client " << cl._id << endl;
 		//		getchar();
@@ -672,12 +713,12 @@ void process_packet(int client_index, char* p)
 	}
 
 	case INIT_BOMB: {
-		//if (ÆøÅº »ı¼º Çß´Ù¸é){
+		//if (í­íƒ„ ìƒì„± í–ˆë‹¤ë©´){
 		timer_event ev;
-		//¶ô
+		//ë½
 		g_b_count++;
 		ev.obj_id =g_b_count;
-		//¾ğ¶ô
+		//ì–¸ë½
 		ev.start_time = chrono::system_clock::now() + 3000ms;
 		timer_queue.push(ev);
 		//}
@@ -689,56 +730,88 @@ void process_packet(int client_index, char* p)
 	}
 
 	case CHANGE_STATE: {
-		cout << "change_state" << endl;
-		//LOGIN_packet* packet = reinterpret_cast<LOGIN_packet*>(p);
 		PLAYER_CHANGE_STATE_packet* packet = reinterpret_cast<PLAYER_CHANGE_STATE_packet*>(p);
 		switch (packet->state) {
 
 		case READY: {
 			cl._x = packet->x;
 			cl._y = packet->y;
-			cout << "packet's x: " << cl._x << endl;
-			cout << "packet's y: " << cl._y << endl;
-			cl._state = READY;
-			//bool g_start = get_ready(cl._index);
-			bool g_start = true;
-			if (g_start == true) {
-				for (auto& pl : clients) {
-					if (true == pl.in_use)
+			cl._state = packet->state;
+			cout << "í´ë¼ì´ì–¸íŠ¸ \'" << cl._id << "\' - ì¤€ë¹„ ìƒíƒœ" << endl;
+
+			if (check_all_ready()) {
+				send_all_play_start();
+				break;
+			}
+
+			for (auto& other : clients) {
+				if (true == other.in_use) {
+					if (strcmp(other._id, cl._id) != 0)
 					{
 						PLAYER_CHANGE_STATE_packet state_packet;
 						state_packet.size = sizeof(state_packet);
 						state_packet.type = CHANGE_STATE;
-						strcpy_s(state_packet.id, pl._id);
-						state_packet.x = pl._x;
-						state_packet.y = pl._y;
-						state_packet.state = PLAY;
-						pl.do_send(sizeof(state_packet), &state_packet);
+						state_packet.x = cl._x;
+						state_packet.y = cl._y;
+						state_packet.state = cl._state;
+						strcpy_s(state_packet.id, cl._id);
+						other.do_send(sizeof(state_packet), &state_packet);
+					}
+					else 
+					{
+						PLAYER_CHANGE_STATE_packet state_packet;
+						state_packet.size = sizeof(state_packet);
+						state_packet.type = CHANGE_STATE;
+						state_packet.x = other._x;
+						state_packet.y = other._y;
+						state_packet.state = other._state;
+						strcpy_s(state_packet.id, other._id);
+						cl.do_send(sizeof(state_packet), &state_packet);
 					}
 				}
 			}
+
 			break;
 		}
 
-		/*case READY: {
-			bool g_start = get_ready(cl._index);
-			if (g_start == true) {
-				for (auto& pl : clients) {
-					if (true == pl.in_use)
+		case ACCEPT: {
+			cl._x = packet->x;
+			cl._y = packet->y;
+			cl._state = packet->state;
+			cout << "í´ë¼ì´ì–¸íŠ¸ \'" << cl._id << "\' - ì¤€ë¹„ ì·¨ì†Œ ìƒíƒœ" << endl;
+
+			for (auto& other : clients) {
+				if (true == other.in_use) {
+					if (strcmp(other._id, cl._id) != 0)
 					{
 						PLAYER_CHANGE_STATE_packet state_packet;
 						state_packet.size = sizeof(state_packet);
 						state_packet.type = CHANGE_STATE;
-						strcpy_s(state_packet.id, pl._id);
-						state_packet.x = pl._x;
-						state_packet.y = pl._y;
-						state_packet.state = PLAY;
-						pl.do_send(sizeof(state_packet), &state_packet);
+						state_packet.x = cl._x;
+						state_packet.y = cl._y;
+						state_packet.state = cl._state;
+						strcpy_s(state_packet.id, cl._id);
+						other.do_send(sizeof(state_packet), &state_packet);
+					}
+					else
+					{
+						PLAYER_CHANGE_STATE_packet state_packet;
+						state_packet.size = sizeof(state_packet);
+						state_packet.type = CHANGE_STATE;
+						state_packet.x = other._x;
+						state_packet.y = other._y;
+						state_packet.state = other._state;
+						strcpy_s(state_packet.id, other._id);
+						cl.do_send(sizeof(state_packet), &state_packet);
 					}
 				}
 			}
+
 			break;
-		}*/ // ÁØºñ
+		}
+
+
+		// ì¤€ë¹„
 		//case DEAD: { 
 		//	for (auto& pl : clients) {
 		//		if (true == pl.in_use)
@@ -754,16 +827,12 @@ void process_packet(int client_index, char* p)
 		//		}
 		//	}
 		//	break; 
-		//}// ÇÏÆ®
+		//}// í•˜íŠ¸
 		default: {
-			/*cout << "packet's id: " << packet->id << endl;
-			cout << "packet's x: " << packet->x << endl;
-			cout << "packet's y: " << packet->y << endl;
-			cout << "packet's state: " << packet->state << endl;
-
-			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;*/
-			//getchar();
-			//exit(-1);
+			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;
+			cout << "packet state number: " << packet->state << endl;
+			getchar();
+			exit(-1);
 			break;
 		}
 
@@ -772,7 +841,7 @@ void process_packet(int client_index, char* p)
 	}
 
 	default: {
-		cout << "[¿¡·¯] UnKnown Packet" << endl;
+		cout << "[ì—ëŸ¬] UnKnown Packet" << endl;
 		err_quit("UnKnown Packet");
 	}
 
@@ -804,7 +873,7 @@ DWORD WINAPI Thread_1(LPVOID arg)
 	player._index = index;
 
 	while (1) {
-		// µ¥ÀÌÅÍ ¹Ş±â
+		// ë°ì´í„° ë°›ê¸°
 		player.do_recv();
 		//int remain_data = num_byte + cl._prev_size;
 		char* packet_start = clients[index]._recv_buf;
@@ -830,4 +899,8 @@ DWORD WINAPI Thread_1(LPVOID arg)
 			return 0;
 		}
 	}
+}
+
+void do_bomb(int id) {
+
 }
