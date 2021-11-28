@@ -897,7 +897,3 @@ DWORD WINAPI Thread_1(LPVOID arg)
 		}
 	}
 }
-
-void do_bomb(int id) {
-
-}
