@@ -35,8 +35,6 @@ enum Player_Condition {
 
 #pragma pack (push, 1)
 
-//[주의할 점] 배열로 선언된 변수는 맨 뒤에 선언해 주어야 한다!!!
-
 struct LOGIN_packet { // 로그인 요청 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 0
