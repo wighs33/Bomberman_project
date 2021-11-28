@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 #define _WINSOCK_DEPRECATED_NO_WARNINGS // 최신 VC++ 컴파일 시 경고 방지
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -210,7 +208,7 @@ void do_bomb(int id) {
 		if (obj.active != true) continue;
 		if (true == is_bomb(obj.object_index)) continue;
 		//락
-		if (true == is_near(id, obj.object_index)); {
+		if (true == is_near(id, obj.object_index)) {
 			obj.active = false;
 		}
 		//언락
@@ -900,4 +898,4 @@ DWORD WINAPI Thread_1(LPVOID arg)
 		}
 	}
 }
->>>>>>> main
+
