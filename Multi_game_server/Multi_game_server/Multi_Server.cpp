@@ -195,19 +195,20 @@ int main(int argc, char* argv[])
 bool is_bomb(int id) {
 	return (id >= 0) && (id <= MAX_BOMB);
 }
-bool is_near(int a, int b, int power)
+bool is_near(int a, int b)
 {
+	int power = objects[a].power;
 	if (power < abs(objects[a].x - objects[b].x)) return false;
 	if (power < abs(objects[a].y - objects[b].y)) return false;
 	return true;
 }
 
-void do_bomb(int id, int power) {
+void do_bomb(int id) {
 	for (auto& obj : objects) {
 		if (obj.active != true) continue;
 		if (true == is_bomb(obj.object_index)) continue;
 		//¶ô
-		if (true == is_near(id, obj.object_index, power)); {
+		if (true == is_near(id, obj.object_index)); {
 			obj.active = false;
 		}
 		//¾ğ¶ô
