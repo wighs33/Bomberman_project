@@ -13,15 +13,13 @@
 #include "protocol.h"
 #include "constant_numbers.h"
 #include "Session.h"
-<<<<<<< HEAD
+
 #include <concurrent_priority_queue.h>
 
-=======
 #include "Object.h"
 
 #pragma comment(lib, "ws2_32")
 #pragma comment(lib, "json/jsoncpp.lib")
->>>>>>> main
 
 using namespace std;
 
@@ -76,13 +74,12 @@ bool get_status(int client_index, char* id);
 bool get_ready(int client_index);
 void process_packet(int client_index, char* p);
 int get_new_index();
-<<<<<<< HEAD
+
 void do_bomb(int id);
-=======
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
 int Check_Collision(int source_type, int source_index, int target_type);
->>>>>>> main
+
 DWORD WINAPI Thread_1(LPVOID arg);
 
 //////////////////////////////////////////////////////////
@@ -209,8 +206,8 @@ void do_timer() {
 		timer_queue.try_pop(ev);
 		//auto t = ev.start_time - chrono::system_clock::now();
 		int bomb_id = ev.obj_id;
-		if (false == is_bomb(bomb_id)) continue;
-		if (objects[bomb_id]._is_active == false) continue;
+		//if (false == is_bomb(bomb_id)) continue;
+		//if (objects[bomb_id]._is_active == false) continue;
 		if (ev.start_time <= chrono::system_clock::now()) {
 			
 		}

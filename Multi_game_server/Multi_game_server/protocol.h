@@ -3,17 +3,15 @@
 const short SERVER_PORT = 4000;
 
 const int  MAX_NAME_SIZE = 20;
-<<<<<<< HEAD
 const int  MAX_MAP_SIZE = 256;
 const int  MAX_ITEM_COUNT = 12;
 const int  MAX_BOMB = 12;
-=======
 const int  MAX_ITEM_SIZE = 12;
->>>>>>> main
+
 const int BUFSIZE = 256;
   
 const int  MAX_USER = 4;
-const int  MAX_BOMB = 20;
+
 
 enum Packet_Type {
 	LOGIN,
