@@ -60,7 +60,6 @@ public:
 	{
 		ZeroMemory(_recv_buf, sizeof(_recv_buf));
 		recv(_cl, _recv_buf, BUFSIZE, 0);
-
 	}
 };
 

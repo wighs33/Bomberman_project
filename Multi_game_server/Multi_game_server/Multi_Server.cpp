@@ -13,6 +13,9 @@
 #include "protocol.h"
 #include "constant_numbers.h"
 #include "Session.h"
+
+#include <concurrent_priority_queue.h>
+
 #include "Object.h"
 
 #pragma comment(lib, "ws2_32")
@@ -37,7 +40,6 @@ tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
 
 int map_num;	//몇 번 맵 선택?
 
-
 //블록 - [파괴 불가능]
 vector <Block>	blocks;
 
@@ -56,7 +58,6 @@ bool g_shutdown = false;
 
 mutex mylock;
 
-
 //타일 내 정보
 enum Map_object_type {
 	M_EMPTY, M_BLOCK, M_ROCK
@@ -66,15 +67,42 @@ enum Map_object_type {
 
 void err_quit(const char* msg);
 bool get_status(int client_index, char* id);
-bool get_ready(int client_index);
+void init_client(int client_index);
+bool check_all_ready();
+void send_all_play_start();
 void process_packet(int client_index, char* p);
 int get_new_index();
+void do_bomb(int id);
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
 int Check_Collision(int source_type, int source_index, int target_type);
+
 DWORD WINAPI Thread_1(LPVOID arg);
 
 //////////////////////////////////////////////////////////
+
+enum EVENT_TYPE { EVENT_DO_BOMB };
+
+struct timer_event {
+	int obj_id;
+	chrono::system_clock::time_point	start_time;
+	EVENT_TYPE ev;
+	int target_id;
+	constexpr bool operator < (const timer_event& _Left) const
+	{
+		return (start_time > _Left.start_time);
+	}
+
+};
+
+concurrency::concurrent_priority_queue <timer_event> timer_queue;
+
+class object {
+
+};
+
+array <object, MAX_BOMB> objects;
+
 
 int main(int argc, char* argv[])
 {
@@ -99,6 +127,8 @@ int main(int argc, char* argv[])
 	while (TRUE) {
 		cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
 		scanf("%d", &map_num);
+		//map_num = 1;
+
 		if (map_num == 1 || map_num == 2) {
 			cout << map_num << " 번 맵을 선택하였습니다." << endl << endl;
 			break;
@@ -133,7 +163,7 @@ int main(int argc, char* argv[])
 	bind(listen_socket, (SOCKADDR*)&server_addr, sizeof(server_addr));
 	listen(listen_socket, SOMAXCONN);
 	
-	for (int i = 0; ; ++i) {
+	for (int i = 0; i < MAX_USER; ++i) {
 		// 데이터 통신에 사용할 변수
 		SOCKET client_sock;
 		SOCKADDR_IN clientaddr;
@@ -151,11 +181,46 @@ int main(int argc, char* argv[])
 		
 	}
 
+	while (1)
+	{
+
+
+	}
+
 	closesocket(listen_socket);
 	WSACleanup();
 	
 	return 0;
 }
+
+void do_bomb(int id)
+{
+
+}
+
+void do_timer() {
+
+	while (true) {
+		timer_event ev;
+		timer_queue.try_pop(ev);
+		//auto t = ev.start_time - chrono::system_clock::now();
+		int bomb_id = ev.obj_id;
+		//if (false == is_bomb(bomb_id)) continue;
+		//if (objects[bomb_id]._is_active == false) continue;
+		if (ev.start_time <= chrono::system_clock::now()) {
+			
+		}
+		else {
+			timer_queue.push(ev);
+			this_thread::sleep_for(10ms);
+
+		}
+
+
+	}
+
+}
+
 
 void err_quit(const char* msg)
 {
@@ -181,8 +246,20 @@ bool get_status(int client_index, char* id)
 		return false;
 	}
 	
-	//-- 초기화
+	//레벨, 경험치 DB용 데이터 초기화
+	strcpy_s(clients[client_index]._id, id);
+	clients[client_index]._level = b_n->_level;
+	clients[client_index]._exp = b_n->_exp;
 
+	//기타 인게임 데이터 초기화
+	init_client(client_index);
+
+	return true;
+}
+
+//인게임 데이터 초기화
+void init_client(int client_index) 
+{
 	//맵별 위치 지정
 	if (map_num == 1) {
 		switch (client_index) {
@@ -232,27 +309,60 @@ bool get_status(int client_index, char* id)
 	}
 
 	clients[client_index]._dir = 0;
-	clients[client_index]._level = b_n->_level;
-	clients[client_index]._exp = b_n->_exp;
 	clients[client_index]._power = 1;
 	clients[client_index]._heart = 3;
 	clients[client_index]._bomb_count = 2;
 	clients[client_index]._rock_count = 0;
 	clients[client_index]._state = ACCEPT;
+}
+
+//모든 플레이어가 READY 상태인지 검사
+//모두 READY 상태라면 PLAY 상태로 변경
+bool check_all_ready()
+{
+	for (auto& cl : clients)
+	{
+		if (cl.in_use == TRUE && cl._state != READY)
+			return false;
+	}
+
+	cout << endl;
+	cout << "<<게임 스타트>>" << endl;
+
+	for (auto& cl : clients)
+	{
+		if (cl.in_use == TRUE) {
+			cout << "클라이언트 \'" << cl._id << "\' - 플레이 상태" << endl;
+			//인게임 데이터 초기화 - 위치 등등...
+			init_client(cl._index);
+			cl._state = PLAY;
+		}
+	}
 
 	return true;
 }
 
-bool get_ready(int client_index)
+void send_all_play_start()
 {
-	clients[client_index]._state = READY;
-	for (auto& cl : clients)
+	for (auto& other : clients)
 	{
-		if (cl._state != READY)
-			return false;
-	}
-	return true;
+		if (other.in_use) {
+			PLAYER_CHANGE_STATE_packet state_packet;
+			state_packet.size = sizeof(state_packet);
+			state_packet.type = CHANGE_STATE;
 
+			for (auto& another : clients) {
+				if (another.in_use) {
+					state_packet.x = another._x;
+					state_packet.y = another._y;
+					state_packet.state = another._state;
+					strcpy_s(state_packet.id, another._id);
+
+					other.do_send(sizeof(state_packet), &state_packet);
+				}
+			}
+		}
+	}
 }
 
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path)
@@ -409,9 +519,8 @@ void process_packet(int client_index, char* p)
 	case LOGIN: {
 		LOGIN_packet* packet = reinterpret_cast<LOGIN_packet*>(p);
 		//send_login_ok_packet(client_index);
-		strcpy_s(cl._id, packet->id);
 
-		if (!get_status(client_index, cl._id)) {
+		if (!get_status(client_index, packet->id)) {
 			LOGIN_ERROR_packet login_error_packet;
 			login_error_packet.type = LOGIN_ERROR;
 			cl.do_send(sizeof(login_error_packet), &login_error_packet);
@@ -438,7 +547,6 @@ void process_packet(int client_index, char* p)
 
 			// 현재 접속한 플레이어에게 이미 접속해 있는 타 플레이어들의 정보 전송
 			INIT_PLAYER_packet IN_Player;
-			strcpy_s(IN_Player.id, other._id);
 			IN_Player.size = sizeof(INIT_PLAYER_packet);
 			IN_Player.type = INIT_PLAYER;
 			IN_Player.x = other._x;
@@ -448,19 +556,21 @@ void process_packet(int client_index, char* p)
 			IN_Player.index = other._index;
 			IN_Player.level = other._level;
 			IN_Player.exp = other._exp;
+			strcpy_s(IN_Player.id, other._id);
 			cl.do_send(sizeof(IN_Player), &IN_Player);
 
 			// 이미 접속해 있는 플레이어들에게 현재 접속한 플레이어의 정보 전송
 			INIT_PLAYER_packet IN_Other;
-			strcpy_s(IN_Other.id, cl._id);
 			IN_Other.size = sizeof(INIT_PLAYER_packet);
 			IN_Other.type = INIT_PLAYER;
 			IN_Other.x = cl._x;
 			IN_Other.y = cl._y;
+			IN_Other.dir = cl._dir;
 			IN_Other.state = cl._state;
 			IN_Other.index = cl._index;
 			IN_Other.level = cl._level;
 			IN_Other.exp = cl._exp;
+			strcpy_s(IN_Other.id, cl._id);
 			other.do_send(sizeof(IN_Other), &IN_Other);
 
 		}
@@ -514,10 +624,10 @@ void process_packet(int client_index, char* p)
 				MOVE_OK_packet Move_Player;
 				Move_Player.size = sizeof(Move_Player);
 				Move_Player.type = MOVE_OK;
-				strcpy_s(Move_Player.id, cl._id);
 				Move_Player.x = cl._x;
 				Move_Player.y = cl._y;
 				Move_Player.dir = cl._dir;
+				strcpy_s(Move_Player.id, cl._id);
 				pl.do_send(sizeof(Move_Player), &Move_Player);
 
 			}
@@ -591,49 +701,87 @@ void process_packet(int client_index, char* p)
 
 	case CHANGE_STATE: {
 		PLAYER_CHANGE_STATE_packet* packet = reinterpret_cast<PLAYER_CHANGE_STATE_packet*>(p);
-
 		switch (packet->state) {
 
 		case READY: {
 			cl._x = packet->x;
-			cl._x = packet->x;
+			cl._y = packet->y;
 			cl._state = packet->state;
+			cout << "클라이언트 \'" << cl._id << "\' - 준비 상태" << endl;
 
-			for (auto& pl : clients) {
-				if (true == pl.in_use)
-				{
-					PLAYER_CHANGE_STATE_packet state_packet;
-					state_packet.size = sizeof(state_packet);
-					state_packet.type = CHANGE_STATE;
-					strcpy_s(state_packet.id, cl._id);
-					state_packet.x = cl._x;
-					state_packet.y = cl._y;
-					state_packet.state = cl._state;
-					pl.do_send(sizeof(state_packet), &state_packet);
-				}
+			if (check_all_ready()) {
+				send_all_play_start();
+				break;
 			}
-			break;
-		}
 
-		/*case READY: {
-			bool g_start = get_ready(cl._index);
-			if (g_start == true) {
-				for (auto& pl : clients) {
-					if (true == pl.in_use)
+			for (auto& other : clients) {
+				if (true == other.in_use) {
+					if (strcmp(other._id, cl._id) != 0)
 					{
 						PLAYER_CHANGE_STATE_packet state_packet;
 						state_packet.size = sizeof(state_packet);
 						state_packet.type = CHANGE_STATE;
-						strcpy_s(state_packet.id, pl._id);
-						state_packet.x = pl._x;
-						state_packet.y = pl._y;
-						state_packet.state = PLAY;
-						pl.do_send(sizeof(state_packet), &state_packet);
+						state_packet.x = cl._x;
+						state_packet.y = cl._y;
+						state_packet.state = cl._state;
+						strcpy_s(state_packet.id, cl._id);
+						other.do_send(sizeof(state_packet), &state_packet);
+					}
+					else 
+					{
+						PLAYER_CHANGE_STATE_packet state_packet;
+						state_packet.size = sizeof(state_packet);
+						state_packet.type = CHANGE_STATE;
+						state_packet.x = other._x;
+						state_packet.y = other._y;
+						state_packet.state = other._state;
+						strcpy_s(state_packet.id, other._id);
+						cl.do_send(sizeof(state_packet), &state_packet);
 					}
 				}
 			}
+
 			break;
-		}*/ // 준비
+		}
+
+		case ACCEPT: {
+			cl._x = packet->x;
+			cl._y = packet->y;
+			cl._state = packet->state;
+			cout << "클라이언트 \'" << cl._id << "\' - 준비 취소 상태" << endl;
+
+			for (auto& other : clients) {
+				if (true == other.in_use) {
+					if (strcmp(other._id, cl._id) != 0)
+					{
+						PLAYER_CHANGE_STATE_packet state_packet;
+						state_packet.size = sizeof(state_packet);
+						state_packet.type = CHANGE_STATE;
+						state_packet.x = cl._x;
+						state_packet.y = cl._y;
+						state_packet.state = cl._state;
+						strcpy_s(state_packet.id, cl._id);
+						other.do_send(sizeof(state_packet), &state_packet);
+					}
+					else
+					{
+						PLAYER_CHANGE_STATE_packet state_packet;
+						state_packet.size = sizeof(state_packet);
+						state_packet.type = CHANGE_STATE;
+						state_packet.x = other._x;
+						state_packet.y = other._y;
+						state_packet.state = other._state;
+						strcpy_s(state_packet.id, other._id);
+						cl.do_send(sizeof(state_packet), &state_packet);
+					}
+				}
+			}
+
+			break;
+		}
+
+
+		// 준비
 		//case DEAD: { 
 		//	for (auto& pl : clients) {
 		//		if (true == pl.in_use)
@@ -651,14 +799,10 @@ void process_packet(int client_index, char* p)
 		//	break; 
 		//}// 하트
 		default: {
-			cout << "packet's id: " << packet->id << endl;
-			cout << "packet's x: " << packet->x << endl;
-			cout << "packet's y: " << packet->y << endl;
-			cout << "packet's state: " << packet->state << endl;
-
 			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;
-			//getchar();
-			//exit(-1);
+			cout << "packet state number: " << packet->state << endl;
+			getchar();
+			exit(-1);
 			break;
 		}
 

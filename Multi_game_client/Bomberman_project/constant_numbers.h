@@ -45,9 +45,9 @@ const int item_more_power_img_size{ 96 };	//실제 폭발위력증가 아이템 이미지 비트
 const int heart_img_size_w{ 263 };	//실제 하트 이미지 비트크기
 const int heart_img_size_h{ 223 };	//실제 하트 이미지 비트크기
 
-const int backboard_img_w{ 260 };
-const int backboard_img_h{ 716 };
-const int backboard_w{ 200 };
+const int backboard_img_w{ 260 };	//실제 ui 용 이미지 비트크기
+const int backboard_img_h{ 716 };	//실제 ui 용 이미지 비트크기
+const int backboard_w{ 200 };		//ui 화면상 폭
 
 const int bb_char_img_size{ 30 };				//실제 한글짜 알파벳 & 숫자 이미지 비트크기
 
