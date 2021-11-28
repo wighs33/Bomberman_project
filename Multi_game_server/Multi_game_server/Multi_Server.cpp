@@ -95,6 +95,7 @@ int get_new_index();
 <<<<<<< HEAD
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 
@@ -103,6 +104,9 @@ void do_bomb(int id);
 =======
 =======
 >>>>>>> parent of e57e735 (Merge pull request #25 from wighs33/YUNTAE_protocol_and_packet_second_commit)
+void do_bomb(int id);
+>>>>>>> parent of 01b6a80 (power ìˆ˜ì •)
+=======
 void do_bomb(int id);
 >>>>>>> parent of 01b6a80 (power ìˆ˜ì •)
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
@@ -250,6 +254,7 @@ void do_bomb(int id, int power) {
 		if (true == is_bomb(obj.object_index)) continue;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 		//ë½
 		if (true == is_near(id, obj.object_index)); {
 =======
@@ -260,6 +265,10 @@ void do_bomb(int id, int power) {
 		//¶ô
 		if (true == is_near(id, obj.object_index, power)); {
 >>>>>>> parent of e57e735 (Merge pull request #25 from wighs33/YUNTAE_protocol_and_packet_second_commit)
+=======
+		//¶ô
+		if (true == is_near(id, obj.object_index, power)); {
+>>>>>>> parent of 01b6a80 (power ìˆ˜ì •)
 			obj.active = false;
 		}
 		//¾ð¶ô
