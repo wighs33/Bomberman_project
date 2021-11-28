@@ -86,6 +86,7 @@ vector <Item>	items;
 //폭탄
 vector <Bomb>	bombs;
 
+
 ////////////////////////////////////////////////////////////////////////////
 //--- 열거형
 
@@ -237,7 +238,8 @@ BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lPara
 		DisplayText(hEdit_PW_T, "패스워드");
 		SetFocus(hEdit_ID);
 		SetTimer(hwnd, 1, game_mil_sec, NULL);
-		return TRUE;
+		return FALSE;
+		//return TRUE; 로 하면 포커스가 기본적으로 IDOK 버튼으로 옮겨간다.
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
@@ -268,8 +270,7 @@ BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lPara
 			KillTimer(hwnd, 1);
 			EndDialog(hwnd, IDCANCEL);
 		}
-
-		return TRUE;
+		return FALSE;
 
 	}
 
@@ -304,7 +305,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		//대화상자 생성
 		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG1), hwnd, (DLGPROC)LoginDlgProc);
-
 
 		hdc = GetDC(hwnd);
 		hBit_main = CreateCompatibleBitmap(hdc, bg_w + backboard_w, bg_h);
