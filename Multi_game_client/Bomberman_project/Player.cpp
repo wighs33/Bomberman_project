@@ -53,7 +53,7 @@ void Player::ChangeState(char send_buf[], int state)
 	memcpy(&send_buf[0], &state_packet, BUFSIZE);
 }
 
-std::pair<int, int> Player::PlaceBomb()		// ÆøÅº Ä­¿¡ ¸ÂÃç¼­ ³õ°Ô ÇØÁÖ´Â ÇÔ¼ö
+std::pair<int, int> Player::GetMapIndexOfPlayer()
 {
 	int map_x = (_x - outer_wall_start) / tile_size;
 	int map_y = (_y - outer_wall_start) / tile_size;

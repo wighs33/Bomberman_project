@@ -422,13 +422,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		case VK_SPACE:
 		{
-			int map_x = players[my_index].PlaceBomb().first;
-			int map_y = players[my_index].PlaceBomb().second;
+			int map_ix = players[my_index].GetMapIndexOfPlayer().first;
+			int map_iy = players[my_index].GetMapIndexOfPlayer().second;
 
 			//현재 맵?
-			map_1[map_y][map_x] = BOMB;
-			int bomb_x = GetMapPos(map_x, map_y).first;
-			int bomb_y = GetMapPos(map_x, map_y).second;
+			map_1[map_iy][map_ix] = BOMB;
+			int bomb_x = GetMapPos(map_ix, map_iy).first;
+			int bomb_y = GetMapPos(map_ix, map_iy).second;
 			
 			players[my_index].InputSpaceBar(send_buf);
 			bombs.emplace_back(bomb_x, bomb_y, 0, 3);	//타이머 임시값
