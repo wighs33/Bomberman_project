@@ -52,3 +52,10 @@ void Player::ChangeState(char send_buf[], int state)
 	ZeroMemory(send_buf, sizeof(send_buf));
 	memcpy(&send_buf[0], &state_packet, BUFSIZE);
 }
+
+std::pair<int, int> Player::PlaceBomb()		// ÆøÅº Ä­¿¡ ¸ÂÃç¼­ ³õ°Ô ÇØÁÖ´Â ÇÔ¼ö
+{
+	int map_x = (_x - outer_wall_start) / tile_size;
+	int map_y = (_y - outer_wall_start) / tile_size;
+	return std::make_pair(map_x, map_y);
+}

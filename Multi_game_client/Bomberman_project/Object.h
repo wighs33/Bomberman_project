@@ -1,12 +1,12 @@
 #pragma once
 #include "constant_numbers.h"
 
-enum Obstacle_type{
-	OBSTACLE_BLOCK,
-	OBSTACLE_ROCK
-};
-
-enum Item_type{
+enum MapData{
+	EMPTY,
+	PLAYER,
+	BOMB,
+	BLOCK,
+	ROCK,
 	ITEM_HEART,
 	ITEM_MORE_BOMB,
 	ITEM_MORE_POWER,
@@ -76,7 +76,6 @@ public:
 		timer = copy.timer;
 	}
 
-	void PlaceBomb(int pl_x, int pl_y);		// 폭탄 칸에 맞춰서 놓게 해주는 함수
 	void ExplodeBomb();						// _timer가 후폭풍 유지 시간에 도달할 시 충돌체크
 };
 

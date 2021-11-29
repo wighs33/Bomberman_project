@@ -1,7 +1,9 @@
 #pragma once
 #include <windows.h>
 #include <tchar.h>
+#include <utility>
 #include "protocol.h"
+#include "constant_numbers.h"
 
 class Player
 {
@@ -23,5 +25,6 @@ public:
 	void InputMoveKey(char send_buf[], int dir);
 	void InputSpaceBar(char send_buf[]);
 	void ChangeState(char send_buf[], int state);
+	std::pair<int, int> PlaceBomb();
 };
 

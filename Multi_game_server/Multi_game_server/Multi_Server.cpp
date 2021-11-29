@@ -722,13 +722,15 @@ void process_packet(int client_index, char* p)
 		ev.start_time = chrono::system_clock::now() + 3000ms;
 		timer_queue.push(ev);
 
-		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
-		//bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, static_cast<int>(ev.start_time)));
+		//////////////////////////////////////////////////////////
 
-		cout << "ÆøÅº" << endl;
-		cout << packet->x << endl;
-		cout << packet->y << endl;
-		cout << packet->power << endl;
+		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
+		//bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, 3));
+
+		//cout << "ÆøÅº" << endl;
+		//cout << packet->x << endl;
+		//cout << packet->y << endl;
+		//cout << packet->power << endl;
 
 		break;
 	}

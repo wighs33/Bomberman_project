@@ -94,15 +94,6 @@ vector <Bomb>	bombs;
 
 
 ////////////////////////////////////////////////////////////////////////////
-//--- 열거형
-
-//타일 내 정보
-enum Map_object_type {
-	M_EMPTY, M_BLOCK, M_ROCK
-};
-
-
-////////////////////////////////////////////////////////////////////////////
 //--- 사용자 정의 함수
 
 DWORD WINAPI ClientMain(LPVOID arg);
@@ -119,6 +110,8 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map,const char* map_
 void Setting_Map();
 void Display_Players_Info(HDC, HDC, int, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, 
 	HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP);
+
+std::pair<int, int> GetMapPos(int ix, int iy);
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -428,9 +421,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_SPACE:
+		{
+			int map_x = players[my_index].PlaceBomb().first;
+			int map_y = players[my_index].PlaceBomb().second;
+
+			//현재 맵?
+			map_1[map_y][map_x] = BOMB;
+			int bomb_x = GetMapPos(map_x, map_y).first;
+			int bomb_y = GetMapPos(map_x, map_y).second;
+			
 			players[my_index].InputSpaceBar(send_buf);
+			bombs.emplace_back(bomb_x, bomb_y, 0, 3);	//타이머 임시값
+			bombs[bombs.size() - 1].object_index = bombs.size() - 1;
 			SetEvent(hEvent);
 			break;
+		}
 
 		case 'Q':
 			DestroyWindow(hwnd);
@@ -587,13 +592,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 
 			//폭탄
-			/*oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
+			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
 
-			for (int i = 0; i < bomb_num; ++i) {
-				if (bomb[i].dir != 0) {
-					TransparentBlt(mem1dc, bomb[i].left, bomb[i].top, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
+			for (int i = 0; i < bombs.size(); ++i) {
+				if (bombs[i].isActive) {
+					TransparentBlt(mem1dc, bombs[i].x, bombs[i].y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
 				}
-			}*/
+			}
 
 
 			//플레이어
@@ -824,15 +829,15 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map, const char* map
 			for (int j = 0; j < tile_max_w_num; ++j) {
 				switch (value[i][j].asInt()) {
 				case 0:
-					map[i][j] = M_EMPTY;
+					map[i][j] = EMPTY;
 					break;
 
 				case 1:
-					map[i][j] = M_BLOCK;
+					map[i][j] = BLOCK;
 					break;
 
 				case 2:
-					map[i][j] = M_ROCK;
+					map[i][j] = ROCK;
 					break;
 				}
 			}
@@ -870,14 +875,14 @@ void Setting_Map()
 	}
 
 	for (int i = 0; i < nTiles; ++i) {
-		if (map[i / tile_max_w_num][i % tile_max_w_num] == M_BLOCK) {
+		if (map[i / tile_max_w_num][i % tile_max_w_num] == BLOCK) {
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
 			blocks.push_back(Block(X, Y, bl_indx));
 			bl_indx++;
 		}
-		else if (map[i / tile_max_w_num][i % tile_max_w_num] == M_ROCK) {
+		else if (map[i / tile_max_w_num][i % tile_max_w_num] == ROCK) {
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
@@ -1010,4 +1015,12 @@ void Process_packet(char* p)
 
 	}
 
+}
+
+
+std::pair<int, int> GetMapPos(int ix, int iy)
+{
+	int window_x = ix * tile_size + outer_wall_start;
+	int window_y = iy * tile_size + outer_wall_start;
+	return std::make_pair(window_x, window_y);
 }
