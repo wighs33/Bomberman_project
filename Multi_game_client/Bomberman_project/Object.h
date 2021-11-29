@@ -2,27 +2,27 @@
 #include "constant_numbers.h"
 
 enum Obstacle_type{
-	OB_BLOCK,
-	OB_ROCK
+	OBSTACLE_BLOCK,
+	OBSTACLE_ROCK
 };
 
 enum Item_type{
-	I_HEART,
-	I_MORE_BOMB,
-	I_MORE_POWER,
-	I_ROCK
+	ITEM_HEART,
+	ITEM_MORE_BOMB,
+	ITEM_MORE_POWER,
+	ITEM_ROCK
 };
 
 class Object
 {
 public:
-	bool active;
+	bool isActive;
 	int x, y;
 	int object_index;	// 오브젝트 인덱스 값
 
 	Object()
 	{
-		active = true;
+		isActive = true;
 		x = 0;
 		y = 0;
 		object_index = -1;
@@ -30,7 +30,7 @@ public:
 
 	Object(int X, int Y, int OBJ_INDX)
 	{
-		active = true;
+		isActive = true;
 		x = X;
 		y = Y;
 		object_index = OBJ_INDX;
@@ -38,7 +38,7 @@ public:
 
 	Object(Object& obj) 
 	{
-		active = true;
+		isActive = true;
 		x = obj.x;
 		y = obj.y;
 		object_index = obj.object_index;

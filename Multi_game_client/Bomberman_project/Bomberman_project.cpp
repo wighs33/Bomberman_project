@@ -428,15 +428,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_SPACE:
-			//폭탄 생성
-			/*for (int i = 0; i < bomb_num; ++i) {
-				if (bomb[i].dir == 0) {
-					bomb[i].dir = players[my_index]._dir;
-					bomb[i].left = players[my_index]._x - 10;
-					bomb[i].top = players[my_index]._y - p_size / 3;
-					break;
-				}
-			}*/
+			players[my_index].InputSpaceBar(send_buf);
+			SetEvent(hEvent);
 			break;
 
 		case 'Q':
@@ -581,7 +574,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_block);
 
 			for (int i = 0; i < blocks.size(); ++i) {
-				if (blocks[i].active)
+				if (blocks[i].isActive)
 					TransparentBlt(mem1dc, blocks[i].x, blocks[i].y, block_size, block_size, mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
 			}
 
@@ -589,7 +582,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_rock);
 
 			for (int i = 0; i < rocks.size(); ++i) {
-				if (rocks[i].active)
+				if (rocks[i].isActive)
 					TransparentBlt(mem1dc, rocks[i].x, rocks[i].y, rock_size, rock_size, mem2dc, 0, 0, rock_img_size, rock_img_size, RGB(79, 51, 44));
 			}
 
@@ -933,6 +926,7 @@ void Process_packet(char* p)
 	case LOGIN_ERROR: {
 		MessageBox(NULL, "로그인 정보가 일치하지 않습니다.", "로그인 실패", MB_ICONWARNING);
 		setfocus_idedit = TRUE;
+		
 		break;
 	}
 
@@ -984,6 +978,7 @@ void Process_packet(char* p)
 	}
 
 	case INIT_BOMB: {
+		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
 		break;
 	}
 

@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 	}
 
 	for (int i = 0; i < MAX_USER; ++i) {                         //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
-		clients_DB.push_back(Session_DB(in));                        //임시객체를 인자로 받아올 때 emplace 사용하면 바보
+		clients_DB.push_back(Session_DB(in));
 	}
 
 	//맵 읽기
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
 
 
 	//for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                    //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
-	//	g_item[i] = true;                                            //임시객체를 인자로 받아올 때 emplace 사용하면 바보
+	//	g_item[i] = true;                                            
 	//}
 
 	//윈속 초기화
@@ -721,6 +721,15 @@ void process_packet(int client_index, char* p)
 		//언락
 		ev.start_time = chrono::system_clock::now() + 3000ms;
 		timer_queue.push(ev);
+
+		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
+		//bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, static_cast<int>(ev.start_time)));
+
+		cout << "폭탄" << endl;
+		cout << packet->x << endl;
+		cout << packet->y << endl;
+		cout << packet->power << endl;
+
 		break;
 	}
 
@@ -899,4 +908,3 @@ DWORD WINAPI Thread_1(LPVOID arg)
 		}
 	}
 }
-

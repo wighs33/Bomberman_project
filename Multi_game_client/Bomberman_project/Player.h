@@ -21,6 +21,7 @@ public:
 
 	void InputID(char send_buf[], char id[]);
 	void InputMoveKey(char send_buf[], int dir);
+	void InputSpaceBar(char send_buf[]);
 	void ChangeState(char send_buf[], int state);
 };
 
