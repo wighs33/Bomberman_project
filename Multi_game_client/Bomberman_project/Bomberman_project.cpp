@@ -430,9 +430,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			int bomb_x = GetMapPos(map_ix, map_iy).first;
 			int bomb_y = GetMapPos(map_ix, map_iy).second;
 			
-			players[my_index].InputSpaceBar(send_buf);
-			bombs.emplace_back(bomb_x, bomb_y, 0, 3);	//타이머 임시값
-			bombs[bombs.size() - 1].object_index = bombs.size() - 1;
+			//이건 서버에서 생성하라 할때 생성
+			//players[my_index].InputSpaceBar(send_buf);
+			//bombs.emplace_back(bomb_x, bomb_y, 0, 3);	//타이머 임시값
+			//bombs[bombs.size() - 1].object_index = bombs.size() - 1;
 			SetEvent(hEvent);
 			break;
 		}

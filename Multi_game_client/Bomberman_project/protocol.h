@@ -117,6 +117,7 @@ struct INIT_OBJECT_packet { // 오브젝트 생성 패킷
 struct INIT_BOMB_packet {// 폭탄 생성 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 10
+    int id; // 폭탄 아이디
 	int power; // 폭탄 위력
 	int x, y; // 오브젝트 좌표
 };

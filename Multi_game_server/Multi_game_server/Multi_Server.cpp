@@ -6,9 +6,7 @@
 #include <array>
 #include <algorithm>
 #include <thread>
-#include <mutex>
 #include <atomic>
-
 #include "json/json.h"
 #include "protocol.h"
 #include "constant_numbers.h"
@@ -56,7 +54,7 @@ vector <Bomb>	bombs;
 
 bool g_shutdown = false;
 
-mutex mylock;
+//mutex mylock;
 
 //Å¸ÀÏ ³» Á¤º¸
 enum Map_object_type {
@@ -195,51 +193,59 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-bool is_bomb(int id) {
-	return (id >= 0) && (id <= MAX_BOMB);
-}
-
 bool is_near(int a, int b)
 {
-	/*int power = objects[a].power;
-	if (power < abs(objects[a].x - objects[b].x)) return false;
-	if (power < abs(objects[a].y - objects[b].y)) return false;*/
+	int power = bombs[a]._power;
+	if (power < abs(bombs[a].x - blocks[b].x)) return false;
+	if (power < abs(bombs[a].y - blocks[b].y)) return false;
 	return true;
 }
 
 void do_bomb(int id) {
-	//for (auto& obj : objects) {
-	//	if (obj.active != true) continue;
-	//	if (true == is_bomb(obj.object_index)) continue;
-	//	//¶ô
-	//	if (true == is_near(id, obj.object_index)) {
-	//		obj.active = false;
-	//	}
-	//	//¾ð¶ô
-	//}
+	for (auto& obj : blocks) {
+		if (obj.active != true) continue;
+		if (true == is_near(id, obj.object_index)) {
+
+			obj.active_lock.lock();
+			obj.active = false;
+			obj.active_lock.unlock();
+			
+			for (auto& pl : clients) {
+				if (true == pl.in_use)
+				{
+					DELETE_OBJECT_packet del_obj_packet;
+					del_obj_packet.size = sizeof(del_obj_packet);
+					del_obj_packet.type = CHANGE_STATE;
+					del_obj_packet.ob_type = OB_BLOCK;
+					del_obj_packet.index = obj.object_index;
+					pl.do_send(sizeof(del_obj_packet), &del_obj_packet);
+				}
+			}
+
+		}
+	}
 }
 
 void do_timer() {
 
-	//while (true) {
-	//	timer_event ev;
-	//	timer_queue.try_pop(ev);
-	//	//auto t = ev.start_time - chrono::system_clock::now();
-	//	int bomb_id = ev.obj_id;
-	//	if (false == is_bomb(bomb_id)) continue;
-	//	if (objects[bomb_id].active == false) continue;
-	//	if (ev.start_time <= chrono::system_clock::now()) {
-	//		do_bomb(bomb_id);
-	//		this_thread::sleep_for(10ms);
-	//	}
-	//	else {
-	//		timer_queue.push(ev);
-	//		this_thread::sleep_for(10ms);
+	while (true) {
+		timer_event ev;
+		timer_queue.try_pop(ev);
+		auto t = ev.start_time - chrono::system_clock::now();
+		int bomb_id = ev.obj_id;
+		if (bombs[bomb_id].active == false) continue;
+		if (ev.start_time <= chrono::system_clock::now()) {
+			do_bomb(bomb_id);
+			this_thread::sleep_for(10ms);
+		}
+		else {
+			timer_queue.push(ev);
+			this_thread::sleep_for(10ms);
 
-	//	}
+		}
 
 
-	//}
+	}
 
 }
 
@@ -715,23 +721,24 @@ void process_packet(int client_index, char* p)
 	case INIT_BOMB: {
 		//if (ÆøÅº »ý¼º Çß´Ù¸é)
 		timer_event ev;
-		//¶ô
-		g_b_count++;
-		ev.obj_id = g_b_count;
-		//¾ð¶ô
-		ev.start_time = chrono::system_clock::now() + 3000ms;
-		timer_queue.push(ev);
-
+		ev.obj_id = ++g_b_count;
+		
 		//////////////////////////////////////////////////////////
 
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
-		//bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, 3));
-
+		bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, packet->power));
+		packet->id = ev.obj_id;
+		for (auto& pl : clients) {
+			if (true == pl.in_use)
+			{
+				pl.do_send(sizeof(INIT_BOMB_packet), packet);
+			}
+		};
+		timer_queue.push(ev);
 		//cout << "ÆøÅº" << endl;
 		//cout << packet->x << endl;
 		//cout << packet->y << endl;
 		//cout << packet->power << endl;
-
 		break;
 	}
 
@@ -863,14 +870,15 @@ void process_packet(int client_index, char* p)
 int get_new_index()
 {
 	static int g_id = 0;
-	mylock.lock();
+
 	for (int i = 0; i < MAX_USER; ++i)
 		if (false == clients[i].in_use) {
+			clients[i].use_lock.lock();
 			clients[i].in_use = true;
-			mylock.unlock();
+			clients[i].use_lock.unlock();
 			return i;
 		}
-	mylock.unlock();
+
 	return -1;
 }
 
