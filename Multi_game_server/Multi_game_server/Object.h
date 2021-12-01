@@ -20,7 +20,7 @@ public:
 	bool active;
 	int x, y;
 	int object_index;	// 오브젝트 인덱스 값
-	mutex active_lock;
+	std::mutex active_lock;
 
 	Object()
 	{

@@ -20,8 +20,8 @@
 #pragma comment(lib, "ws2_32")
 
 
-#define SERVERIP "127.0.0.1"
-#define SERVERPORT 4000
+#define SERVERIP "192.168.219.105"
+#define SERVERPORT 3389
 #define BUFSIZE 256
 #define IDC_BUTTON 100
 #define IDC_EDIT 101

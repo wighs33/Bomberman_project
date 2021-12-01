@@ -1,6 +1,6 @@
 #pragma once
 #include <mutex>
-const short SERVER_PORT = 4000;
+const short SERVER_PORT = 3389;
 
 const int  MAX_NAME_SIZE = 20;
 const int  MAX_MAP_SIZE = 256;
