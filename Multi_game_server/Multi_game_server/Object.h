@@ -1,5 +1,6 @@
 #pragma once
 #include "constant_numbers.h"
+#include "protocol.h"
 
 enum Obstacle_type{
 	OB_BLOCK,
@@ -19,6 +20,7 @@ public:
 	bool active;
 	int x, y;
 	int object_index;	// 오브젝트 인덱스 값
+	std::mutex active_lock;
 
 	Object()
 	{
@@ -64,17 +66,23 @@ public:
 class Bomb: public Object
 {
 public:
-	int timer;		// '폭탄 대기 시간 + 후폭풍 유지 시간' 을 모두 더한 값에서 시작 [ex) 6 = 5(폭탄 대기 시간) + 1(후폭풍 지속시간)]
-	int power;
+	int _timer;		// '폭탄 대기 시간 + 후폭풍 유지 시간' 을 모두 더한 값에서 시작 [ex) 6 = 5(폭탄 대기 시간) + 1(후폭풍 지속시간)]
+	 // 타이머 인자 없어도 돌아갈것 같은데 일단 남겨둠	
+	///////////////////
+	int _power; // 폭탄 파워
 
-	Bomb(int X, int Y, int OBJ_INDX, int timer) : Object(X, Y, OBJ_INDX)
+	Bomb(int X, int Y, int OBJ_INDX, int power) : Object(X, Y, OBJ_INDX) // 4번쨰 파라미터 파워값으로 바꿈
 	{
-		timer = fuse_bomb_timer + explode_bomb_timer;	// 6 = 5(폭탄 대기 시간) + 1(후폭풍 지속시간)
+		_timer = fuse_bomb_timer + explode_bomb_timer;	// 6 = 5(폭탄 대기 시간) + 1(후폭풍 지속시간)
+                                                       	
+		/////////////////
+		_power = power; // 폭탄 파워 초기화
+		                
 	}
 
 	explicit Bomb(const Bomb& copy) : Object(copy.x, copy.y, copy.object_index) 
 	{
-		timer = copy.timer;
+		_timer = copy._timer;
 	}
 
 	void PlaceBomb(int pl_x, int pl_y);		// 폭탄 칸에 맞춰서 놓게 해주는 함수

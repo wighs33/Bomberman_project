@@ -1,12 +1,25 @@
 #pragma once
-
-const short SERVER_PORT = 4000;
+#include <mutex>
+const short SERVER_PORT = 3389;
 
 const int  MAX_NAME_SIZE = 20;
-const int  MAX_ITEM_SIZE = 12;
+const int  MAX_MAP_SIZE = 256;
+
+
+const int  MAX_ROCK = 10;
+const int  MAX_ITEM = 10;
+const int  MAX_BLOCK = 10;
+const int  MAX_BOMB = 1000;
+
+constexpr int BOMB_ID_START = MAX_ROCK + MAX_ITEM + MAX_BLOCK;
+constexpr int BOMB_ID_END = BOMB_ID_START + MAX_BOMB - 1;
+
+
+
 const int BUFSIZE = 256;
 
 const int  MAX_USER = 4;
+
 
 enum Packet_Type {
 	LOGIN,
@@ -117,6 +130,7 @@ struct INIT_OBJECT_packet { // 오브젝트 생성 패킷
 struct INIT_BOMB_packet {// 폭탄 생성 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 10
+	int id;    // 폭탄 아이디
 	int power; // 폭탄 위력
 	int x, y; // 오브젝트 좌표
 };
