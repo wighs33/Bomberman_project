@@ -1,52 +1,5 @@
 #pragma once
-#include <mutex>
-<<<<<<< HEAD
-
-const int  MAX_NAME_SIZE = 20;
-const int  MAX_MAP_SIZE = 256;
-
-const int  MAX_ROCK = 10;
-const int  MAX_ITEM = 10;
-const int  MAX_BLOCK = 10;
-const int  MAX_BOMB = 1000;
-
-constexpr int BOMB_ID_START = MAX_ROCK + MAX_ITEM + MAX_BLOCK;
-constexpr int BOMB_ID_END = BOMB_ID_START + MAX_BOMB - 1;
-
-const int BUFSIZE = 256;
-
-const int  MAX_USER = 4;
-
-=======
-#include <queue>
-#include <utility>
-#include "constant_numbers.h"
->>>>>>> ee442bbc3be120929a073a3a91c815f7a10d9f7a
-
-enum Packet_Type {
-	LOGIN,
-	LOGIN_OK,
-	LOGIN_ERROR,
-	INIT_PLAYER,
-	CHANGE_STATE,
-	ITEMBUF,
-	GET_ITEM,
-	MOVE,
-	MOVE_OK,
-	INIT_OBJECT,
-	INIT_BOMB,
-	DELETE_OBJECT,
-	DELETE_ITEM,
-	CHANGE_ITEMBUF
-};
-
-enum Player_Condition {
-	NO_ACCEPT,
-	ACCEPT,
-	READY,
-	PLAY,
-	DEAD
-};
+#include "stdafx.h"
 
 #pragma pack (push, 1)
 
