@@ -1,25 +1,8 @@
 #pragma once
 #include <mutex>
-const short SERVER_PORT = 3389;
-
-const int  MAX_NAME_SIZE = 20;
-const int  MAX_MAP_SIZE = 256;
-
-
-const int  MAX_ROCK = 10;
-const int  MAX_ITEM = 10;
-const int  MAX_BLOCK = 10;
-const int  MAX_BOMB = 1000;
-
-constexpr int BOMB_ID_START = MAX_ROCK + MAX_ITEM + MAX_BLOCK;
-constexpr int BOMB_ID_END = BOMB_ID_START + MAX_BOMB - 1;
-
-
-
-const int BUFSIZE = 256;
-
-const int  MAX_USER = 4;
-
+#include <queue>
+#include <utility>
+#include "constant_numbers.h"
 
 enum Packet_Type {
 	LOGIN,
