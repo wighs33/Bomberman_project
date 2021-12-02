@@ -1,7 +1,6 @@
 #pragma once
 #include <windows.h>
 #include <tchar.h>
-#include <utility>
 #include "protocol.h"
 #include "constant_numbers.h"
 
@@ -21,10 +20,11 @@ public:
 	int _exp;
 	int _index;
 
-	void InputID(char send_buf[], char id[]);
-	void InputMoveKey(char send_buf[], int dir);
-	void InputSpaceBar(char send_buf[]);
-	void ChangeState(char send_buf[], int state);
+	void InputID(std::queue<char*>& send_queue, char send_buf[BUFSIZE], char id[]);
+	void InputMoveKey(std::queue<char*>& send_queue, char send_buf[BUFSIZE], int dir);
+	void InputSpaceBar(std::queue<char*>& send_queue, char send_buf[BUFSIZE]);
+	void ChangeState(std::queue<char*>& send_queue, char send_buf[BUFSIZE], int state);
+
 	std::pair<int, int> GetMapIndexOfPlayer();
 };
 

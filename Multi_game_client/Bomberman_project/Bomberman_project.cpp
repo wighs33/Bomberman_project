@@ -12,17 +12,15 @@
 #include "Object.h"
 #include "protocol.h"
 #include "json/json.h"
-#include "constant_numbers.h"
-
+//#include "constant_numbers.h"
 
 #pragma comment (lib, "msimg32.lib")
 #pragma comment(lib, "json/jsoncpp.lib")
 #pragma comment(lib, "ws2_32")
 
-
-#define SERVERIP "192.168.219.105"
+#define SERVERIP "127.0.0.1"
+//#define SERVERIP "192.168.219.105"
 #define SERVERPORT 3389
-#define BUFSIZE 256
 #define IDC_BUTTON 100
 #define IDC_EDIT 101
 
@@ -48,6 +46,7 @@ SOCKET sock;
 int retval;
 
 char send_buf[BUFSIZE];
+queue<char*> send_queue;
 char recv_buf[BUFSIZE];
 
 TCHAR input_id_str[edit_box_max_size];
@@ -103,8 +102,8 @@ BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lPara
 void DisplayText(HWND hEdit, const char* fmt, ...);
 void err_quit(const char* msg);
 void err_display(const char* msg);
-void Send_packet(SOCKET s);
-void Recv_packet(SOCKET s);
+void Send_packet();
+void Recv_packet();
 void Process_packet(char* p);
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map,const char* map_path);
 void Setting_Map();
@@ -199,7 +198,7 @@ DWORD WINAPI ClientMain(LPVOID arg)
 
 	while (true)
 	{
-		Send_packet(sock);
+		Send_packet();
 
 		WaitForSingleObject(hEvent, INFINITE);
 	}
@@ -210,7 +209,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 {
 	while (true)
 	{
-		Recv_packet(sock);
+		Recv_packet();
 		
 		Process_packet(recv_buf);
 	}
@@ -246,7 +245,7 @@ BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lPara
 
 			if (strcmp((char*)input_id_str, "")) {
 				Player temp_send_id;
-				temp_send_id.InputID(send_buf, input_id_str);
+				temp_send_id.InputID(send_queue, send_buf, input_id_str);
 				SetEvent(hEvent);
 			}
 			else {
@@ -380,7 +379,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		case IDC_BUTTON:
 			if (!isReady) {
 				isReady = TRUE;
-				players[my_index].ChangeState(send_buf, READY);
+				players[my_index].ChangeState(send_queue, send_buf, READY);
 				SetEvent(hEvent);
 				DestroyWindow(hButton);
 					hButton = CreateWindow(_T("Button"), _T("UNREADY"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
@@ -388,7 +387,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 			else {
 				isReady = FALSE;
-				players[my_index].ChangeState(send_buf, ACCEPT);
+				players[my_index].ChangeState(send_queue, send_buf, ACCEPT);
 				SetEvent(hEvent);
 				DestroyWindow(hButton);
 				hButton = CreateWindow(_T("Button"), _T("READY"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
@@ -401,22 +400,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		switch (wParam) {
 		case VK_RIGHT:
-			players[my_index].InputMoveKey(send_buf, 1);
+			players[my_index].InputMoveKey(send_queue, send_buf, 1);
 			SetEvent(hEvent);
 			break;
 
 		case VK_LEFT:
-			players[my_index].InputMoveKey(send_buf, 2);
+			players[my_index].InputMoveKey(send_queue, send_buf, 2);
 			SetEvent(hEvent);
 			break;
 
 		case VK_UP:
-			players[my_index].InputMoveKey(send_buf, 4);
+			players[my_index].InputMoveKey(send_queue, send_buf, 4);
 			SetEvent(hEvent);
 			break;
 
 		case VK_DOWN:
-			players[my_index].InputMoveKey(send_buf, 3);
+			players[my_index].InputMoveKey(send_queue, send_buf, 3);
 			SetEvent(hEvent);
 			break;
 
@@ -794,19 +793,29 @@ void err_display(const char* msg)
 }
 
 //서버에 패킷 전송
-void Send_packet(SOCKET s)
+void Send_packet()
 {
-	retval = send(sock, send_buf, BUFSIZE, 0);
+	if (send_queue.empty())
+	{
+		retval = send(sock, send_buf, BUFSIZE, 0);
+		if (retval == SOCKET_ERROR) {
+			err_quit("send()");
+		}
+		return;
+	}
+
+	retval = send(sock, send_queue.front(), BUFSIZE, 0);
 	if (retval == SOCKET_ERROR) {
 		err_quit("send()");
 	}
+	send_queue.pop();
 }
 
 //서버에서 패킷 수신
-void Recv_packet(SOCKET s)
+void Recv_packet()
 {
 	ZeroMemory(recv_buf, sizeof(recv_buf));
-	int retval = recv(s, recv_buf, BUFSIZE, 0);
+	int retval = recv(sock, recv_buf, BUFSIZE, 0);
 	if (retval == SOCKET_ERROR) {
 		err_quit("recv()");
 	}
