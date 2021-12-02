@@ -1,7 +1,7 @@
 #include "Player.h"
 #include <iostream>
 
-void Player::InputID(char send_buf[], char id[])
+void Player::InputID(std::queue<char*>& send_queue, char send_buf[BUFSIZE], char id[])
 {
 	strcpy_s(_id, id);
 
@@ -12,9 +12,10 @@ void Player::InputID(char send_buf[], char id[])
 
 	ZeroMemory(send_buf, sizeof(send_buf));
 	memcpy(&send_buf[0], &login_packet, BUFSIZE);
+	send_queue.push(send_buf);
 }
 
-void Player::InputMoveKey(char send_buf[], int dir)
+void Player::InputMoveKey(std::queue<char*>& send_queue, char send_buf[BUFSIZE], int dir)
 {
 	MOVE_PLAYER_packet move_packet;
 	move_packet.size = sizeof(move_packet);
@@ -24,9 +25,10 @@ void Player::InputMoveKey(char send_buf[], int dir)
 
 	ZeroMemory(send_buf, sizeof(send_buf));
 	memcpy(&send_buf[0], &move_packet, BUFSIZE);
+	send_queue.push(send_buf);
 }
 
-void Player::InputSpaceBar(char send_buf[])
+void Player::InputSpaceBar(std::queue<char*>& send_queue, char send_buf[BUFSIZE])
 {
 	INIT_BOMB_packet bomb_packet;
 	bomb_packet.size = sizeof(bomb_packet);
@@ -37,9 +39,10 @@ void Player::InputSpaceBar(char send_buf[])
 
 	ZeroMemory(send_buf, sizeof(send_buf));
 	memcpy(&send_buf[0], &bomb_packet, BUFSIZE);
+	send_queue.push(send_buf);
 }
 
-void Player::ChangeState(char send_buf[], int state)
+void Player::ChangeState(std::queue<char*>& send_queue, char send_buf[BUFSIZE], int state)
 {
 	PLAYER_CHANGE_STATE_packet state_packet;
 	state_packet.size = sizeof(state_packet);
@@ -51,6 +54,7 @@ void Player::ChangeState(char send_buf[], int state)
 
 	ZeroMemory(send_buf, sizeof(send_buf));
 	memcpy(&send_buf[0], &state_packet, BUFSIZE);
+	send_queue.push(send_buf);
 }
 
 std::pair<int, int> Player::GetMapIndexOfPlayer()

@@ -1,5 +1,6 @@
 #pragma once
 #include <mutex>
+<<<<<<< HEAD
 
 const int  MAX_NAME_SIZE = 20;
 const int  MAX_MAP_SIZE = 256;
@@ -16,6 +17,11 @@ const int BUFSIZE = 256;
 
 const int  MAX_USER = 4;
 
+=======
+#include <queue>
+#include <utility>
+#include "constant_numbers.h"
+>>>>>>> ee442bbc3be120929a073a3a91c815f7a10d9f7a
 
 enum Packet_Type {
 	LOGIN,

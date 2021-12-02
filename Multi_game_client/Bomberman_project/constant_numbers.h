@@ -88,3 +88,21 @@ const int edit_box_max_size{ 40 };	//에디트 박스 최대크기
 //ui 관련 상수들
 
 const int h_gap = 190;				// 플레이어 ui 간 간격
+
+//////////////////////////////////////////////////////////////////////////
+
+const int BUFSIZE = 256;
+
+const int  MAX_NAME_SIZE = 20;
+const int  MAX_MAP_SIZE = 256;
+
+
+const int  MAX_ROCK = 10;
+const int  MAX_ITEM = 10;
+const int  MAX_BLOCK = 10;
+const int  MAX_BOMB = 1000;
+
+constexpr int BOMB_ID_START = MAX_ROCK + MAX_ITEM + MAX_BLOCK;
+constexpr int BOMB_ID_END = BOMB_ID_START + MAX_BOMB - 1;
+
+const int  MAX_USER = 4;
