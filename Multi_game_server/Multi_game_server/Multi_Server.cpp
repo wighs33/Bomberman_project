@@ -203,11 +203,11 @@ bool is_near(int a, int b)
 
 void do_bomb(int id) {
 	for (auto& obj : blocks) {
-		if (obj.active != true) continue;
+		if (obj.isActive != true) continue;
 		if (true == is_near(id, obj.object_index)) {
 
 			obj.active_lock.lock();
-			obj.active = false;
+			obj.isActive = false;
 			obj.active_lock.unlock();
 			
 			for (auto& pl : clients) {
@@ -233,7 +233,7 @@ void do_timer() {
 		timer_queue.try_pop(ev);
 		auto t = ev.start_time - chrono::system_clock::now();
 		int bomb_id = ev.obj_id;
-		if (bombs[bomb_id].active == false) continue;
+		if (bombs[bomb_id].isActive == false) continue;
 		if (ev.start_time <= chrono::system_clock::now()) {
 			do_bomb(bomb_id);
 			this_thread::sleep_for(10ms);
@@ -498,7 +498,7 @@ int Check_Collision(int source_type, int source_index, int target_type)
 	switch (target_type) {
 	case 1:	//블록
 		for (int i = 0; i < blocks.size(); ++i) {
-			if (blocks[i].active) {
+			if (blocks[i].isActive) {
 				RECT target_rt{ blocks[i].x + adj_obstacle_size_tl, blocks[i].y + adj_obstacle_size_tl, blocks[i].x + tile_size - adj_obstacle_size_br,blocks[i].y + tile_size - adj_obstacle_size_br };
 
 				if (IntersectRect(&temp, &source_rt, &target_rt))
@@ -509,7 +509,7 @@ int Check_Collision(int source_type, int source_index, int target_type)
 
 	case 2:	//바위
 		for (int i = 0; i < rocks.size(); ++i) {
-			if (rocks[i].active) {
+			if (rocks[i].isActive) {
 				RECT target_rt{ rocks[i].x + adj_obstacle_size_tl, rocks[i].y + adj_obstacle_size_tl, rocks[i].x + tile_size - adj_obstacle_size_br,rocks[i].y + tile_size - adj_obstacle_size_br };
 
 				if (IntersectRect(&temp, &source_rt, &target_rt))
