@@ -184,6 +184,7 @@ enum MapData {
 	EMPTY,
 	PLAYER,
 	BOMB,
+	EXPLOSION,
 	BLOCK,
 	ROCK,
 	ITEM_HEART,

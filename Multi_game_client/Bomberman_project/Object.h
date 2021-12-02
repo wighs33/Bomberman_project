@@ -69,7 +69,7 @@ public:
 		_power = copy._power; // 폭탄 파워 초기화
 	}
 
-	void ExplodeBomb(tileArr<int, tile_max_w_num, tile_max_h_num> objectMap);						// _timer가 후폭풍 유지 시간에 도달할 시 충돌체크
+	void ExplodeBomb(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap);						// _timer가 후폭풍 유지 시간에 도달할 시 충돌체크
 };
 
 class Item: public Object
