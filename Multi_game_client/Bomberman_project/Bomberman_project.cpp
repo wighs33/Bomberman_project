@@ -18,9 +18,9 @@
 #pragma comment(lib, "json/jsoncpp.lib")
 #pragma comment(lib, "ws2_32")
 
-#define SERVERIP "127.0.0.1"
-//#define SERVERIP "192.168.219.105"
-#define SERVERPORT 3389
+//#define SERVERIP "127.0.0.1"
+#define SERVERIP "192.168.182.71"
+#define SERVERPORT 22
 #define IDC_BUTTON 100
 #define IDC_EDIT 101
 
@@ -430,7 +430,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			int bomb_y = GetMapPos(map_ix, map_iy).second;
 			
 			//이건 서버에서 생성하라 할때 생성
-			//players[my_index].InputSpaceBar(send_buf);
+			players[my_index].InputSpaceBar(send_queue, send_buf);
 			//bombs.emplace_back(bomb_x, bomb_y, 0, 3);	//타이머 임시값
 			//bombs[bombs.size() - 1].object_index = bombs.size() - 1;
 			SetEvent(hEvent);
