@@ -485,53 +485,78 @@ int Check_Collision(int source_type, int source_index)
 	if (s_y <= outer_wall_start - p_size / 3)
 		return 1;
 
-	for (int iy = 0; iy < tile_max_h_num; ++iy)
-		for (int ix = 0; ix < tile_max_w_num; ++ix) {
-			//À©µµ¿ì »ó ÁÂÇ¥
-			auto [window_x, window_y] = MapIndexToWindowPos(ix, iy);
+	for (auto& bl : blocks) {
+		if (bl._isActive) {
+			RECT target_rt{ bl._x + adj_obstacle_size_tl, bl._y + adj_obstacle_size_tl, bl._x + tile_size - adj_obstacle_size_br, bl._y + tile_size - adj_obstacle_size_br };
+			if (IntersectRect(&temp, &source_rt, &target_rt))
+				return BLOCK;
+		}
+	}
 
-			//¿ÀºêÁ§Æ® ±×¸®±â
-			switch (selectedMap[iy][ix]) {
-			case BLOCK:			//ºí·Ï
-			{
-				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+	for (auto& ro : rocks) {
+		if (ro._isActive) {
+			RECT target_rt{ ro._x + adj_obstacle_size_tl, ro._y + adj_obstacle_size_tl, ro._x + tile_size - adj_obstacle_size_br, ro._y + tile_size - adj_obstacle_size_br };
+			if (IntersectRect(&temp, &source_rt, &target_rt))
+				return ROCK;
+		}
+	}
+	
+	for (auto& bo : bombs) {
+		if (bo._isActive) {
+			RECT target_rt{ bo._x + adj_obstacle_size_tl, bo._y + adj_obstacle_size_tl, bo._x + tile_size - adj_obstacle_size_br, bo._y + tile_size - adj_obstacle_size_br };
+			if (IntersectRect(&temp, &source_rt, &target_rt))
+				return BOMB;
+		}
+	}
+	
+	//for (int iy = 0; iy < tile_max_h_num; ++iy)
+	//	for (int ix = 0; ix < tile_max_w_num; ++ix) {
+	//		//À©µµ¿ì »ó ÁÂÇ¥
+	//		auto [window_x, window_y] = MapIndexToWindowPos(ix, iy);
 
-				if (IntersectRect(&temp, &source_rt, &target_rt))
-					return BLOCK;
+	//		//¿ÀºêÁ§Æ® ±×¸®±â
+	//		switch (selectedMap[iy][ix]) {
+	//		case BLOCK:			//ºí·Ï
+	//		{
+	//			
+	//			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
-				break;
-			}
-			case ROCK:			//µ¹
-			{
-				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+	//			if (IntersectRect(&temp, &source_rt, &target_rt))
+	//				return BLOCK;
 
-				if (IntersectRect(&temp, &source_rt, &target_rt))
-					return ROCK;
+	//			break;
+	//		}
+	//		case ROCK:			//µ¹
+	//		{
+	//			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
-				break;
-			}
-			case BOMB:			//ÆøÅº
-			{
-				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+	//			if (IntersectRect(&temp, &source_rt, &target_rt))
+	//				return ROCK;
 
-				if (IntersectRect(&temp, &source_rt, &target_rt))
-					return BOMB;
+	//			break;
+	//		}
+	//		case BOMB:			//ÆøÅº
+	//		{
+	//			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
-				break;
-			}
-			case EXPLOSION:		//Æø¹ß
-			{
-				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+	//			if (IntersectRect(&temp, &source_rt, &target_rt))
+	//				return BOMB;
 
-				if (IntersectRect(&temp, &source_rt, &target_rt))
-					return EXPLOSION;
+	//			break;
+	//		}
+	//		case EXPLOSION:		//Æø¹ß
+	//		{
+	//			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
-				break;
-			}
-			default:
-				break;
-			}
-		};
+	//			if (IntersectRect(&temp, &source_rt, &target_rt))
+	//				return EXPLOSION;
+
+	//			break;
+	//		}
+	//		default:
+	//			break;
+	//		}
+	//	};
 
 	return EMPTY;	//Ãæµ¹X
 }
