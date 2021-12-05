@@ -504,8 +504,8 @@ int Check_Collision(int source_type, int source_index)
 	for (auto& bo : bombs) {
 		if (bo._isActive) {
 			RECT target_rt{ bo._x + adj_obstacle_size_tl, bo._y + adj_obstacle_size_tl, bo._x + tile_size - adj_obstacle_size_br, bo._y + tile_size - adj_obstacle_size_br };
-			if (IntersectRect(&temp, &source_rt, &target_rt))
-				return BOMB;
+			//if (IntersectRect(&temp, &source_rt, &target_rt))
+				//return BOMB;
 		}
 	}
 	
