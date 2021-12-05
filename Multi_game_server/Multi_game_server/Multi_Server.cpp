@@ -7,13 +7,12 @@
 #include <algorithm>
 #include <thread>
 #include <atomic>
+#include <concurrent_priority_queue.h>
+
 #include "json/json.h"
 #include "protocol.h"
 #include "constant_numbers.h"
 #include "Session.h"
-
-#include <concurrent_priority_queue.h>
-
 #include "Object.h"
 
 #pragma comment(lib, "ws2_32")

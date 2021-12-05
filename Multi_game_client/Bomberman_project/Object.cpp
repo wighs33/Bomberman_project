@@ -1,6 +1,6 @@
 #include "Object.h"
 
-std::pair<int, int> WindowPosToMapIndex(int x, int y)
+static std::pair<int, int> WindowPosToMapIndex(int x, int y)
 {
 	int map_x = (x - outer_wall_start) / tile_size;
 	int map_y = (y - outer_wall_start) / tile_size;
