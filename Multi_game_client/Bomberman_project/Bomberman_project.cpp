@@ -558,44 +558,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		//접속 후 화면 출력
 		if (retval) {
-			//블록
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_block);
+			for (int iy = 0; iy < tile_max_h_num; ++iy)
+				for (int ix = 0; ix < tile_max_w_num; ++ix) {
+					//윈도우 상 좌표
+					auto [window_x, window_y] = MapIndexToWindowPos(ix, iy);
 
-			for (int i = 0; i < blocks.size(); ++i) {
-				if (blocks[i]._isActive)
-					TransparentBlt(mem1dc, blocks[i]._x, blocks[i]._y, block_size, block_size, mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
-			}
-
-			//돌
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_rock);
-
-			for (int i = 0; i < rocks.size(); ++i) {
-				if (rocks[i]._isActive)
-					TransparentBlt(mem1dc, rocks[i]._x, rocks[i]._y, rock_size, rock_size, mem2dc, 0, 0, rock_img_size, rock_img_size, RGB(79, 51, 44));
-			}
-
-			//폭탄
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
-
-			for (int i = 0; i < bombs.size(); ++i) {
-				if (bombs[i]._isActive) {
-					TransparentBlt(mem1dc, bombs[i]._x, bombs[i]._y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
-				}
-			}
-
-			//폭발
-			//oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_explosion);
-
-			for (int i = 0; i < bombs.size(); ++i) {
-
-				//if (!bombs[i]._explode) break;
-				for (int j = 0; j < bombs[i]._explosionPosVec.size(); ++j) {
-					auto [explosion_x, explosion_y] = bombs[i]._explosionPosVec[j];
-					//cout << bombs[i]._explosionPosVec.size() << endl;
-					//폭발그림 수정
-					TransparentBlt(mem1dc, explosion_x, explosion_y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
-				}
-			}
+					//오브젝트 그리기
+					switch (selectedMap[iy][ix]) {
+					case EMPTY:			//땅
+						break;
+					case BLOCK:			//블록
+						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_block);
+						TransparentBlt(mem1dc, window_x, window_y, block_size, block_size, mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
+						break;
+					case ROCK:			//돌
+						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_rock);
+						TransparentBlt(mem1dc, window_x, window_y, rock_size, rock_size, mem2dc, 0, 0, rock_img_size, rock_img_size, RGB(79, 51, 44));
+						break;
+					case BOMB:			//폭탄
+						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
+						TransparentBlt(mem1dc, window_x, window_y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
+						break;
+					case EXPLOSION:		//폭발
+						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_explosion);
+						//그림 수정필요
+						TransparentBlt(mem1dc, window_x, window_y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
+						break;
+					default:
+						break;
+					}
+				};
 
 
 			//플레이어

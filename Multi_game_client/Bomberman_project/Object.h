@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include "protocol.h"
 
 class Object
 {
@@ -74,6 +75,7 @@ public:
 	}
 
 	void ExplodeBomb(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap);						// _timer가 후폭풍 유지 시간에 도달할 시 충돌체크
+	void DestroyRock(std::queue<char*>& send_queue, char send_buf[BUFSIZE], int x, int y);
 };
 
 class Item: public Object
