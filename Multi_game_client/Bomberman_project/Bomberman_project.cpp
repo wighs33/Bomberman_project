@@ -1,33 +1,9 @@
-#include <winsock2.h>	// windows.h 보다 위에 두어야 재정의 빌드 에러 안 생김
-#include <windows.h>	
-#include <tchar.h>
-//#include <random>
-#include <array>
-#include <vector>
-#include <fstream>
-//#include <iostream>	//콘솔 출력용
-
 #include "resource.h"
 #include "Player.h"
 #include "Object.h"
 #include "protocol.h"
 #include "json/json.h"
-//#include "constant_numbers.h"
-
-#pragma comment (lib, "msimg32.lib")
-#pragma comment(lib, "json/jsoncpp.lib")
-#pragma comment(lib, "ws2_32")
-
-
-#define SERVERIP "192.168.182.71"
-#define SERVERPORT 22
-
-#define IDC_BUTTON 100
-#define IDC_EDIT 101
-
-
-using namespace std;
-
+#include "stdafx.h"
 
 ////////////////////////////////////////////////////////////////////////////
 //--- 전역 변수
@@ -68,16 +44,10 @@ bool setfocus_idedit = FALSE;
 //--- 컨테이너
 
 //맵
-template<typename T, size_t X, size_t Y>
-using tileArr = array<array<T, X>, Y>;
-
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_1;
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
 
 //플레이어
-template<typename T, size_t N>
-using playerArr = array<T, N>;
-
 playerArr<Player, MAX_USER>	players;
 
 //블록 - [파괴 불가능]
@@ -111,7 +81,8 @@ void Setting_Map();
 void Display_Players_Info(HDC, HDC, int, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, 
 	HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP);
 
-std::pair<int, int> GetMapPos(int ix, int iy);
+std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
+std::pair<int, int> WindowPosToMapIndex(int x, int y);
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -383,8 +354,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				players[my_index].ChangeState(send_queue, send_buf, READY);
 				SetEvent(hEvent);
 				DestroyWindow(hButton);
-					hButton = CreateWindow(_T("Button"), _T("UNREADY"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-						bg_w + 5 + 25 * 2 + 20 - 10, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * my_index + 30, 80, 30, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
+				hButton = CreateWindow(_T("Button"), _T("UNREADY"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+					bg_w + 5 + 25 * 2 + 20 - 10, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * my_index + 30, 80, 30, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
 			}
 			else {
 				isReady = FALSE;
@@ -401,39 +372,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		switch (wParam) {
 		case VK_RIGHT:
-			players[my_index].InputMoveKey(send_queue, send_buf, 1);
+			players[my_index].InputMoveKey(send_queue, send_buf, RIGHT);
 			SetEvent(hEvent);
 			break;
 
 		case VK_LEFT:
-			players[my_index].InputMoveKey(send_queue, send_buf, 2);
+			players[my_index].InputMoveKey(send_queue, send_buf, LEFT);
 			SetEvent(hEvent);
 			break;
 
 		case VK_UP:
-			players[my_index].InputMoveKey(send_queue, send_buf, 4);
+			players[my_index].InputMoveKey(send_queue, send_buf, UP);
 			SetEvent(hEvent);
 			break;
 
 		case VK_DOWN:
-			players[my_index].InputMoveKey(send_queue, send_buf, 3);
+			players[my_index].InputMoveKey(send_queue, send_buf, DOWN);
 			SetEvent(hEvent);
 			break;
 
 		case VK_SPACE:
 		{
-			int map_ix = players[my_index].GetMapIndexOfPlayer().first;
-			int map_iy = players[my_index].GetMapIndexOfPlayer().second;
+			int px = players[my_index]._x;
+			int py = players[my_index]._y;
+			int map_ix = WindowPosToMapIndex(px, py).first;
+			int map_iy = WindowPosToMapIndex(px, py).second;
 
-			//현재 맵?
-			map_1[map_iy][map_ix] = BOMB;
-			int bomb_x = GetMapPos(map_ix, map_iy).first;
-			int bomb_y = GetMapPos(map_ix, map_iy).second;
+			int bomb_x = MapIndexToWindowPos(map_ix, map_iy).first;
+			int bomb_y = MapIndexToWindowPos(map_ix, map_iy).second;
 			
 			//이건 서버에서 생성하라 할때 생성
-			players[my_index].InputSpaceBar(send_queue, send_buf);
-			//bombs.emplace_back(bomb_x, bomb_y, 0, 3);	//타이머 임시값
-			//bombs[bombs.size() - 1].object_index = bombs.size() - 1;
+			players[my_index].InputSpaceBar(send_queue, send_buf, bomb_x, bomb_y);
 			SetEvent(hEvent);
 			break;
 		}
@@ -581,7 +550,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			for (int i = 0; i < blocks.size(); ++i) {
 				if (blocks[i].isActive)
-					TransparentBlt(mem1dc, blocks[i].x, blocks[i].y, block_size, block_size, mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
+					TransparentBlt(mem1dc, blocks[i]._x, blocks[i]._y, block_size, block_size, mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
 			}
 
 			//돌
@@ -589,7 +558,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			for (int i = 0; i < rocks.size(); ++i) {
 				if (rocks[i].isActive)
-					TransparentBlt(mem1dc, rocks[i].x, rocks[i].y, rock_size, rock_size, mem2dc, 0, 0, rock_img_size, rock_img_size, RGB(79, 51, 44));
+					TransparentBlt(mem1dc, rocks[i]._x, rocks[i]._y, rock_size, rock_size, mem2dc, 0, 0, rock_img_size, rock_img_size, RGB(79, 51, 44));
 			}
 
 			//폭탄
@@ -597,7 +566,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			for (int i = 0; i < bombs.size(); ++i) {
 				if (bombs[i].isActive) {
-					TransparentBlt(mem1dc, bombs[i].x, bombs[i].y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
+					TransparentBlt(mem1dc, bombs[i]._x, bombs[i]._y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
 				}
 			}
 
@@ -995,6 +964,14 @@ void Process_packet(char* p)
 
 	case INIT_BOMB: {
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
+		bombs.emplace_back(packet->x, packet->y, 0, 3, packet->power);	//타이머 임시값
+		bombs[bombs.size() - 1].object_index = bombs.size() - 1;
+
+		//현재 맵?
+		int map_ix = WindowPosToMapIndex(packet->x, packet->y).first;
+		int map_iy = WindowPosToMapIndex(packet->x, packet->y).second;
+		map_1[map_iy][map_ix] = BOMB;
+
 		break;
 	}
 
@@ -1029,9 +1006,16 @@ void Process_packet(char* p)
 }
 
 
-std::pair<int, int> GetMapPos(int ix, int iy)
+std::pair<int, int> MapIndexToWindowPos(int ix, int iy)
 {
 	int window_x = ix * tile_size + outer_wall_start;
 	int window_y = iy * tile_size + outer_wall_start;
 	return std::make_pair(window_x, window_y);
+}
+
+std::pair<int, int> WindowPosToMapIndex(int x, int y)
+{
+	int map_x = (x - outer_wall_start) / tile_size;
+	int map_y = (y - outer_wall_start) / tile_size;
+	return std::make_pair(map_x, map_y);
 }

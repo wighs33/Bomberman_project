@@ -1,4 +1,35 @@
 #pragma once
+
+#include <winsock2.h>	// windows.h 보다 위에 두어야 재정의 빌드 에러 안 생김
+#include <windows.h>	
+#include <tchar.h>
+//#include <random>
+#include <array>
+#include <vector>
+#include <fstream>
+#include <mutex>
+#include <queue>
+#include <utility>
+#include <iostream>
+
+#include "resource.h"
+#include "json/json.h"
+
+#pragma comment (lib, "msimg32.lib")
+#pragma comment(lib, "json/jsoncpp.lib")
+#pragma comment(lib, "ws2_32")
+
+
+//#define SERVERIP "192.168.182.71"
+#define SERVERIP "127.0.0.1"
+#define SERVERPORT 10000
+
+#define IDC_BUTTON 100
+#define IDC_EDIT 101
+
+using namespace std;
+
+
 ////////////////////////////////////////////////////////////////////////////
 //스프라이트 관련 상수들
 
@@ -106,3 +137,58 @@ constexpr int BOMB_ID_START = MAX_ROCK + MAX_ITEM + MAX_BLOCK;
 constexpr int BOMB_ID_END = BOMB_ID_START + MAX_BOMB - 1;
 
 const int  MAX_USER = 4;
+
+//맵
+template<typename T, size_t X, size_t Y>
+using tileArr = array<array<T, X>, Y>;
+
+//플레이어
+template<typename T, size_t N>
+using playerArr = array<T, N>;
+
+
+enum Packet_Type {
+	LOGIN,
+	LOGIN_OK,
+	LOGIN_ERROR,
+	INIT_PLAYER,
+	CHANGE_STATE,
+	ITEMBUF,
+	GET_ITEM,
+	MOVE,
+	MOVE_OK,
+	INIT_OBJECT,
+	INIT_BOMB,
+	DELETE_OBJECT,
+	DELETE_ITEM,
+	CHANGE_ITEMBUF
+};
+
+enum Player_Condition {
+	NO_ACCEPT,
+	ACCEPT,
+	READY,
+	PLAY,
+	DEAD
+};
+
+enum Player_Move {
+	RIGHT = 1,
+	LEFT,
+	DOWN,
+	UP
+};
+
+
+enum MapData {
+	EMPTY,
+	PLAYER,
+	BOMB,
+	EXPLOSION,
+	BLOCK,
+	ROCK,
+	ITEM_HEART,
+	ITEM_MORE_BOMB,
+	ITEM_MORE_POWER,
+	ITEM_ROCK
+};

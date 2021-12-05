@@ -1,33 +1,5 @@
 #pragma once
-#include <mutex>
-#include <queue>
-#include <utility>
-#include "constant_numbers.h"
-
-enum Packet_Type {
-	LOGIN,
-	LOGIN_OK,
-	LOGIN_ERROR,
-	INIT_PLAYER,
-	CHANGE_STATE,
-	ITEMBUF,
-	GET_ITEM,
-	MOVE,
-	MOVE_OK,
-	INIT_OBJECT,
-	INIT_BOMB,
-	DELETE_OBJECT,
-	DELETE_ITEM,
-	CHANGE_ITEMBUF
-};
-
-enum Player_Condition {
-	NO_ACCEPT,
-	ACCEPT,
-	READY,
-	PLAY,
-	DEAD
-};
+#include "stdafx.h"
 
 #pragma pack (push, 1)
 

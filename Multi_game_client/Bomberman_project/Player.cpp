@@ -1,5 +1,4 @@
 #include "Player.h"
-#include <iostream>
 
 void Player::InputID(std::queue<char*>& send_queue, char send_buf[BUFSIZE], char id[])
 {
@@ -28,14 +27,14 @@ void Player::InputMoveKey(std::queue<char*>& send_queue, char send_buf[BUFSIZE],
 	send_queue.push(send_buf);
 }
 
-void Player::InputSpaceBar(std::queue<char*>& send_queue, char send_buf[BUFSIZE])
+void Player::InputSpaceBar(std::queue<char*>& send_queue, char send_buf[BUFSIZE], int bomb_x, int bomb_y)
 {
 	INIT_BOMB_packet bomb_packet;
 	bomb_packet.size = sizeof(bomb_packet);
 	bomb_packet.type = INIT_BOMB;
 	bomb_packet.power = _bomb_power;
-	bomb_packet.x = _x;
-	bomb_packet.y = _y;
+	bomb_packet.x = bomb_x;
+	bomb_packet.y = bomb_y;
 
 	ZeroMemory(send_buf, sizeof(send_buf));
 	memcpy(&send_buf[0], &bomb_packet, BUFSIZE);
@@ -55,11 +54,4 @@ void Player::ChangeState(std::queue<char*>& send_queue, char send_buf[BUFSIZE], 
 	ZeroMemory(send_buf, sizeof(send_buf));
 	memcpy(&send_buf[0], &state_packet, BUFSIZE);
 	send_queue.push(send_buf);
-}
-
-std::pair<int, int> Player::GetMapIndexOfPlayer()
-{
-	int map_x = (_x - outer_wall_start) / tile_size;
-	int map_y = (_y - outer_wall_start) / tile_size;
-	return std::make_pair(map_x, map_y);
 }
