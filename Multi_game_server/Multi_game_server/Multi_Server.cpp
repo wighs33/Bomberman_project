@@ -34,6 +34,7 @@ using tileArr = array<array<T, X>, Y>;
 
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_1;
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
+tileArr<int, tile_max_w_num, tile_max_h_num>	selectedMap;
 
 int map_num;	//몇 번 맵 선택?
 
@@ -56,8 +57,17 @@ bool g_shutdown = false;
 //mutex mylock;
 
 //타일 내 정보
-enum Map_object_type {
-	M_EMPTY, M_BLOCK, M_ROCK
+enum MapData {
+	EMPTY,
+	PLAYER,
+	BOMB,
+	EXPLOSION,
+	BLOCK,
+	ROCK,
+	ITEM_HEART,
+	ITEM_MORE_BOMB,
+	ITEM_MORE_POWER,
+	ITEM_ROCK
 };
 
 // ====================================================================
@@ -97,9 +107,12 @@ int get_new_index();
 void do_bomb(int id);
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
-int Check_Collision(int source_type, int source_index, int target_type);
+int Check_Collision(int source_type, int source_index);
 
 DWORD WINAPI Thread_1(LPVOID arg);
+
+std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
+std::pair<int, int> WindowPosToMapIndex(int x, int y);
 
 //////////////////////////////////////////////////////////
 
@@ -409,15 +422,15 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map
 			for (int j = 0; j < tile_max_w_num; ++j) {
 				switch (value[i][j].asInt()) {
 				case 0:
-					map[i][j] = M_EMPTY;
+					map[i][j] = EMPTY;
 					break;
 
 				case 1:
-					map[i][j] = M_BLOCK;
+					map[i][j] = BLOCK;
 					break;
 
 				case 2:
-					map[i][j] = M_ROCK;
+					map[i][j] = ROCK;
 					break;
 				}
 			}
@@ -442,27 +455,25 @@ void Setting_Map()
 	int bl_indx = 0;
 	int r_indx = 0;
 
-	tileArr<int, tile_max_w_num, tile_max_h_num> map;
-
 	switch (map_num) {
 	case 1:
-		map = map_1;
+		selectedMap = map_1;
 		break;
 
 	case 2:
-		map = map_2;
+		selectedMap = map_2;
 		break;
 	}
 
 	for (int i = 0; i < nTiles; ++i) {
-		if (map[i / tile_max_w_num][i % tile_max_w_num] == M_BLOCK) {
+		if (selectedMap[i / tile_max_w_num][i % tile_max_w_num] == BLOCK) {
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
 			blocks.push_back(Block(X, Y, bl_indx));
 			bl_indx++;
 		}
-		else if (map[i / tile_max_w_num][i % tile_max_w_num] == M_ROCK) {
+		else if (selectedMap[i / tile_max_w_num][i % tile_max_w_num] == ROCK) {
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
@@ -473,10 +484,10 @@ void Setting_Map()
 }
 
 //충돌체크
-//type: 0 - player / 1 - block / 2 - rock / 3 - item / 4 - bomb / 5 - explode / 6 - wall
 //충돌 발생시 해당 오브젝트 인덱스 번호 + 1 리턴 / 충돌이 없으면 0 리턴
 //따라서!! 충돌이 안일어날시 0을 리턴하므로, 0번째 인덱스를 구분하기 위해서 + 1을 해준다.
-int Check_Collision(int source_type, int source_index, int target_type)
+
+int Check_Collision(int source_type, int source_index)
 {
 	int s_x{ 0 }, s_y{ 0 };
 	int s_x_bias{ 0 }, s_y_bias{ 0 };
@@ -488,49 +499,69 @@ int Check_Collision(int source_type, int source_index, int target_type)
 		s_x_bias = p_size;
 		s_y_bias = p_size;
 		break;
-
 	}
 
 	RECT temp;
 	RECT source_rt{ s_x, s_y, s_x + s_x_bias, s_y + s_y_bias };
 
-	switch (target_type) {
-	case 1:	//블록
-		for (int i = 0; i < blocks.size(); ++i) {
-			if (blocks[i].isActive) {
-				RECT target_rt{ blocks[i].x + adj_obstacle_size_tl, blocks[i].y + adj_obstacle_size_tl, blocks[i].x + tile_size - adj_obstacle_size_br,blocks[i].y + tile_size - adj_obstacle_size_br };
+	if (s_x >= bg_w - outer_wall_start - p_size / 3)
+		return 1;
+	if (s_x <= outer_wall_start - p_size / 3)
+		return 1;
+	if (s_y >= bg_h - outer_wall_start - p_size / 3)
+		return 1;
+	if (s_y <= outer_wall_start - p_size / 3)
+		return 1;
+
+	for (int iy = 0; iy < tile_max_h_num; ++iy)
+		for (int ix = 0; ix < tile_max_w_num; ++ix) {
+			//윈도우 상 좌표
+			auto [window_x, window_y] = MapIndexToWindowPos(ix, iy);
+
+			//오브젝트 그리기
+			switch (selectedMap[iy][ix]) {
+			case BLOCK:			//블록
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
 				if (IntersectRect(&temp, &source_rt, &target_rt))
-					return (i + 1);
-			}
-		}
-		break;
+					return BLOCK;
 
-	case 2:	//바위
-		for (int i = 0; i < rocks.size(); ++i) {
-			if (rocks[i].isActive) {
-				RECT target_rt{ rocks[i].x + adj_obstacle_size_tl, rocks[i].y + adj_obstacle_size_tl, rocks[i].x + tile_size - adj_obstacle_size_br,rocks[i].y + tile_size - adj_obstacle_size_br };
+				break;
+			}
+			case ROCK:			//돌
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
 				if (IntersectRect(&temp, &source_rt, &target_rt))
-					return (i + 1);
+					return ROCK;
+
+				break;
 			}
-		}
-		break;
+			case BOMB:			//폭탄
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
-	case 6:	//외벽
-		if (s_x >= bg_w - outer_wall_start - p_size / 3)
-			return 1;
-		if (s_x <= outer_wall_start - p_size / 3)
-			return 1;
-		if (s_y >= bg_h - outer_wall_start - p_size / 3)
-			return 1;
-		if (s_y <= outer_wall_start - p_size / 3)
-			return 1;
+				if (IntersectRect(&temp, &source_rt, &target_rt))
+					return BOMB;
 
-		break;
-	}
+				break;
+			}
+			case EXPLOSION:		//폭발
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
-	return 0;	//충돌X
+				if (IntersectRect(&temp, &source_rt, &target_rt))
+					return EXPLOSION;
+
+				break;
+			}
+			default:
+				break;
+			}
+		};
+
+	return EMPTY;	//충돌X
 }
 
 void process_packet(int client_index, char* p)
@@ -627,19 +658,7 @@ void process_packet(int client_index, char* p)
 		cl._dir = packet->dir;
 
 		//블록과 충돌체크
-		if (Check_Collision(0, cl._index, 1)) {
-			cl._x -= x_bias;
-			cl._y -= y_bias;
-		}
-
-		//바위와 충돌체크
-		if (Check_Collision(0, cl._index, 2)) {
-			cl._x -= x_bias;
-			cl._y -= y_bias;
-		}
-
-		//외벽과 충돌체크
-		if (Check_Collision(0, cl._index, 6)) {
+		if (Check_Collision(0, cl._index)) {
 			cl._x -= x_bias;
 			cl._y -= y_bias;
 		}
@@ -916,4 +935,18 @@ DWORD WINAPI Thread_1(LPVOID arg)
 			return 0;
 		}
 	}
+}
+
+std::pair<int, int> MapIndexToWindowPos(int ix, int iy)
+{
+	int window_x = ix * tile_size + outer_wall_start;
+	int window_y = iy * tile_size + outer_wall_start;
+	return std::make_pair(window_x, window_y);
+}
+
+std::pair<int, int> WindowPosToMapIndex(int x, int y)
+{
+	int map_x = (x - outer_wall_start) / tile_size;
+	int map_y = (y - outer_wall_start) / tile_size;
+	return std::make_pair(map_x, map_y);
 }

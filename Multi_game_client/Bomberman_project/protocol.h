@@ -94,13 +94,13 @@ struct DELETE_OBJECT_packet { // 오브젝트 제거 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 11
 	int ob_type; // 오브젝트 타입
-	int index; // 오브젝트 인덱스 번호
+	int x, y; // 오브젝트 좌표
 };
 
 struct DELETE_ITEM_packet { // 오브젝트 제거 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 12
-	int index; // 아이템 인덱스 번호
+	int x, y; // 아이템 좌표
 };
 
 struct CHANGE_BUF_packet { // 플레이어 버프 변경 정보 패킷
