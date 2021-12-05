@@ -46,6 +46,7 @@ bool setfocus_idedit = FALSE;
 //맵
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_1;
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
+tileArr<int, tile_max_w_num, tile_max_h_num>	selectedMap;
 
 //플레이어
 playerArr<Player, MAX_USER>	players;
@@ -84,14 +85,24 @@ void Display_Players_Info(HDC, HDC, int, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBI
 std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
 std::pair<int, int> WindowPosToMapIndex(int x, int y);
 
+//테스트
+void PrintMap() {
+	for (int i = 0; i < tile_max_h_num; ++i) {
+		for (int j = 0; j < tile_max_w_num; ++j)
+			cout << selectedMap[i][j] << ' ';
+		cout << endl;
+	}
+	cout << endl;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 //--- 윈도우 메인 (윈도우 클래스, 메세지 프로시저, 쓰레드함수 생성)
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
-	/*AllocConsole();
-	freopen("CONOUT$", "wt", stdout);*/
+	AllocConsole();
+	freopen("CONOUT$", "wt", stdout);
 	
 	//자동 리셋 이벤트 생성 (비신호 시작)
 	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -259,7 +270,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT ps;
 	HDC mem1dc, mem2dc;
 
-	static HBITMAP hBit_main, hBit_bg, hBit_issac, hBit_magdalene, hBit_lazarus, hBit_samson, hBit_eve, hBit_block, hBit_bomb, hBit_rock, hBit_heart;
+	static HBITMAP hBit_main, hBit_bg, hBit_issac, hBit_magdalene, hBit_lazarus, hBit_samson, hBit_eve, hBit_block, hBit_bomb, hBit_rock, hBit_heart, hBit_explosion;
 	static HBITMAP hBit_item_more_heart, hBit_item_more_power, hBit_item_more_bomb;
 	static HBITMAP hBit_backboard, hBit_num_0, hBit_num_1, hBit_num_2, hBit_num_3, hBit_num_4, hBit_num_5, hBit_al_p, hBit_empty, hBit_idle, hBit_ready, hBit_play, hBit_dead;
 	static HBITMAP oldBit1, oldBit2;
@@ -303,6 +314,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		hBit_block = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP2));
 		hBit_bomb = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP10));
+		hBit_explosion = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP10));  //임시 이미지
 		hBit_rock = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP13));
 		hBit_heart = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP5));
 
@@ -395,17 +407,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		{
 			int px = players[my_index]._x;
 			int py = players[my_index]._y;
-			int map_ix = WindowPosToMapIndex(px, py).first;
-			int map_iy = WindowPosToMapIndex(px, py).second;
-
-			int bomb_x = MapIndexToWindowPos(map_ix, map_iy).first;
-			int bomb_y = MapIndexToWindowPos(map_ix, map_iy).second;
+			auto [map_ix, map_iy] = WindowPosToMapIndex(px, py);
+			auto [bomb_x, bomb_y] = MapIndexToWindowPos(map_ix, map_iy);
 			
 			//이건 서버에서 생성하라 할때 생성
 			players[my_index].InputSpaceBar(send_queue, send_buf, bomb_x, bomb_y);
 			SetEvent(hEvent);
 			break;
 		}
+
+		case 'P':
+			PrintMap();
+			break;
 
 		case 'Q':
 			DestroyWindow(hwnd);
@@ -549,7 +562,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_block);
 
 			for (int i = 0; i < blocks.size(); ++i) {
-				if (blocks[i].isActive)
+				if (blocks[i]._isActive)
 					TransparentBlt(mem1dc, blocks[i]._x, blocks[i]._y, block_size, block_size, mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
 			}
 
@@ -557,7 +570,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_rock);
 
 			for (int i = 0; i < rocks.size(); ++i) {
-				if (rocks[i].isActive)
+				if (rocks[i]._isActive)
 					TransparentBlt(mem1dc, rocks[i]._x, rocks[i]._y, rock_size, rock_size, mem2dc, 0, 0, rock_img_size, rock_img_size, RGB(79, 51, 44));
 			}
 
@@ -565,8 +578,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
 
 			for (int i = 0; i < bombs.size(); ++i) {
-				if (bombs[i].isActive) {
+				if (bombs[i]._isActive) {
 					TransparentBlt(mem1dc, bombs[i]._x, bombs[i]._y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
+				}
+			}
+
+			//폭발
+			//oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_explosion);
+
+			for (int i = 0; i < bombs.size(); ++i) {
+
+				//if (!bombs[i]._explode) break;
+				for (int j = 0; j < bombs[i]._explosionPosVec.size(); ++j) {
+					auto [explosion_x, explosion_y] = bombs[i]._explosionPosVec[j];
+					//cout << bombs[i]._explosionPosVec.size() << endl;
+					//폭발그림 수정
+					TransparentBlt(mem1dc, explosion_x, explosion_y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
 				}
 			}
 
@@ -842,27 +869,25 @@ void Setting_Map()
 	int bl_indx = 0;
 	int r_indx = 0;
 
-	tileArr<int, tile_max_w_num, tile_max_h_num> map;
-
 	switch (map_num) {
 	case 1:
-		map = map_1;
+		selectedMap = map_1;
 		break;
 
 	case 2:
-		map = map_2;
+		selectedMap = map_2;
 		break;
 	}
 
 	for (int i = 0; i < nTiles; ++i) {
-		if (map[i / tile_max_w_num][i % tile_max_w_num] == BLOCK) {
+		if (selectedMap[i / tile_max_w_num][i % tile_max_w_num] == BLOCK) {
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
 			blocks.push_back(Block(X, Y, bl_indx));
 			bl_indx++;
 		}
-		else if (map[i / tile_max_w_num][i % tile_max_w_num] == ROCK) {
+		else if (selectedMap[i / tile_max_w_num][i % tile_max_w_num] == ROCK) {
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
@@ -965,12 +990,17 @@ void Process_packet(char* p)
 	case INIT_BOMB: {
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
 		bombs.emplace_back(packet->x, packet->y, 0, 3, packet->power);	//타이머 임시값
-		bombs[bombs.size() - 1].object_index = bombs.size() - 1;
+		bombs[bombs.size() - 1]._object_index = bombs.size() - 1;
 
-		//현재 맵?
-		int map_ix = WindowPosToMapIndex(packet->x, packet->y).first;
-		int map_iy = WindowPosToMapIndex(packet->x, packet->y).second;
-		map_1[map_iy][map_ix] = BOMB;
+		auto [map_ix, map_iy] = WindowPosToMapIndex(packet->x, packet->y);
+
+		//임시코드
+		for (int i = 0; i < bombs.size(); ++i) {
+			bombs[i]._explode = true;
+			bombs[i].ExplodeBomb(selectedMap);
+		}
+
+		selectedMap[map_iy][map_ix] = BOMB;
 
 		break;
 	}
