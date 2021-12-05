@@ -8,6 +8,7 @@ public:
 	bool _isActive;
 	int _x, _y;
 	int _object_index;	// 오브젝트 인덱스 값
+	std::mutex _active_lock;
 
 	Object()
 	{
@@ -75,7 +76,6 @@ public:
 	}
 
 	void ExplodeBomb(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap);						// _timer가 후폭풍 유지 시간에 도달할 시 충돌체크
-	void DestroyRock(std::queue<char*>& send_queue, char send_buf[BUFSIZE], int x, int y);
 };
 
 class Item: public Object

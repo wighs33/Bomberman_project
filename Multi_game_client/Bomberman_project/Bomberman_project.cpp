@@ -1078,6 +1078,7 @@ void Process_packet(char* p)
 		for (int i = 0; i < bombs.size(); ++i) {
 			bombs[i]._explode = true;
 			bombs[i].ExplodeBomb(selectedMap);
+			bombs.pop_back();
 		}
 
 		selectedMap[map_iy][map_ix] = BOMB;

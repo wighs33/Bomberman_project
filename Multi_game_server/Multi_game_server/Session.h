@@ -1,8 +1,6 @@
 #pragma once
-#include <windows.h>
-#include <fstream>
-#include <iostream>
 #include "protocol.h"
+#include "stdafx.h"
 
 using namespace std;
 

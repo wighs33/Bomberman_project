@@ -1,24 +1,9 @@
-#define _WINSOCK_DEPRECATED_NO_WARNINGS // 최신 VC++ 컴파일 시 경고 방지
-#define _CRT_SECURE_NO_WARNINGS
 
-#include <winsock2.h>
-#include <vector>
-#include <array>
-#include <algorithm>
-#include <thread>
-#include <atomic>
-#include <concurrent_priority_queue.h>
-
+#include "stdafx.h"
 #include "json/json.h"
 #include "protocol.h"
-#include "constant_numbers.h"
 #include "Session.h"
 #include "Object.h"
-
-#pragma comment(lib, "ws2_32")
-#pragma comment(lib, "json/jsoncpp.lib")
-
-using namespace std;
 
 ///////////////////////////////////////////////////////////
 
@@ -55,20 +40,6 @@ vector <Bomb>	bombs;
 bool g_shutdown = false;
 
 //mutex mylock;
-
-//타일 내 정보
-enum MapData {
-	EMPTY,
-	PLAYER,
-	BOMB,
-	EXPLOSION,
-	BLOCK,
-	ROCK,
-	ITEM_HEART,
-	ITEM_MORE_BOMB,
-	ITEM_MORE_POWER,
-	ITEM_ROCK
-};
 
 // ====================================================================
 
@@ -208,28 +179,29 @@ int main(int argc, char* argv[])
 bool is_near(int a, int b)
 {
 	int power = bombs[a]._power;
-	if (power < abs(bombs[a].x - blocks[b].x)) return false;
-	if (power < abs(bombs[a].y - blocks[b].y)) return false;
+	if (power < abs(bombs[a]._x - blocks[b]._x)) return false;
+	if (power < abs(bombs[a]._y - blocks[b]._y)) return false;
 	return true;
 }
 
 void do_bomb(int id) {
 	for (auto& obj : blocks) {
-		if (obj.isActive != true) continue;
-		if (true == is_near(id, obj.object_index)) {
+		if (obj._isActive != true) continue;
+		if (true == is_near(id, obj._object_index)) {
 
-			obj.active_lock.lock();
-			obj.isActive = false;
-			obj.active_lock.unlock();
+			obj._active_lock.lock();
+			obj._isActive = false;
+			obj._active_lock.unlock();
 			
 			for (auto& pl : clients) {
 				if (true == pl.in_use)
 				{
 					DELETE_OBJECT_packet del_obj_packet;
 					del_obj_packet.size = sizeof(del_obj_packet);
-					del_obj_packet.type = CHANGE_STATE;
-					del_obj_packet.ob_type = OB_BLOCK;
-					del_obj_packet.index = obj.object_index;
+					del_obj_packet.type = DELETE_OBJECT;
+					del_obj_packet.ob_type = BLOCK;
+					del_obj_packet.x = obj._x;
+					del_obj_packet.y = obj._y;
 					pl.do_send(sizeof(del_obj_packet), &del_obj_packet);
 				}
 			}
@@ -245,7 +217,7 @@ void do_timer() {
 		timer_queue.try_pop(ev);
 		auto t = ev.start_time - chrono::system_clock::now();
 		int bomb_id = ev.obj_id;
-		if (bombs[bomb_id].isActive == false) continue;
+		if (bombs[bomb_id]._isActive == false) continue;
 		if (ev.start_time <= chrono::system_clock::now()) {
 			do_bomb(bomb_id);
 			this_thread::sleep_for(10ms);

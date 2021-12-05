@@ -1,4 +1,27 @@
 #pragma once
+
+#define _WINSOCK_DEPRECATED_NO_WARNINGS // 최신 VC++ 컴파일 시 경고 방지
+#define _CRT_SECURE_NO_WARNINGS
+
+#include <winsock2.h>	// windows.h 보다 위에 두어야 재정의 빌드 에러 안 생김
+#include <windows.h>
+#include <fstream>
+#include <iostream>
+#include <vector>
+#include <array>
+#include <algorithm>
+#include <thread>
+#include <atomic>
+#include <concurrent_priority_queue.h>
+#include <mutex>
+
+#pragma comment(lib, "ws2_32")
+#pragma comment(lib, "json/jsoncpp.lib")
+
+const short SERVER_PORT = 10000;
+
+using namespace std;
+
 ////////////////////////////////////////////////////////////////////////////
 //스프라이트 관련 상수들
 
@@ -45,9 +68,9 @@ const int item_more_power_img_size{ 96 };	//실제 폭발위력증가 아이템 이미지 비트
 const int heart_img_size_w{ 263 };	//실제 하트 이미지 비트크기
 const int heart_img_size_h{ 223 };	//실제 하트 이미지 비트크기
 
-const int backboard_img_w{ 260 };
-const int backboard_img_h{ 716 };
-const int backboard_w{ 200 };
+const int backboard_img_w{ 260 };	//실제 ui 용 이미지 비트크기
+const int backboard_img_h{ 716 };	//실제 ui 용 이미지 비트크기
+const int backboard_w{ 200 };		//ui 화면상 폭
 
 const int bb_char_img_size{ 30 };				//실제 한글짜 알파벳 & 숫자 이미지 비트크기
 
@@ -89,9 +112,9 @@ const int edit_box_max_size{ 40 };	//에디트 박스 최대크기
 
 const int h_gap = 190;				// 플레이어 ui 간 간격
 
-////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
-const short SERVER_PORT = 10000;
+const int BUFSIZE = 256;
 
 const int  MAX_NAME_SIZE = 20;
 const int  MAX_MAP_SIZE = 256;
@@ -105,8 +128,59 @@ const int  MAX_BOMB = 1000;
 constexpr int BOMB_ID_START = MAX_ROCK + MAX_ITEM + MAX_BLOCK;
 constexpr int BOMB_ID_END = BOMB_ID_START + MAX_BOMB - 1;
 
-
-
-const int BUFSIZE = 256;
-
 const int  MAX_USER = 4;
+
+//맵
+template<typename T, size_t X, size_t Y>
+using tileArr = array<array<T, X>, Y>;
+
+//플레이어
+template<typename T, size_t N>
+using playerArr = array<T, N>;
+
+
+enum Packet_Type {
+	LOGIN,
+	LOGIN_OK,
+	LOGIN_ERROR,
+	INIT_PLAYER,
+	CHANGE_STATE,
+	ITEMBUF,
+	GET_ITEM,
+	MOVE,
+	MOVE_OK,
+	INIT_OBJECT,
+	INIT_BOMB,
+	DELETE_OBJECT,
+	DELETE_ITEM,
+	CHANGE_ITEMBUF
+};
+
+enum Player_Condition {
+	NO_ACCEPT,
+	ACCEPT,
+	READY,
+	PLAY,
+	DEAD
+};
+
+enum Player_Move {
+	RIGHT = 1,
+	LEFT,
+	DOWN,
+	UP
+};
+
+
+enum MapData {
+	EMPTY,
+	PLAYER,
+	BOMB,
+	EXPLOSION,
+	BLOCK,
+	ROCK,
+	ITEM_HEART,
+	ITEM_MORE_BOMB,
+	ITEM_MORE_POWER,
+	ITEM_ROCK
+};
