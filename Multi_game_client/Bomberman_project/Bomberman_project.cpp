@@ -26,6 +26,9 @@ char send_buf[BUFSIZE];
 queue<char*> send_queue;
 char recv_buf[BUFSIZE];
 
+TCHAR input_ip_str[4][4+1];
+TCHAR input_port_str[5+1];
+
 TCHAR input_id_str[edit_box_max_size];
 
 int my_index;	//현재 클라이언트의 플레이어 배열에서 인덱스
@@ -71,6 +74,7 @@ DWORD WINAPI ClientMain(LPVOID arg);
 DWORD WINAPI RecvThread(LPVOID arg);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK ConnectSettingDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
 void DisplayText(HWND hEdit, const char* fmt, ...);
 void err_quit(const char* msg);
 void err_display(const char* msg);
@@ -164,17 +168,30 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == INVALID_SOCKET) err_quit("socket()");
 
+	//아이피, 포트번호 입력 대기
+	WaitForSingleObject(hEvent, INFINITE);
+
+	char IP_NUM[16 + 3 + 1];
+	u_short PORT_NUM;
+
+	strcat(IP_NUM, input_ip_str[0]); strcat(IP_NUM, ".");
+	strcat(IP_NUM, input_ip_str[1]); strcat(IP_NUM, ".");
+	strcat(IP_NUM, input_ip_str[2]); strcat(IP_NUM, ".");
+	strcat(IP_NUM, input_ip_str[3]);
+
+	PORT_NUM = (u_short)atoi(input_port_str);
+
 	SOCKADDR_IN serveraddr;
 	ZeroMemory(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
-	serveraddr.sin_port = htons(SERVERPORT);
-
-	//아이디 입력 대기
-	WaitForSingleObject(hEvent, INFINITE);
+	serveraddr.sin_addr.s_addr = inet_addr(IP_NUM);
+	serveraddr.sin_port = htons(PORT_NUM);
 
 	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("connect()");
+
+	//아이디 입력 대기
+	WaitForSingleObject(hEvent, INFINITE);
 
 	//수신용 쓰레드 생성
 	CreateThread(NULL, 0, RecvThread, (LPVOID)sock, 0, NULL);
@@ -201,6 +218,56 @@ DWORD WINAPI RecvThread(LPVOID arg)
 
 ////////////////////////////////////////////////////////////////////////////
 //--- 메세지 프로시저
+
+//접속설정 대화상자 메세지 프로시저 (아이피, 포트번호 입력)
+BOOL CALLBACK ConnectSettingDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
+{
+	static HWND hEdit_IP_M, hEdit_PORT_M;
+	static HWND hEdit_IP_1, hEdit_IP_2, hEdit_IP_3, hEdit_IP_4, hEdit_PORT;
+
+	switch (iMessage)
+	{
+	case WM_INITDIALOG:
+		hEdit_IP_M = GetDlgItem(hwnd, IDC_EDIT_1);
+		DisplayText(hEdit_IP_M, "아이피");
+		hEdit_PORT_M = GetDlgItem(hwnd, IDC_EDIT_2);
+		DisplayText(hEdit_PORT_M, "포트번호");
+		hEdit_IP_1 = GetDlgItem(hwnd, IDC_EDIT_3);
+		hEdit_IP_2 = GetDlgItem(hwnd, IDC_EDIT_4);
+		hEdit_IP_3 = GetDlgItem(hwnd, IDC_EDIT_5);
+		hEdit_IP_4 = GetDlgItem(hwnd, IDC_EDIT_6);
+		hEdit_PORT = GetDlgItem(hwnd, IDC_EDIT_7);
+		SetFocus(hEdit_IP_1);
+		return FALSE;
+		//return TRUE; 로 하면 포커스가 기본적으로 IDOK 버튼으로 옮겨간다.
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDOK:
+			GetDlgItemText(hwnd, IDC_EDIT_3, input_ip_str[0], 4 + 1);
+			GetDlgItemText(hwnd, IDC_EDIT_4, input_ip_str[1], 4 + 1);
+			GetDlgItemText(hwnd, IDC_EDIT_5, input_ip_str[2], 4 + 1);
+			GetDlgItemText(hwnd, IDC_EDIT_6, input_ip_str[3], 4 + 1);
+			GetDlgItemText(hwnd, IDC_EDIT_7, input_port_str, 5 + 1);
+
+			SetEvent(hEvent);
+
+			EndDialog(hwnd, IDCANCEL);
+
+			return TRUE;
+
+		case IDCANCEL:
+			EndDialog(hwnd, IDCANCEL);
+			exit(1);
+			return TRUE;
+
+		}
+		return FALSE;
+
+	}
+
+	return  FALSE;
+}
 
 //로그인 대화상자 메세지 프로시저
 BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
@@ -290,7 +357,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	switch (iMessage) {
 	case WM_CREATE:
 
-		//대화상자 생성
+		//접속설정 대화상자 생성 (아이피, 포트번호 입력)
+		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG2), hwnd, (DLGPROC)ConnectSettingDlgProc);
+
+		//로그인 대화상자 생성
 		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG1), hwnd, (DLGPROC)LoginDlgProc);
 
 		hdc = GetDC(hwnd);
@@ -772,7 +842,25 @@ void err_quit(const char* msg)
 		NULL, WSAGetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR)&lpMsgBuf, 0, NULL);
-	MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONERROR);
+	if(strcmp(msg, "connect()") == 0){
+		char msg_[50];
+		char IP_NUM[16 + 3 + 1];
+
+		strcat(IP_NUM, input_ip_str[0]); strcat(IP_NUM, ".");
+		strcat(IP_NUM, input_ip_str[1]); strcat(IP_NUM, ".");
+		strcat(IP_NUM, input_ip_str[2]); strcat(IP_NUM, ".");
+		strcat(IP_NUM, input_ip_str[3]);
+
+		strcpy(msg_, msg);
+		strcat(msg_, "           아이피 - ");
+		strcat(msg_, IP_NUM);
+		strcat(msg_, ", 포트번호 - ");
+		strcat(msg_, input_port_str);
+
+		MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg_, MB_ICONERROR);
+	}
+	else
+		MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONERROR);
 	LocalFree(lpMsgBuf);
 	exit(1);
 }

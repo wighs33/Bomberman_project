@@ -19,11 +19,6 @@
 #pragma comment(lib, "json/jsoncpp.lib")
 #pragma comment(lib, "ws2_32")
 
-
-//#define SERVERIP "192.168.182.71"
-#define SERVERIP "127.0.0.1"
-#define SERVERPORT 10000
-
 #define IDC_BUTTON 100
 #define IDC_EDIT 101
 
