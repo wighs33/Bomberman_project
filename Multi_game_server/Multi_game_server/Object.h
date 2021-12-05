@@ -17,14 +17,14 @@ enum Item_type{
 class Object
 {
 public:
-	bool active;
+	bool isActive;
 	int x, y;
 	int object_index;	// 오브젝트 인덱스 값
 	std::mutex active_lock;
 
 	Object()
 	{
-		active = true;
+		isActive = true;
 		x = 0;
 		y = 0;
 		object_index = -1;
@@ -32,7 +32,7 @@ public:
 
 	Object(int X, int Y, int OBJ_INDX)
 	{
-		active = true;
+		isActive = true;
 		x = X;
 		y = Y;
 		object_index = OBJ_INDX;
@@ -40,7 +40,7 @@ public:
 
 	Object(Object& obj) 
 	{
-		active = true;
+		isActive = true;
 		x = obj.x;
 		y = obj.y;
 		object_index = obj.object_index;

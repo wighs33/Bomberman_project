@@ -1,32 +1,9 @@
-#include <winsock2.h>	// windows.h 보다 위에 두어야 재정의 빌드 에러 안 생김
-#include <windows.h>	
-#include <tchar.h>
-//#include <random>
-#include <array>
-#include <vector>
-#include <fstream>
-//#include <iostream>	//콘솔 출력용
-
 #include "resource.h"
 #include "Player.h"
 #include "Object.h"
 #include "protocol.h"
 #include "json/json.h"
-//#include "constant_numbers.h"
-
-#pragma comment (lib, "msimg32.lib")
-#pragma comment(lib, "json/jsoncpp.lib")
-#pragma comment(lib, "ws2_32")
-
-//#define SERVERIP "127.0.0.1"
-#define SERVERIP "192.168.182.71"
-#define SERVERPORT 22
-#define IDC_BUTTON 100
-#define IDC_EDIT 101
-
-
-using namespace std;
-
+#include "stdafx.h"
 
 ////////////////////////////////////////////////////////////////////////////
 //--- 전역 변수
@@ -49,6 +26,9 @@ char send_buf[BUFSIZE];
 queue<char*> send_queue;
 char recv_buf[BUFSIZE];
 
+TCHAR input_ip_str[4][4+1];
+TCHAR input_port_str[5+1];
+
 TCHAR input_id_str[edit_box_max_size];
 
 int my_index;	//현재 클라이언트의 플레이어 배열에서 인덱스
@@ -67,16 +47,11 @@ bool setfocus_idedit = FALSE;
 //--- 컨테이너
 
 //맵
-template<typename T, size_t X, size_t Y>
-using tileArr = array<array<T, X>, Y>;
-
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_1;
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
+tileArr<int, tile_max_w_num, tile_max_h_num>	selectedMap;
 
 //플레이어
-template<typename T, size_t N>
-using playerArr = array<T, N>;
-
 playerArr<Player, MAX_USER>	players;
 
 //블록 - [파괴 불가능]
@@ -99,6 +74,7 @@ DWORD WINAPI ClientMain(LPVOID arg);
 DWORD WINAPI RecvThread(LPVOID arg);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK ConnectSettingDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
 void DisplayText(HWND hEdit, const char* fmt, ...);
 void err_quit(const char* msg);
 void err_display(const char* msg);
@@ -110,7 +86,18 @@ void Setting_Map();
 void Display_Players_Info(HDC, HDC, int, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, 
 	HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP);
 
-std::pair<int, int> GetMapPos(int ix, int iy);
+std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
+std::pair<int, int> WindowPosToMapIndex(int x, int y);
+
+//테스트
+void PrintMap() {
+	for (int i = 0; i < tile_max_h_num; ++i) {
+		for (int j = 0; j < tile_max_w_num; ++j)
+			cout << selectedMap[i][j] << ' ';
+		cout << endl;
+	}
+	cout << endl;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -118,8 +105,8 @@ std::pair<int, int> GetMapPos(int ix, int iy);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
-	/*AllocConsole();
-	freopen("CONOUT$", "wt", stdout);*/
+	AllocConsole();
+	freopen("CONOUT$", "wt", stdout);
 	
 	//자동 리셋 이벤트 생성 (비신호 시작)
 	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -181,17 +168,30 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == INVALID_SOCKET) err_quit("socket()");
 
+	//아이피, 포트번호 입력 대기
+	WaitForSingleObject(hEvent, INFINITE);
+
+	char IP_NUM[16 + 3 + 1];
+	u_short PORT_NUM;
+
+	strcat(IP_NUM, input_ip_str[0]); strcat(IP_NUM, ".");
+	strcat(IP_NUM, input_ip_str[1]); strcat(IP_NUM, ".");
+	strcat(IP_NUM, input_ip_str[2]); strcat(IP_NUM, ".");
+	strcat(IP_NUM, input_ip_str[3]);
+
+	PORT_NUM = (u_short)atoi(input_port_str);
+
 	SOCKADDR_IN serveraddr;
 	ZeroMemory(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
-	serveraddr.sin_port = htons(SERVERPORT);
-
-	//아이디 입력 대기
-	WaitForSingleObject(hEvent, INFINITE);
+	serveraddr.sin_addr.s_addr = inet_addr(IP_NUM);
+	serveraddr.sin_port = htons(PORT_NUM);
 
 	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("connect()");
+
+	//아이디 입력 대기
+	WaitForSingleObject(hEvent, INFINITE);
 
 	//수신용 쓰레드 생성
 	CreateThread(NULL, 0, RecvThread, (LPVOID)sock, 0, NULL);
@@ -218,6 +218,56 @@ DWORD WINAPI RecvThread(LPVOID arg)
 
 ////////////////////////////////////////////////////////////////////////////
 //--- 메세지 프로시저
+
+//접속설정 대화상자 메세지 프로시저 (아이피, 포트번호 입력)
+BOOL CALLBACK ConnectSettingDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
+{
+	static HWND hEdit_IP_M, hEdit_PORT_M;
+	static HWND hEdit_IP_1, hEdit_IP_2, hEdit_IP_3, hEdit_IP_4, hEdit_PORT;
+
+	switch (iMessage)
+	{
+	case WM_INITDIALOG:
+		hEdit_IP_M = GetDlgItem(hwnd, IDC_EDIT_1);
+		DisplayText(hEdit_IP_M, "아이피");
+		hEdit_PORT_M = GetDlgItem(hwnd, IDC_EDIT_2);
+		DisplayText(hEdit_PORT_M, "포트번호");
+		hEdit_IP_1 = GetDlgItem(hwnd, IDC_EDIT_3);
+		hEdit_IP_2 = GetDlgItem(hwnd, IDC_EDIT_4);
+		hEdit_IP_3 = GetDlgItem(hwnd, IDC_EDIT_5);
+		hEdit_IP_4 = GetDlgItem(hwnd, IDC_EDIT_6);
+		hEdit_PORT = GetDlgItem(hwnd, IDC_EDIT_7);
+		SetFocus(hEdit_IP_1);
+		return FALSE;
+		//return TRUE; 로 하면 포커스가 기본적으로 IDOK 버튼으로 옮겨간다.
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDOK:
+			GetDlgItemText(hwnd, IDC_EDIT_3, input_ip_str[0], 4 + 1);
+			GetDlgItemText(hwnd, IDC_EDIT_4, input_ip_str[1], 4 + 1);
+			GetDlgItemText(hwnd, IDC_EDIT_5, input_ip_str[2], 4 + 1);
+			GetDlgItemText(hwnd, IDC_EDIT_6, input_ip_str[3], 4 + 1);
+			GetDlgItemText(hwnd, IDC_EDIT_7, input_port_str, 5 + 1);
+
+			SetEvent(hEvent);
+
+			EndDialog(hwnd, IDCANCEL);
+
+			return TRUE;
+
+		case IDCANCEL:
+			EndDialog(hwnd, IDCANCEL);
+			exit(1);
+			return TRUE;
+
+		}
+		return FALSE;
+
+	}
+
+	return  FALSE;
+}
 
 //로그인 대화상자 메세지 프로시저
 BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
@@ -287,7 +337,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT ps;
 	HDC mem1dc, mem2dc;
 
-	static HBITMAP hBit_main, hBit_bg, hBit_issac, hBit_magdalene, hBit_lazarus, hBit_samson, hBit_eve, hBit_block, hBit_bomb, hBit_rock, hBit_heart;
+	static HBITMAP hBit_main, hBit_bg, hBit_issac, hBit_magdalene, hBit_lazarus, hBit_samson, hBit_eve, hBit_block, hBit_bomb, hBit_rock, hBit_heart, hBit_explosion;
 	static HBITMAP hBit_item_more_heart, hBit_item_more_power, hBit_item_more_bomb;
 	static HBITMAP hBit_backboard, hBit_num_0, hBit_num_1, hBit_num_2, hBit_num_3, hBit_num_4, hBit_num_5, hBit_al_p, hBit_empty, hBit_idle, hBit_ready, hBit_play, hBit_dead;
 	static HBITMAP oldBit1, oldBit2;
@@ -307,7 +357,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	switch (iMessage) {
 	case WM_CREATE:
 
-		//대화상자 생성
+		//접속설정 대화상자 생성 (아이피, 포트번호 입력)
+		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG2), hwnd, (DLGPROC)ConnectSettingDlgProc);
+
+		//로그인 대화상자 생성
 		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG1), hwnd, (DLGPROC)LoginDlgProc);
 
 		hdc = GetDC(hwnd);
@@ -331,6 +384,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		hBit_block = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP2));
 		hBit_bomb = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP10));
+		hBit_explosion = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP10));  //임시 이미지
 		hBit_rock = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP13));
 		hBit_heart = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP5));
 
@@ -382,8 +436,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				players[my_index].ChangeState(send_queue, send_buf, READY);
 				SetEvent(hEvent);
 				DestroyWindow(hButton);
-					hButton = CreateWindow(_T("Button"), _T("UNREADY"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-						bg_w + 5 + 25 * 2 + 20 - 10, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * my_index + 30, 80, 30, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
+				hButton = CreateWindow(_T("Button"), _T("UNREADY"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+					bg_w + 5 + 25 * 2 + 20 - 10, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * my_index + 30, 80, 30, hwnd, (HMENU)IDC_BUTTON, g_hInst, NULL);
 			}
 			else {
 				isReady = FALSE;
@@ -400,42 +454,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		switch (wParam) {
 		case VK_RIGHT:
-			players[my_index].InputMoveKey(send_queue, send_buf, 1);
+			players[my_index].InputMoveKey(send_queue, send_buf, RIGHT);
 			SetEvent(hEvent);
 			break;
 
 		case VK_LEFT:
-			players[my_index].InputMoveKey(send_queue, send_buf, 2);
+			players[my_index].InputMoveKey(send_queue, send_buf, LEFT);
 			SetEvent(hEvent);
 			break;
 
 		case VK_UP:
-			players[my_index].InputMoveKey(send_queue, send_buf, 4);
+			players[my_index].InputMoveKey(send_queue, send_buf, UP);
 			SetEvent(hEvent);
 			break;
 
 		case VK_DOWN:
-			players[my_index].InputMoveKey(send_queue, send_buf, 3);
+			players[my_index].InputMoveKey(send_queue, send_buf, DOWN);
 			SetEvent(hEvent);
 			break;
 
 		case VK_SPACE:
 		{
-			int map_ix = players[my_index].GetMapIndexOfPlayer().first;
-			int map_iy = players[my_index].GetMapIndexOfPlayer().second;
-
-			//현재 맵?
-			map_1[map_iy][map_ix] = BOMB;
-			int bomb_x = GetMapPos(map_ix, map_iy).first;
-			int bomb_y = GetMapPos(map_ix, map_iy).second;
+			int px = players[my_index]._x;
+			int py = players[my_index]._y;
+			auto [map_ix, map_iy] = WindowPosToMapIndex(px, py);
+			auto [bomb_x, bomb_y] = MapIndexToWindowPos(map_ix, map_iy);
 			
 			//이건 서버에서 생성하라 할때 생성
-			players[my_index].InputSpaceBar(send_queue, send_buf);
-			//bombs.emplace_back(bomb_x, bomb_y, 0, 3);	//타이머 임시값
-			//bombs[bombs.size() - 1].object_index = bombs.size() - 1;
+			players[my_index].InputSpaceBar(send_queue, send_buf, bomb_x, bomb_y);
 			SetEvent(hEvent);
 			break;
 		}
+
+		case 'P':
+			PrintMap();
+			break;
 
 		case 'Q':
 			DestroyWindow(hwnd);
@@ -575,30 +628,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		//접속 후 화면 출력
 		if (retval) {
-			//블록
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_block);
+			for (int iy = 0; iy < tile_max_h_num; ++iy)
+				for (int ix = 0; ix < tile_max_w_num; ++ix) {
+					//윈도우 상 좌표
+					auto [window_x, window_y] = MapIndexToWindowPos(ix, iy);
 
-			for (int i = 0; i < blocks.size(); ++i) {
-				if (blocks[i].isActive)
-					TransparentBlt(mem1dc, blocks[i].x, blocks[i].y, block_size, block_size, mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
-			}
-
-			//돌
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_rock);
-
-			for (int i = 0; i < rocks.size(); ++i) {
-				if (rocks[i].isActive)
-					TransparentBlt(mem1dc, rocks[i].x, rocks[i].y, rock_size, rock_size, mem2dc, 0, 0, rock_img_size, rock_img_size, RGB(79, 51, 44));
-			}
-
-			//폭탄
-			oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
-
-			for (int i = 0; i < bombs.size(); ++i) {
-				if (bombs[i].isActive) {
-					TransparentBlt(mem1dc, bombs[i].x, bombs[i].y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
-				}
-			}
+					//오브젝트 그리기
+					switch (selectedMap[iy][ix]) {
+					case EMPTY:			//땅
+						break;
+					case BLOCK:			//블록
+						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_block);
+						TransparentBlt(mem1dc, window_x, window_y, block_size, block_size, mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
+						break;
+					case ROCK:			//돌
+						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_rock);
+						TransparentBlt(mem1dc, window_x, window_y, rock_size, rock_size, mem2dc, 0, 0, rock_img_size, rock_img_size, RGB(79, 51, 44));
+						break;
+					case BOMB:			//폭탄
+						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
+						TransparentBlt(mem1dc, window_x, window_y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
+						break;
+					case EXPLOSION:		//폭발
+						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_explosion);
+						//그림 수정필요
+						TransparentBlt(mem1dc, window_x, window_y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
+						break;
+					default:
+						break;
+					}
+				};
 
 
 			//플레이어
@@ -775,7 +834,25 @@ void err_quit(const char* msg)
 		NULL, WSAGetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR)&lpMsgBuf, 0, NULL);
-	MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONERROR);
+	if(strcmp(msg, "connect()") == 0){
+		char msg_[50];
+		char IP_NUM[16 + 3 + 1];
+
+		strcat(IP_NUM, input_ip_str[0]); strcat(IP_NUM, ".");
+		strcat(IP_NUM, input_ip_str[1]); strcat(IP_NUM, ".");
+		strcat(IP_NUM, input_ip_str[2]); strcat(IP_NUM, ".");
+		strcat(IP_NUM, input_ip_str[3]);
+
+		strcpy(msg_, msg);
+		strcat(msg_, "           아이피 - ");
+		strcat(msg_, IP_NUM);
+		strcat(msg_, ", 포트번호 - ");
+		strcat(msg_, input_port_str);
+
+		MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg_, MB_ICONERROR);
+	}
+	else
+		MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONERROR);
 	LocalFree(lpMsgBuf);
 	exit(1);
 }
@@ -872,27 +949,25 @@ void Setting_Map()
 	int bl_indx = 0;
 	int r_indx = 0;
 
-	tileArr<int, tile_max_w_num, tile_max_h_num> map;
-
 	switch (map_num) {
 	case 1:
-		map = map_1;
+		selectedMap = map_1;
 		break;
 
 	case 2:
-		map = map_2;
+		selectedMap = map_2;
 		break;
 	}
 
 	for (int i = 0; i < nTiles; ++i) {
-		if (map[i / tile_max_w_num][i % tile_max_w_num] == BLOCK) {
+		if (selectedMap[i / tile_max_w_num][i % tile_max_w_num] == BLOCK) {
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
 			blocks.push_back(Block(X, Y, bl_indx));
 			bl_indx++;
 		}
-		else if (map[i / tile_max_w_num][i % tile_max_w_num] == ROCK) {
+		else if (selectedMap[i / tile_max_w_num][i % tile_max_w_num] == ROCK) {
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
@@ -994,6 +1069,19 @@ void Process_packet(char* p)
 
 	case INIT_BOMB: {
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
+		bombs.emplace_back(packet->x, packet->y, 0, 3, packet->power);	//타이머 임시값
+		bombs[bombs.size() - 1]._object_index = bombs.size() - 1;
+
+		auto [map_ix, map_iy] = WindowPosToMapIndex(packet->x, packet->y);
+
+		//임시코드
+		for (int i = 0; i < bombs.size(); ++i) {
+			bombs[i]._explode = true;
+			bombs[i].ExplodeBomb(selectedMap);
+		}
+
+		selectedMap[map_iy][map_ix] = BOMB;
+
 		break;
 	}
 
@@ -1028,9 +1116,16 @@ void Process_packet(char* p)
 }
 
 
-std::pair<int, int> GetMapPos(int ix, int iy)
+std::pair<int, int> MapIndexToWindowPos(int ix, int iy)
 {
 	int window_x = ix * tile_size + outer_wall_start;
 	int window_y = iy * tile_size + outer_wall_start;
 	return std::make_pair(window_x, window_y);
+}
+
+std::pair<int, int> WindowPosToMapIndex(int x, int y)
+{
+	int map_x = (x - outer_wall_start) / tile_size;
+	int map_y = (y - outer_wall_start) / tile_size;
+	return std::make_pair(map_x, map_y);
 }
