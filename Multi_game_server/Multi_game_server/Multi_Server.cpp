@@ -4,7 +4,7 @@
 #include "protocol.h"
 #include "Session.h"
 #include "Object.h"
-
+#include <thread>
 ///////////////////////////////////////////////////////////
 
 //플레이어
@@ -45,6 +45,8 @@ bool g_shutdown = false;
 
 atomic<int> g_b_count = 0;
 
+HANDLE hEvent;
+
 enum EVENT_TYPE { EVENT_DO_BOMB };
 
 struct timer_event {
@@ -79,6 +81,7 @@ void do_bomb(int id);
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
 int Check_Collision(int source_type, int source_index);
+void do_timer();
 
 DWORD WINAPI Thread_1(LPVOID arg);
 
@@ -106,7 +109,7 @@ int main(int argc, char* argv[])
 	//맵 읽기
 	Load_Map(map_1, "maps_json/map_1.json");
 	Load_Map(map_2, "maps_json/map_2.json");
-
+	
 	while (TRUE) {
 		cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
 		scanf("%d", &map_num);
@@ -122,6 +125,9 @@ int main(int argc, char* argv[])
 	}
 
 	Setting_Map();
+	
+	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (hEvent == NULL) return 1;
 
 
 	//for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                    //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
@@ -145,7 +151,9 @@ int main(int argc, char* argv[])
 	server_addr.sin_port = htons(SERVER_PORT);
 	bind(listen_socket, (SOCKADDR*)&server_addr, sizeof(server_addr));
 	listen(listen_socket, SOMAXCONN);
-
+	thread timer_thread{ do_timer };
+	
+	
 	for (int i = 0; i < MAX_USER; ++i) {
 		// 데이터 통신에 사용할 변수
 		SOCKET client_sock;
@@ -164,12 +172,14 @@ int main(int argc, char* argv[])
 
 	}
 
+	timer_thread.join();
 	while (1)
 	{
 
 
 	}
 
+	CloseHandle(hEvent);
 	closesocket(listen_socket);
 	WSACleanup();
 
@@ -178,28 +188,33 @@ int main(int argc, char* argv[])
 
 bool is_near(int a, int b)
 {
-	int power = bombs[a]._power;
-	if (power < abs(bombs[a]._x - blocks[b]._x)) return false;
-	if (power < abs(bombs[a]._y - blocks[b]._y)) return false;
+	int power = bombs[a]._power * 60;
+	cout << abs(bombs[a]._x - rocks[b]._x) << endl;
+	cout << "폭탄 x " << bombs[a]._x << endl;
+	cout << "바위 x " << rocks[a]._x << endl;
+
+	if (power < abs(bombs[a]._x - rocks[b]._x)) return false;
+	if (power < abs(bombs[a]._y - rocks[b]._y)) return false;
 	return true;
 }
 
 void do_bomb(int id) {
-	for (auto& obj : blocks) {
+	cout << "폭발" << endl;
+
+	for (auto& obj : rocks) {
 		if (obj._isActive != true) continue;
 		if (true == is_near(id, obj._object_index)) {
-
+			cout << "폭발" << endl;
 			obj._active_lock.lock();
 			obj._isActive = false;
 			obj._active_lock.unlock();
-			
 			for (auto& pl : clients) {
 				if (true == pl.in_use)
 				{
 					DELETE_OBJECT_packet del_obj_packet;
 					del_obj_packet.size = sizeof(del_obj_packet);
 					del_obj_packet.type = DELETE_OBJECT;
-					del_obj_packet.ob_type = BLOCK;
+					del_obj_packet.ob_type = ROCK;
 					del_obj_packet.x = obj._x;
 					del_obj_packet.y = obj._y;
 					pl.do_send(sizeof(del_obj_packet), &del_obj_packet);
@@ -208,10 +223,13 @@ void do_bomb(int id) {
 
 		}
 	}
+	bombs[id]._isActive = false;
 }
 
 void do_timer() {
 
+	WaitForSingleObject(hEvent, INFINITE);
+	cout << "타이머" << endl;
 	while (true) {
 		timer_event ev;
 		timer_queue.try_pop(ev);
@@ -488,26 +506,30 @@ int Check_Collision(int source_type, int source_index)
 	for (auto& bl : blocks) {
 		if (bl._isActive) {
 			RECT target_rt{ bl._x + adj_obstacle_size_tl, bl._y + adj_obstacle_size_tl, bl._x + tile_size - adj_obstacle_size_br, bl._y + tile_size - adj_obstacle_size_br };
-			if (IntersectRect(&temp, &source_rt, &target_rt))
+			if (IntersectRect(&temp, &source_rt, &target_rt)) {
+				//cout << "block" << endl;
 				return BLOCK;
+			}
 		}
 	}
 
 	for (auto& ro : rocks) {
 		if (ro._isActive) {
 			RECT target_rt{ ro._x + adj_obstacle_size_tl, ro._y + adj_obstacle_size_tl, ro._x + tile_size - adj_obstacle_size_br, ro._y + tile_size - adj_obstacle_size_br };
-			if (IntersectRect(&temp, &source_rt, &target_rt))
+			if (IntersectRect(&temp, &source_rt, &target_rt)) {
+				//cout << "rock" << endl;
 				return ROCK;
+			}
 		}
 	}
 	
-	for (auto& bo : bombs) {
-		if (bo._isActive) {
-			RECT target_rt{ bo._x + adj_obstacle_size_tl, bo._y + adj_obstacle_size_tl, bo._x + tile_size - adj_obstacle_size_br, bo._y + tile_size - adj_obstacle_size_br };
-			//if (IntersectRect(&temp, &source_rt, &target_rt))
-				//return BOMB;
-		}
-	}
+	//for (auto& bo : bombs) {
+	//	if (bo._isActive) {
+	//		RECT target_rt{ bo._x + adj_obstacle_size_tl, bo._y + adj_obstacle_size_tl, bo._x + tile_size - adj_obstacle_size_br, bo._y + tile_size - adj_obstacle_size_br };
+	//		//if (IntersectRect(&temp, &source_rt, &target_rt))
+	//			//return BOMB;
+	//	}
+	//}
 	
 	//for (int iy = 0; iy < tile_max_h_num; ++iy)
 	//	for (int ix = 0; ix < tile_max_w_num; ++ix) {
@@ -557,7 +579,7 @@ int Check_Collision(int source_type, int source_index)
 	//			break;
 	//		}
 	//	};
-
+	//cout << "통과" << endl;
 	return EMPTY;	//충돌X
 }
 
@@ -659,6 +681,9 @@ void process_packet(int client_index, char* p)
 			cl._x -= x_bias;
 			cl._y -= y_bias;
 		}
+		//cout << "\n---------------\n";
+		//cout << cl._x << endl;
+		//cout << cl._y << endl;
 
 		for (auto& pl : clients) {
 			if (true == pl.in_use)
@@ -735,6 +760,7 @@ void process_packet(int client_index, char* p)
 
 	case INIT_BOMB: {
 		//if (폭탄 생성 했다면)
+		cout << "폭탄 생성" << endl;
 		timer_event ev;
 		ev.obj_id = ++g_b_count;
 		
@@ -742,6 +768,7 @@ void process_packet(int client_index, char* p)
 
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
 		bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, packet->power));
+		cout << "파워" << packet->power << endl;
 		packet->id = ev.obj_id;
 		for (auto& pl : clients) {
 			if (true == pl.in_use)
@@ -750,6 +777,8 @@ void process_packet(int client_index, char* p)
 			}
 		};
 		timer_queue.push(ev);
+		SetEvent(hEvent);
+		
 		//cout << "폭탄" << endl;
 		//cout << packet->x << endl;
 		//cout << packet->y << endl;
