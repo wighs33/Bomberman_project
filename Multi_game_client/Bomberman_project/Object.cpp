@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "Object.h"
 
 static std::pair<int, int> MapIndexToWindowPos(int ix, int iy)
@@ -19,68 +20,98 @@ void Bomb::ExplodeBomb(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap)
 	//¸ÊÀÎµ¦½ºÀÇ ÆøÅº ÁÂÇ¥
 	auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(_x, _y);
 
-	cout <<"ÆøÅº: "<< bomb_ix << ", " << bomb_iy << endl << endl;
-
-	//ÆøÅºÀ§Ä¡
+	//ÇöÀçÆøÅºÀ§Ä¡
 	objectMap[bomb_iy][bomb_ix] = EXPLOSION;
+
+	//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+	auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy);
+	_explosionPositions.push_back(make_pair(window_x, window_y));
 
 	//ÆøÅº À§ Ã¼Å©
 	for (int i = 1; i <= _power + 1; ++i) {
 		//¹üÀ§ Ã¼Å©
-		if (bomb_iy - _power == -1) break;
+		if (bomb_iy - i == -1) break;
 		//ºí·° Ã¼Å©
-		if (objectMap[bomb_iy - _power][bomb_ix] == BLOCK) break;
+		if (objectMap[bomb_iy - i][bomb_ix] == BLOCK) break;
 		//¹ÙÀ§ Ã¼Å©
-		if (objectMap[bomb_iy - _power][bomb_ix] == ROCK){
-			objectMap[bomb_iy - _power][bomb_ix] = EMPTY;
+		if (objectMap[bomb_iy - i][bomb_ix] == ROCK) {
+			objectMap[bomb_iy - i][bomb_ix] = EMPTY;
+
+			//ÆÄ±«µÈ ¹ÙÀ§ º¤ÅÍ¿¡ ´ã±â
+			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy - i);
+			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
 			break;
 		}
-		cout << "ÆøÅº À§: "<< bomb_ix << ", " << bomb_iy - _power << endl<<endl;
-		objectMap[bomb_iy - _power][bomb_ix] = EXPLOSION;
+		objectMap[bomb_iy - i][bomb_ix] = EXPLOSION;
+
+		//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy - i);
+		_explosionPositions.push_back(make_pair(window_x, window_y));
 	}
 
 	//ÆøÅº ¾Æ·¡ Ã¼Å©
 	for (int i = 1; i <= _power + 1; ++i) {
 		//¹üÀ§ Ã¼Å©
-		if (bomb_iy + _power == tile_max_h_num + 1) break;
+		if (bomb_iy + i == tile_max_h_num + 1) break;
 		//ºí·° Ã¼Å©
-		if (objectMap[bomb_iy + _power][bomb_ix] == BLOCK) break;
+		if (objectMap[bomb_iy + i][bomb_ix] == BLOCK) break;
 		//¹ÙÀ§ Ã¼Å©
-		if (objectMap[bomb_iy + _power][bomb_ix] == ROCK) {
-			objectMap[bomb_iy + _power][bomb_ix] = EMPTY;
+		if (objectMap[bomb_iy + i][bomb_ix] == ROCK) {
+			objectMap[bomb_iy + i][bomb_ix] = EMPTY;
+
+			//ÆÄ±«µÈ ¹ÙÀ§ º¤ÅÍ¿¡ ´ã±â
+			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy + i);
+			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
 			break;
 		}
-		cout << "ÆøÅº ¾Æ·¡: " << bomb_ix << ", " << bomb_iy + _power << endl << endl;
-		objectMap[bomb_iy + _power][bomb_ix] = EXPLOSION;
+		objectMap[bomb_iy + i][bomb_ix] = EXPLOSION;
+
+		//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy + i);
+		_explosionPositions.push_back(make_pair(window_x, window_y));
 	}
 
 	//ÆøÅº ¿ÞÂÊ Ã¼Å©
 	for (int i = 1; i <= _power + 1; ++i) {
 		//¹üÀ§ Ã¼Å©
-		if (bomb_ix - _power == -1) break;
+		if (bomb_ix - i == -1) break;
 		//ºí·° Ã¼Å©
-		if (objectMap[bomb_iy][bomb_ix - _power] == BLOCK) break;
+		if (objectMap[bomb_iy][bomb_ix - i] == BLOCK) break;
 		//¹ÙÀ§ Ã¼Å©
-		if (objectMap[bomb_iy][bomb_ix - _power] == ROCK) {
-			objectMap[bomb_iy][bomb_ix - _power] = EMPTY;
+		if (objectMap[bomb_iy][bomb_ix - i] == ROCK) {
+			objectMap[bomb_iy][bomb_ix - i] = EMPTY;
+
+			//ÆÄ±«µÈ ¹ÙÀ§ º¤ÅÍ¿¡ ´ã±â
+			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix - i, bomb_iy);
+			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
 			break;
 		}
+		objectMap[bomb_iy][bomb_ix - i] = EXPLOSION;
 
-		objectMap[bomb_iy][bomb_ix - _power] = EXPLOSION;
+		//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix - i, bomb_iy);
+		_explosionPositions.push_back(make_pair(window_x, window_y));
 	}
 
 	//ÆøÅº ¿À¸¥ÂÊ Ã¼Å©
 	for (int i = 1; i <= _power + 1; ++i) {
 		//¹üÀ§ Ã¼Å©
-		if (bomb_ix + _power == tile_max_w_num + 1) break;
+		if (bomb_ix + i == tile_max_w_num + 1) break;
 		//ºí·° Ã¼Å©
-		if (objectMap[bomb_iy][bomb_ix + _power] == BLOCK) break;
+		if (objectMap[bomb_iy][bomb_ix + i] == BLOCK) break;
 		//¹ÙÀ§ Ã¼Å©
-		if (objectMap[bomb_iy][bomb_ix + _power] == ROCK) {
-			objectMap[bomb_iy][bomb_ix + _power] = EMPTY;
+		if (objectMap[bomb_iy][bomb_ix + i] == ROCK) {
+			objectMap[bomb_iy][bomb_ix + i] = EMPTY;
+
+			//ÆÄ±«µÈ ¹ÙÀ§ º¤ÅÍ¿¡ ´ã±â
+			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix + i, bomb_iy);
+			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
 			break;
 		}
-
 		objectMap[bomb_iy][bomb_ix + _power] = EXPLOSION;
+
+		//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix + i, bomb_iy);
+		_explosionPositions.push_back(make_pair(window_x, window_y));
 	}
 }

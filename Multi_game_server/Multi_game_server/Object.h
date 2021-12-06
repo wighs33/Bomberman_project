@@ -58,7 +58,8 @@ public:
 	int _timer;		// '폭탄 대기 시간 + 후폭풍 유지 시간' 을 모두 더한 값에서 시작 [ex) 6 = 5(폭탄 대기 시간) + 1(후폭풍 지속시간)]
 	int _power; // 폭탄 파워
 
-	bool _explode = false;
+	bool _isExploded = false;
+	vector<pair<int, int>> _explosionPositions;
 	vector<pair<int, int>> _destroyedRockPositions;
 
 
