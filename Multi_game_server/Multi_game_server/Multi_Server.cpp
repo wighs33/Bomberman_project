@@ -726,11 +726,15 @@ void process_packet(int client_index, char* p)
 		};
 		timer_queue.push(ev);
 
+
 		//�����Լ� �׽�Ʈ �ڵ�
+
 		for (int i = 0; bombs.size(); ++i) {
 			bombs[i]._isExploded = true;
-			bombs[i].ExplodeBomb(selectedMap);
+			//bombs[i].ExplodeBomb(selectedMap);
 
+		for (auto d : bombs[i]._explosionPositions)
+				cout << d.first << ", " << d.second << endl;
 			cout << "\n���� ��ǥ\n";
 			for (auto d : bombs[i]._explosionPositions)
 				cout << d.first << ", " << d.second << endl;
@@ -938,4 +942,106 @@ std::pair<int, int> WindowPosToMapIndex(int x, int y)
 	int map_x = (x - outer_wall_start) / tile_size;
 	int map_y = (y - outer_wall_start) / tile_size;
 	return std::make_pair(map_x, map_y);
+}
+
+void ExplodeBomb(int _x, int _y, int _power)
+{
+	//맵인?�스????�� 좌표
+	auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(_x, _y);
+
+	//?�재??��?�치
+	selectedMap[bomb_iy][bomb_ix] = EXPLOSION;
+
+	//??��좌표 벡터???�기
+	//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy);
+	//_explosionPositions.push_back(make_pair(window_x, window_y));
+
+	//??�� ??체크
+	for (int i = 1; i <= _power + 1; ++i) {
+		//범위 체크
+		if (bomb_iy - i == -1) break;
+		//블럭 체크
+		if (selectedMap[bomb_iy - i][bomb_ix] == BLOCK) break;
+		//바위 체크
+		if (selectedMap[bomb_iy - i][bomb_ix] == ROCK) {
+			selectedMap[bomb_iy - i][bomb_ix] = EMPTY;
+
+			//?�괴??바위 벡터???�기
+			//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy - i);
+			//_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+			break;
+		}
+		selectedMap[bomb_iy - i][bomb_ix] = EXPLOSION;
+
+		//??��좌표 벡터???�기
+		//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy - i);
+		//_explosionPositions.push_back(make_pair(window_x, window_y));
+	}
+
+	//??�� ?�래 체크
+	for (int i = 1; i <= _power + 1; ++i) {
+		//범위 체크
+		if (bomb_iy + i == tile_max_h_num + 1) break;
+		//블럭 체크
+		if (selectedMap[bomb_iy + i][bomb_ix] == BLOCK) break;
+		//바위 체크
+		if (selectedMap[bomb_iy + i][bomb_ix] == ROCK) {
+			selectedMap[bomb_iy + i][bomb_ix] = EMPTY;
+
+			//?�괴??바위 벡터???�기
+			//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy + i);
+			//_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+			break;
+		}
+		selectedMap[bomb_iy + i][bomb_ix] = EXPLOSION;
+
+		//??��좌표 벡터???�기
+		//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy + i);
+		//_explosionPositions.push_back(make_pair(window_x, window_y));
+	}
+
+	//??�� ?�쪽 체크
+	for (int i = 1; i <= _power + 1; ++i) {
+		//범위 체크
+		if (bomb_ix - i == -1) break;
+		//블럭 체크
+		if (selectedMap[bomb_iy][bomb_ix - i] == BLOCK) break;
+		//바위 체크
+		if (selectedMap[bomb_iy][bomb_ix - i] == ROCK) {
+			selectedMap[bomb_iy][bomb_ix - i] = EMPTY;
+
+			//?�괴??바위 벡터???�기
+			//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix - i, bomb_iy);
+			//_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+			break;
+		}
+		selectedMap[bomb_iy][bomb_ix - i] = EXPLOSION;
+
+		//??��좌표 벡터???�기
+		//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix - i, bomb_iy);
+		//_explosionPositions.push_back(make_pair(window_x, window_y));
+	}
+
+	//??�� ?�른�?체크
+	for (int i = 1; i <= _power + 1; ++i) {
+		//범위 체크
+		if (bomb_ix + i == tile_max_w_num + 1) break;
+		//블럭 체크
+		if (selectedMap[bomb_iy][bomb_ix + i] == BLOCK) break;
+		//바위 체크
+		if (selectedMap[bomb_iy][bomb_ix + i] == ROCK) {
+			selectedMap[bomb_iy][bomb_ix + i] = EMPTY;
+
+			//?�괴??바위 벡터???�기
+			//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix + i, bomb_iy);
+			//_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+			break;
+		}
+		selectedMap[bomb_iy][bomb_ix + _power] = EXPLOSION;
+
+		//??��좌표 벡터???�기
+		//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix + i, bomb_iy);
+		//_explosionPositions.push_back(make_pair(window_x, window_y));
+	}
+
 }
