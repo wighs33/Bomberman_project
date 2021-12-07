@@ -1,0 +1,213 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 한국어(대한민국) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_KOR)
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+#pragma code_page(949)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP1             BITMAP                  "maps_bmp/background_opened.bmp"
+
+IDB_BITMAP2             BITMAP                  "objects_bmp/block.bmp"
+
+IDB_BITMAP3             BITMAP                  "characters_bmp/Isaac.bmp"
+
+IDB_BITMAP4             BITMAP                  "objects_bmp/tear.bmp"
+
+IDB_BITMAP6             BITMAP                  "characters_bmp/Magdalene.bmp"
+
+IDB_BITMAP7             BITMAP                  "characters_bmp/Lazarus.bmp"
+
+IDB_BITMAP8             BITMAP                  "characters_bmp/Samson.bmp"
+
+IDB_BITMAP9             BITMAP                  "characters_bmp\\Eve.bmp"
+
+IDB_BITMAP10            BITMAP                  "objects_bmp\\bomb.bmp"
+
+IDB_BITMAP11            BITMAP                  "objects_bmp\\more_power.bmp"
+
+IDB_BITMAP12            BITMAP                  "objects_bmp\\more_bomb.bmp"
+
+IDB_BITMAP13            BITMAP                  "objects_bmp\\rock1.bmp"
+
+IDB_BITMAP14            BITMAP                  "maps_bmp\\backboard.bmp"
+
+IDB_BITMAP5             BITMAP                  "objects_bmp\\heart_1.bmp"
+
+IDB_BITMAP15            BITMAP                  "objects_bmp\\heart_2.bmp"
+
+IDB_BITMAP16            BITMAP                  "objects_bmp\\more_bomb.bmp"
+
+IDB_BITMAP17            BITMAP                  "maps_bmp\\num_0.bmp"
+
+IDB_BITMAP18            BITMAP                  "maps_bmp\\num_1.bmp"
+
+IDB_BITMAP19            BITMAP                  "maps_bmp\\num_2.bmp"
+
+IDB_BITMAP20            BITMAP                  "maps_bmp\\num_3.bmp"
+
+IDB_BITMAP21            BITMAP                  "maps_bmp\\num_4.bmp"
+
+IDB_BITMAP22            BITMAP                  "maps_bmp\\num_5.bmp"
+
+IDB_BITMAP23            BITMAP                  "maps_bmp\\al_p.bmp"
+
+IDB_BITMAP24            BITMAP                  "maps_bmp\\empty.bmp"
+
+IDB_BITMAP25            BITMAP                  "maps_bmp\\idle.bmp"
+
+IDB_BITMAP26            BITMAP                  "maps_bmp\\ready.bmp"
+
+IDB_BITMAP27            BITMAP                  "maps_bmp\\play.bmp"
+
+IDB_BITMAP28            BITMAP                  "maps_bmp\\dead.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON1               ICON                    "icon_ico\\terror_man.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG1 DIALOGEX 300, 200, 227, 91
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "로그인"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "로그인",IDOK,104,70,50,14
+    PUSHBUTTON      "취소",IDCANCEL,170,70,50,14
+    EDITTEXT        IDC_EDIT1,49,7,171,18,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT2,49,27,171,18,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT3,7,7,37,18,ES_CENTER | ES_AUTOHSCROLL | ES_READONLY | WS_DISABLED,WS_EX_DLGMODALFRAME
+    EDITTEXT        IDC_EDIT4,7,27,37,18,ES_CENTER | ES_AUTOHSCROLL | ES_READONLY | WS_DISABLED,WS_EX_DLGMODALFRAME
+END
+
+IDD_DIALOG2 DIALOGEX 300, 200, 204, 78
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "접속설정"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "접속",IDOK,87,57,50,14
+    PUSHBUTTON      "취소",IDCANCEL,147,57,50,14
+    EDITTEXT        IDC_EDIT_1,7,7,37,18,ES_CENTER | ES_AUTOHSCROLL | ES_READONLY | WS_DISABLED,WS_EX_DLGMODALFRAME
+    EDITTEXT        IDC_EDIT_2,7,28,37,18,ES_CENTER | ES_AUTOHSCROLL | ES_READONLY | WS_DISABLED,WS_EX_DLGMODALFRAME
+    EDITTEXT        IDC_EDIT_3,48,7,36,18,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_4,87,7,36,18,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_5,125,7,35,18,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_6,163,7,34,18,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_7,48,29,149,18,ES_AUTOHSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_DIALOG1, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 220
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 84
+    END
+
+    IDD_DIALOG2, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 197
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 71
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_DIALOG1 AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DIALOG2 AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // 한국어(대한민국) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
