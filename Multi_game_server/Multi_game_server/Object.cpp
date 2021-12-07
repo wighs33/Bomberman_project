@@ -15,103 +15,103 @@ static std::pair<int, int> WindowPosToMapIndex(int x, int y)
 	return std::make_pair(map_x, map_y);
 }
 
-void Bomb::ExplodeBomb(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap)
-{
-	//ë§µì¸ë±ìŠ¤ì˜ í­íƒ„ ì¢Œí‘œ
-	auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(_x, _y);
-
-	//í˜„ì¬í­íƒ„ìœ„ì¹˜
-	objectMap[bomb_iy][bomb_ix] = EXPLOSION;
-
-	//í­ë°œì¢Œí‘œ ë²¡í„°ì— ë‹´ê¸°
-	auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy);
-	_explosionPositions.push_back(make_pair(window_x, window_y));
-
-	//í­íƒ„ ìœ„ ì²´í¬
-	for (int i = 1; i <= _power + 1; ++i) {
-		//ë²”ìœ„ ì²´í¬
-		if (bomb_iy - i == -1) break;
-		//ë¸”ëŸ­ ì²´í¬
-		if (objectMap[bomb_iy - i][bomb_ix] == BLOCK) break;
-		//ë°”ìœ„ ì²´í¬
-		if (objectMap[bomb_iy - i][bomb_ix] == ROCK) {
-			objectMap[bomb_iy - i][bomb_ix] = EMPTY;
-
-			//íŒŒê´´ëœ ë°”ìœ„ ë²¡í„°ì— ë‹´ê¸°
-			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy - i);
-			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
-			break;
-		}
-		objectMap[bomb_iy - i][bomb_ix] = EXPLOSION;
-
-		//í­ë°œì¢Œí‘œ ë²¡í„°ì— ë‹´ê¸°
-		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy - i);
-		_explosionPositions.push_back(make_pair(window_x, window_y));
-	}
-
-	//í­íƒ„ ì•„ë˜ ì²´í¬
-	for (int i = 1; i <= _power + 1; ++i) {
-		//ë²”ìœ„ ì²´í¬
-		if (bomb_iy + i == tile_max_h_num + 1) break;
-		//ë¸”ëŸ­ ì²´í¬
-		if (objectMap[bomb_iy + i][bomb_ix] == BLOCK) break;
-		//ë°”ìœ„ ì²´í¬
-		if (objectMap[bomb_iy + i][bomb_ix] == ROCK) {
-			objectMap[bomb_iy + i][bomb_ix] = EMPTY;
-
-			//íŒŒê´´ëœ ë°”ìœ„ ë²¡í„°ì— ë‹´ê¸°
-			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy + i);
-			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
-			break;
-		}
-		objectMap[bomb_iy + i][bomb_ix] = EXPLOSION;
-
-		//í­ë°œì¢Œí‘œ ë²¡í„°ì— ë‹´ê¸°
-		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy + i);
-		_explosionPositions.push_back(make_pair(window_x, window_y));
-	}
-
-	//í­íƒ„ ì™¼ìª½ ì²´í¬
-	for (int i = 1; i <= _power + 1; ++i) {
-		//ë²”ìœ„ ì²´í¬
-		if (bomb_ix - i == -1) break;
-		//ë¸”ëŸ­ ì²´í¬
-		if (objectMap[bomb_iy][bomb_ix - i] == BLOCK) break;
-		//ë°”ìœ„ ì²´í¬
-		if (objectMap[bomb_iy][bomb_ix - i] == ROCK) {
-			objectMap[bomb_iy][bomb_ix - i] = EMPTY;
-
-			//íŒŒê´´ëœ ë°”ìœ„ ë²¡í„°ì— ë‹´ê¸°
-			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix - i, bomb_iy);
-			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
-			break;
-		}
-		objectMap[bomb_iy][bomb_ix - i] = EXPLOSION;
-
-		//í­ë°œì¢Œí‘œ ë²¡í„°ì— ë‹´ê¸°
-		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix - i, bomb_iy);
-		_explosionPositions.push_back(make_pair(window_x, window_y));
-	}
-
-	//í­íƒ„ ì˜¤ë¥¸ìª½ ì²´í¬
-	for (int i = 1; i <= _power + 1; ++i) {
-		//ë²”ìœ„ ì²´í¬
-		if (bomb_ix + i == tile_max_w_num + 1) break;
-		//ë¸”ëŸ­ ì²´í¬
-		if (objectMap[bomb_iy][bomb_ix + i] == BLOCK) break;
-		//ë°”ìœ„ ì²´í¬
-		if (objectMap[bomb_iy][bomb_ix + i] == ROCK) {
-			objectMap[bomb_iy][bomb_ix + i] = EMPTY;
-
-			//íŒŒê´´ëœ ë°”ìœ„ ë²¡í„°ì— ë‹´ê¸°
-			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix + i, bomb_iy);
-			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
-			break;
-		}
-		objectMap[bomb_iy][bomb_ix + _power] = EXPLOSION;
-
-		//í­ë°œì¢Œí‘œ ë²¡í„°ì— ë‹´ê¸°
-		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix + i, bomb_iy);
-		_explosionPositions.push_back(make_pair(window_x, window_y));
-	}
-}
+//void Bomb::ExplodeBomb(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap)
+//{
+//	//¸ÊÀÎµ¦½ºÀÇ ÆøÅº ÁÂÇ¥
+//	auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(_x, _y);
+//
+//	//ÇöÀçÆøÅºÀ§Ä¡
+//	objectMap[bomb_iy][bomb_ix] = EXPLOSION;
+//
+//	//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+//	auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy);
+//	_explosionPositions.push_back(make_pair(window_x, window_y));
+//
+//	//ÆøÅº À§ Ã¼Å©
+//	for (int i = 1; i <= _power + 1; ++i) {
+//		//¹üÀ§ Ã¼Å©
+//		if (bomb_iy - i == -1) break;
+//		//ºí·° Ã¼Å©
+//		if (objectMap[bomb_iy - i][bomb_ix] == BLOCK) break;
+//		//¹ÙÀ§ Ã¼Å©
+//		if (objectMap[bomb_iy - i][bomb_ix] == ROCK) {
+//			objectMap[bomb_iy - i][bomb_ix] = EMPTY;
+//
+//			//ÆÄ±«µÈ ¹ÙÀ§ º¤ÅÍ¿¡ ´ã±â
+//			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy - i);
+//			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+//			break;
+//		}
+//		objectMap[bomb_iy - i][bomb_ix] = EXPLOSION;
+//
+//		//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+//		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy - i);
+//		_explosionPositions.push_back(make_pair(window_x, window_y));
+//	}
+//
+//	//ÆøÅº ¾Æ·¡ Ã¼Å©
+//	for (int i = 1; i <= _power + 1; ++i) {
+//		//¹üÀ§ Ã¼Å©
+//		if (bomb_iy + i == tile_max_h_num + 1) break;
+//		//ºí·° Ã¼Å©
+//		if (objectMap[bomb_iy + i][bomb_ix] == BLOCK) break;
+//		//¹ÙÀ§ Ã¼Å©
+//		if (objectMap[bomb_iy + i][bomb_ix] == ROCK) {
+//			objectMap[bomb_iy + i][bomb_ix] = EMPTY;
+//
+//			//ÆÄ±«µÈ ¹ÙÀ§ º¤ÅÍ¿¡ ´ã±â
+//			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy + i);
+//			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+//			break;
+//		}
+//		objectMap[bomb_iy + i][bomb_ix] = EXPLOSION;
+//
+//		//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+//		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy + i);
+//		_explosionPositions.push_back(make_pair(window_x, window_y));
+//	}
+//
+//	//ÆøÅº ¿ŞÂÊ Ã¼Å©
+//	for (int i = 1; i <= _power + 1; ++i) {
+//		//¹üÀ§ Ã¼Å©
+//		if (bomb_ix - i == -1) break;
+//		//ºí·° Ã¼Å©
+//		if (objectMap[bomb_iy][bomb_ix - i] == BLOCK) break;
+//		//¹ÙÀ§ Ã¼Å©
+//		if (objectMap[bomb_iy][bomb_ix - i] == ROCK) {
+//			objectMap[bomb_iy][bomb_ix - i] = EMPTY;
+//
+//			//ÆÄ±«µÈ ¹ÙÀ§ º¤ÅÍ¿¡ ´ã±â
+//			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix - i, bomb_iy);
+//			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+//			break;
+//		}
+//		objectMap[bomb_iy][bomb_ix - i] = EXPLOSION;
+//
+//		//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+//		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix - i, bomb_iy);
+//		_explosionPositions.push_back(make_pair(window_x, window_y));
+//	}
+//
+//	//ÆøÅº ¿À¸¥ÂÊ Ã¼Å©
+//	for (int i = 1; i <= _power + 1; ++i) {
+//		//¹üÀ§ Ã¼Å©
+//		if (bomb_ix + i == tile_max_w_num + 1) break;
+//		//ºí·° Ã¼Å©
+//		if (objectMap[bomb_iy][bomb_ix + i] == BLOCK) break;
+//		//¹ÙÀ§ Ã¼Å©
+//		if (objectMap[bomb_iy][bomb_ix + i] == ROCK) {
+//			objectMap[bomb_iy][bomb_ix + i] = EMPTY;
+//
+//			//ÆÄ±«µÈ ¹ÙÀ§ º¤ÅÍ¿¡ ´ã±â
+//			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix + i, bomb_iy);
+//			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+//			break;
+//		}
+//		objectMap[bomb_iy][bomb_ix + _power] = EXPLOSION;
+//
+//		//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+//		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix + i, bomb_iy);
+//		_explosionPositions.push_back(make_pair(window_x, window_y));
+//	}
+//}

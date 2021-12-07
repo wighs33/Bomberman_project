@@ -7,13 +7,13 @@
 
 ///////////////////////////////////////////////////////////
 
-//플레이어
+//?�레?�어
 array<Session, MAX_USER> clients;
 
 vector<Session_DB> clients_DB;
 char g_id_buf[BUFSIZE] = " ";
 
-//맵
+//�?
 template<typename T, size_t X, size_t Y>
 using tileArr = array<array<T, X>, Y>;
 
@@ -21,18 +21,18 @@ tileArr<int, tile_max_w_num, tile_max_h_num>	map_1;
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
 tileArr<int, tile_max_w_num, tile_max_h_num>	selectedMap;
 
-int map_num;	//몇 번 맵 선택?
+int map_num;	//�?�?�??�택?
 
-//블록 - [파괴 불가능]
+//블록 - [?�괴 불�???
 vector <Block>	blocks;
 
-//바위 - [파괴 가능]
+//바위 - [?�괴 가??
 vector <Rock>	rocks;
 
-//아이템
+//?�이??
 vector <Item>	items;
 
-//폭탄
+//??��
 vector <Bomb>	bombs;
 
 //atomic<bool> g_item[MAX_ITEM_SIZE];
@@ -89,51 +89,51 @@ std::pair<int, int> WindowPosToMapIndex(int x, int y);
 
 int main(int argc, char* argv[])
 {
-	//플레이어 DB 읽기
+	//?�레?�어 DB ?�기
 	clients_DB.reserve(MAX_USER);
 
-	ifstream in("플레이어_정보.txt");
+	ifstream in("?�레?�어_?�보.txt");
 	if (!in) {
-		cout << "DB 파일 읽기 실패" << endl;
+		cout << "DB ?�일 ?�기 ?�패" << endl;
 		getchar();
 		exit(1);
 	}
 
-	for (int i = 0; i < MAX_USER; ++i) {                         //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
+	for (int i = 0; i < MAX_USER; ++i) {                         //v_id??벡터??비워???�고 i??카운?�당 ?�소가 채워지므�?i값을 벡터???�덱?�로 ?�각?�며 ?�개??map??v_id[i]??값을 ?�어�?
 		clients_DB.push_back(Session_DB(in));
 	}
 
-	//맵 읽기
+	//�??�기
 	Load_Map(map_1, "maps_json/map_1.json");
 	Load_Map(map_2, "maps_json/map_2.json");
 
 	while (TRUE) {
-		cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
+		cout << "몇번 맵을 ?�레???�실껀가??(1, 2 �??�택): ";
 		scanf("%d", &map_num);
 		//map_num = 1;
 
 		if (map_num == 1 || map_num == 2) {
-			cout << map_num << " 번 맵을 선택하였습니다." << endl << endl;
+			cout << map_num << " �?맵을 ?�택?��??�니??" << endl << endl;
 			break;
 		}
 		else {
-			cout << "잘못 입력하셨습니다. (1, 2 중 하나를 선택하여 주세요.)" << endl << endl;
+			cout << "?�못 ?�력?�셨?�니?? (1, 2 �??�나�??�택?�여 주세??)" << endl << endl;
 		}
 	}
 
 	Setting_Map();
 
 
-	//for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                    //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
+	//for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                    //v_id??벡터??비워???�고 i??카운?�당 ?�소가 채워지므�?i값을 벡터???�덱?�로 ?�각?�며 ?�개??map??v_id[i]??값을 ?�어�?
 	//	g_item[i] = true;                                            
 	//}
 
-	//윈속 초기화
+	//?�속 초기??
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 		return 1;
 
-	//리슨 소켓 생성
+	//리슨 ?�켓 ?�성
 	SOCKET listen_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (listen_socket == INVALID_SOCKET) err_quit("socket()");
 
@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
 	listen(listen_socket, SOMAXCONN);
 
 	for (int i = 0; i < MAX_USER; ++i) {
-		// 데이터 통신에 사용할 변수
+		// ?�이???�신???�용??변??
 		SOCKET client_sock;
 		SOCKADDR_IN clientaddr;
 		int addrlen;
@@ -155,9 +155,9 @@ int main(int argc, char* argv[])
 		client_sock = accept(listen_socket, (SOCKADDR*)&clientaddr, &addrlen);
 
 
-		// 접속한 클라이언트 정보 출력
-		std::cout << "[TCP 서버] 클라이언트 접속: IP 주소 " <<
-			inet_ntoa(clientaddr.sin_addr) << "  포트 번호 : " << ntohs(clientaddr.sin_port) << endl;
+		// ?�속???�라?�언???�보 출력
+		std::cout << "[TCP ?�버] ?�라?�언???�속: IP 주소 " <<
+			inet_ntoa(clientaddr.sin_addr) << "  ?�트 번호 : " << ntohs(clientaddr.sin_port) << endl;
 
 
 		CreateThread(NULL, 0, Thread_1, (LPVOID)client_sock, 0, NULL);
@@ -178,36 +178,20 @@ int main(int argc, char* argv[])
 
 bool is_near(int a, int b)
 {
-<<<<<<< HEAD
-	int power = bombs[a]._power * 60;
-	cout << abs(bombs[a]._x - rocks[b]._x) << endl;
-	cout << "폭탄 x " << bombs[a]._x << endl;
-	cout << "바위 x " << rocks[a]._x << endl;
 
-	if (power < abs(bombs[a]._x - rocks[b]._x)) return false;
-	if (power < abs(bombs[a]._y - rocks[b]._y)) return false;
-=======
 	int power = bombs[a]._power;
 	if (power < abs(bombs[a]._x - blocks[b]._x)) return false;
 	if (power < abs(bombs[a]._y - blocks[b]._y)) return false;
->>>>>>> origin/main
+
 	return true;
 }
 
 void do_bomb(int id) {
-<<<<<<< HEAD
-	cout << "폭발" << endl;
 
-	for (auto& obj : rocks) {
-		if (obj._isActive != true) continue;
-		if (true == is_near(id, obj._object_index)) {
-			cout << "폭발" << endl;
-=======
 	for (auto& obj : blocks) {
 		if (obj._isActive != true) continue;
 		if (true == is_near(id, obj._object_index)) {
 
->>>>>>> origin/main
 			obj._active_lock.lock();
 			obj._isActive = false;
 			obj._active_lock.unlock();
@@ -231,11 +215,6 @@ void do_bomb(int id) {
 
 void do_timer() {
 
-<<<<<<< HEAD
-	WaitForSingleObject(hEvent, INFINITE);
-	cout << "타이머" << endl;
-=======
->>>>>>> origin/main
 	while (true) {
 		timer_event ev;
 		timer_queue.try_pop(ev);
@@ -272,7 +251,7 @@ void err_quit(const char* msg)
 
 bool get_status(int client_index, char* id)
 {
-	//아이디 검색
+	//?�이??검??
 	strcpy_s(g_id_buf, id);
 	auto b_n = find_if(clients_DB.cbegin(), clients_DB.cend(), [](const Session_DB& a) {
 		return strcmp(a._id, g_id_buf) == 0;
@@ -281,21 +260,21 @@ bool get_status(int client_index, char* id)
 		return false;
 	}
 
-	//레벨, 경험치 DB용 데이터 초기화
+	//?�벨, 경험�?DB???�이??초기??
 	strcpy_s(clients[client_index]._id, id);
 	clients[client_index]._level = b_n->_level;
 	clients[client_index]._exp = b_n->_exp;
 
-	//기타 인게임 데이터 초기화
+	//기�? ?�게???�이??초기??
 	init_client(client_index);
 
 	return true;
 }
 
-//인게임 데이터 초기화
+//?�게???�이??초기??
 void init_client(int client_index)
 {
-	//맵별 위치 지정
+	//맵별 ?�치 지??
 	if (map_num == 1) {
 		switch (client_index) {
 		case 0:
@@ -351,8 +330,8 @@ void init_client(int client_index)
 	clients[client_index]._state = ACCEPT;
 }
 
-//모든 플레이어가 READY 상태인지 검사
-//모두 READY 상태라면 PLAY 상태로 변경
+//모든 ?�레?�어가 READY ?�태?��? 검??
+//모두 READY ?�태?�면 PLAY ?�태�?변�?
 bool check_all_ready()
 {
 	for (auto& cl : clients)
@@ -362,13 +341,13 @@ bool check_all_ready()
 	}
 
 	cout << endl;
-	cout << "<<게임 스타트>>" << endl;
+	cout << "<<게임 ?��???>" << endl;
 
 	for (auto& cl : clients)
 	{
 		if (cl.in_use == TRUE) {
-			cout << "클라이언트 \'" << cl._id << "\' - 플레이 상태" << endl;
-			//인게임 데이터 초기화 - 위치 등등...
+			cout << "?�라?�언??\'" << cl._id << "\' - ?�레???�태" << endl;
+			//?�게???�이??초기??- ?�치 ?�등...
 			init_client(cl._index);
 			cl._state = PLAY;
 		}
@@ -434,7 +413,7 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map
 	}
 	else {
 		char msg[256]{ "" };
-		char _msg[]{ " 맵을 불러오지 못하였습니다." };
+		char _msg[]{ " 맵을 불러?��? 못하?�?�니??" };
 		strcat(msg, map_path);
 		strcat(msg, _msg);
 		MessageBox(NULL, (LPCWSTR)msg, L"ERROR - Parse failed", MB_ICONERROR);
@@ -445,7 +424,7 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map
 	json_map.close();
 }
 
-//맵 세팅
+//�??�팅
 void Setting_Map()
 {
 	int bl_indx = 0;
@@ -480,8 +459,8 @@ void Setting_Map()
 }
 
 //충돌체크
-//충돌 발생시 해당 오브젝트 인덱스 번호 + 1 리턴 / 충돌이 없으면 0 리턴
-//따라서!! 충돌이 안일어날시 0을 리턴하므로, 0번째 인덱스를 구분하기 위해서 + 1을 해준다.
+//충돌 발생???�당 ?�브?�트 ?�덱??번호 + 1 리턴 / 충돌???�으�?0 리턴
+//?�라??! 충돌???�일?�날??0??리턴?��?�? 0번째 ?�덱?��? 구분?�기 ?�해??+ 1???��???
 
 int Check_Collision(int source_type, int source_index)
 {
@@ -489,7 +468,7 @@ int Check_Collision(int source_type, int source_index)
 	int s_x_bias{ 0 }, s_y_bias{ 0 };
 
 	switch (source_type) {
-	case 0:	//플레이어
+	case 0:	//?�레?�어
 		s_x = clients[source_index]._x;
 		s_y = clients[source_index]._y;
 		s_x_bias = p_size;
@@ -509,22 +488,11 @@ int Check_Collision(int source_type, int source_index)
 	if (s_y <= outer_wall_start - p_size / 3)
 		return 1;
 
-<<<<<<< HEAD
-	for (auto& bl : blocks) {
-		if (bl._isActive) {
-			RECT target_rt{ bl._x + adj_obstacle_size_tl, bl._y + adj_obstacle_size_tl, bl._x + tile_size - adj_obstacle_size_br, bl._y + tile_size - adj_obstacle_size_br };
-			if (IntersectRect(&temp, &source_rt, &target_rt)) {
-				//cout << "block" << endl;
-				return BLOCK;
-			}
-		}
-	}
-=======
+
 	for (int iy = 0; iy < tile_max_h_num; ++iy)
 		for (int ix = 0; ix < tile_max_w_num; ++ix) {
 			//������ �� ��ǥ
 			auto [window_x, window_y] = MapIndexToWindowPos(ix, iy);
->>>>>>> origin/main
 
 			//������Ʈ �׸���
 			switch (selectedMap[iy][ix]) {
@@ -537,69 +505,7 @@ int Check_Collision(int source_type, int source_index)
 
 				break;
 			}
-<<<<<<< HEAD
-		}
-	}
-	
-	//for (auto& bo : bombs) {
-	//	if (bo._isActive) {
-	//		RECT target_rt{ bo._x + adj_obstacle_size_tl, bo._y + adj_obstacle_size_tl, bo._x + tile_size - adj_obstacle_size_br, bo._y + tile_size - adj_obstacle_size_br };
-	//		//if (IntersectRect(&temp, &source_rt, &target_rt))
-	//			//return BOMB;
-	//	}
-	//}
-	
-	//for (int iy = 0; iy < tile_max_h_num; ++iy)
-	//	for (int ix = 0; ix < tile_max_w_num; ++ix) {
-	//		//윈도우 상 좌표
-	//		auto [window_x, window_y] = MapIndexToWindowPos(ix, iy);
 
-	//		//오브젝트 그리기
-	//		switch (selectedMap[iy][ix]) {
-	//		case BLOCK:			//블록
-	//		{
-	//			
-	//			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
-
-	//			if (IntersectRect(&temp, &source_rt, &target_rt))
-	//				return BLOCK;
-
-	//			break;
-	//		}
-	//		case ROCK:			//돌
-	//		{
-	//			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
-
-	//			if (IntersectRect(&temp, &source_rt, &target_rt))
-	//				return ROCK;
-
-	//			break;
-	//		}
-	//		case BOMB:			//폭탄
-	//		{
-	//			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
-
-	//			if (IntersectRect(&temp, &source_rt, &target_rt))
-	//				return BOMB;
-
-	//			break;
-	//		}
-	//		case EXPLOSION:		//폭발
-	//		{
-	//			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
-
-	//			if (IntersectRect(&temp, &source_rt, &target_rt))
-	//				return EXPLOSION;
-
-	//			break;
-	//		}
-	//		default:
-	//			break;
-	//		}
-	//	};
-	//cout << "통과" << endl;
-	return EMPTY;	//충돌X
-=======
 			case ROCK:			//��
 			{
 				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
@@ -633,7 +539,6 @@ int Check_Collision(int source_type, int source_index)
 		};
 
 	return EMPTY;	//�浹X
->>>>>>> origin/main
 }
 
 void process_packet(int client_index, char* p)
@@ -657,7 +562,7 @@ void process_packet(int client_index, char* p)
 		}
 
 		for (auto& other : clients) {
-			// 플레이어가 로그인 요청
+			// ?�레?�어가 로그???�청
 			if (other._index == client_index) {
 				LOGIN_OK_packet L_packet;
 				L_packet.type = LOGIN_OK;
@@ -674,7 +579,7 @@ void process_packet(int client_index, char* p)
 			};
 			if (NO_ACCEPT == other._state) continue;
 
-			// 현재 접속한 플레이어에게 이미 접속해 있는 타 플레이어들의 정보 전송
+			// ?�재 ?�속???�레?�어?�게 ?��? ?�속???�는 ?� ?�레?�어?�의 ?�보 ?�송
 			INIT_PLAYER_packet IN_Player;
 			IN_Player.size = sizeof(INIT_PLAYER_packet);
 			IN_Player.type = INIT_PLAYER;
@@ -688,7 +593,7 @@ void process_packet(int client_index, char* p)
 			strcpy_s(IN_Player.id, other._id);
 			cl.do_send(sizeof(IN_Player), &IN_Player);
 
-			// 이미 접속해 있는 플레이어들에게 현재 접속한 플레이어의 정보 전송
+			// ?��? ?�속???�는 ?�레?�어?�에�??�재 ?�속???�레?�어???�보 ?�송
 			INIT_PLAYER_packet IN_Other;
 			IN_Other.size = sizeof(INIT_PLAYER_packet);
 			IN_Other.type = INIT_PLAYER;
@@ -704,7 +609,7 @@ void process_packet(int client_index, char* p)
 
 		}
 
-		cout << "[수신 성공] \'" << cl._id << "\' (" << client_index + 1 << " 번째 플레이어) 로그인 요청" << endl;
+		cout << "[?�신 ?�공] \'" << cl._id << "\' (" << client_index + 1 << " 번째 ?�레?�어) 로그???�청" << endl;
 
 		break;
 	}
@@ -729,7 +634,7 @@ void process_packet(int client_index, char* p)
 		cl._y += y_bias;
 		cl._dir = packet->dir;
 
-		//블록과 충돌체크
+		//블록�?충돌체크
 		if (Check_Collision(0, cl._index)) {
 			cl._x -= x_bias;
 			cl._y -= y_bias;
@@ -774,9 +679,9 @@ void process_packet(int client_index, char* p)
 		//{
 		//	g_item[i_index] = false;
 		//	switch (packet->item_type) {
-		//	case 0: cl._power++; break; // 폭탄 세기
-		//	case 1:  cl._heart++; break; // 하트
-		//	case 2: cl._bomb_count++; break; //폭탄 개수
+		//	case 0: cl._power++; break; // ??�� ?�기
+		//	case 1:  cl._heart++; break; // ?�트
+		//	case 2: cl._bomb_count++; break; //??�� 개수
 		//	case 3: cl._rock_count; break; //블록 개수
 		//	default:
 		//		cout << "Invalid item in client " << cl._id << endl;
@@ -809,12 +714,8 @@ void process_packet(int client_index, char* p)
 	}
 
 	case INIT_BOMB: {
-<<<<<<< HEAD
-		//if (폭탄 생성 했다면)
-		cout << "폭탄 생성" << endl;
-=======
+
 		//if (��ź ���� �ߴٸ�)
->>>>>>> origin/main
 		timer_event ev;
 		ev.obj_id = ++g_b_count;
 		
@@ -822,10 +723,7 @@ void process_packet(int client_index, char* p)
 
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
 		bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, packet->power));
-<<<<<<< HEAD
-		cout << "파워" << packet->power << endl;
-=======
->>>>>>> origin/main
+
 		packet->id = ev.obj_id;
 		for (auto& pl : clients) {
 			if (true == pl.in_use)
@@ -835,16 +733,19 @@ void process_packet(int client_index, char* p)
 		};
 		timer_queue.push(ev);
 
-<<<<<<< HEAD
-		SetEvent(hEvent);
+
+		//SetEvent(hEvent);
 		
-		//cout << "폭탄" << endl;
-=======
+		//cout << "??��" << endl;
+
 		//�����Լ� �׽�Ʈ �ڵ�
+
 		for (int i = 0; bombs.size(); ++i) {
 			bombs[i]._isExploded = true;
-			bombs[i].ExplodeBomb(selectedMap);
+			//bombs[i].ExplodeBomb(selectedMap);
 
+		for (auto d : bombs[i]._explosionPositions)
+				cout << d.first << ", " << d.second << endl;
 			cout << "\n���� ��ǥ\n";
 			for (auto d : bombs[i]._explosionPositions)
 				cout << d.first << ", " << d.second << endl;
@@ -857,7 +758,6 @@ void process_packet(int client_index, char* p)
 		}
 
 		//cout << "��ź" << endl;
->>>>>>> origin/main
 		//cout << packet->x << endl;
 		//cout << packet->y << endl;
 		//cout << packet->power << endl;
@@ -876,7 +776,7 @@ void process_packet(int client_index, char* p)
 			cl._x = packet->x;
 			cl._y = packet->y;
 			cl._state = packet->state;
-			cout << "클라이언트 \'" << cl._id << "\' - 준비 상태" << endl;
+			cout << "?�라?�언??\'" << cl._id << "\' - 준�??�태" << endl;
 
 			if (check_all_ready()) {
 				send_all_play_start();
@@ -917,7 +817,7 @@ void process_packet(int client_index, char* p)
 			cl._x = packet->x;
 			cl._y = packet->y;
 			cl._state = packet->state;
-			cout << "클라이언트 \'" << cl._id << "\' - 준비 취소 상태" << endl;
+			cout << "?�라?�언??\'" << cl._id << "\' - 준�?취소 ?�태" << endl;
 
 			for (auto& other : clients) {
 				if (true == other.in_use) {
@@ -950,7 +850,7 @@ void process_packet(int client_index, char* p)
 		}
 
 
-				   // 준비
+				   // 준�?
 				   //case DEAD: { 
 				   //	for (auto& pl : clients) {
 				   //		if (true == pl.in_use)
@@ -966,7 +866,7 @@ void process_packet(int client_index, char* p)
 				   //		}
 				   //	}
 				   //	break; 
-				   //}// 하트
+				   //}// ?�트
 		default: {
 			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;
 			cout << "packet state number: " << packet->state << endl;
@@ -980,7 +880,7 @@ void process_packet(int client_index, char* p)
 	}
 
 	default: {
-		cout << "[에러] UnKnown Packet" << endl;
+		cout << "[?�러] UnKnown Packet" << endl;
 		err_quit("UnKnown Packet");
 	}
 
@@ -1013,7 +913,7 @@ DWORD WINAPI Thread_1(LPVOID arg)
 	player._index = index;
 
 	while (1) {
-		// 데이터 받기
+		// ?�이??받기
 		player.do_recv();
 		//int remain_data = num_byte + cl._prev_size;
 		char* packet_start = clients[index]._recv_buf;
@@ -1053,4 +953,106 @@ std::pair<int, int> WindowPosToMapIndex(int x, int y)
 	int map_x = (x - outer_wall_start) / tile_size;
 	int map_y = (y - outer_wall_start) / tile_size;
 	return std::make_pair(map_x, map_y);
+}
+
+void ExplodeBomb(int _x, int _y, int _power)
+{
+	//맵인?�스????�� 좌표
+	auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(_x, _y);
+
+	//?�재??��?�치
+	selectedMap[bomb_iy][bomb_ix] = EXPLOSION;
+
+	//??��좌표 벡터???�기
+	//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy);
+	//_explosionPositions.push_back(make_pair(window_x, window_y));
+
+	//??�� ??체크
+	for (int i = 1; i <= _power + 1; ++i) {
+		//범위 체크
+		if (bomb_iy - i == -1) break;
+		//블럭 체크
+		if (selectedMap[bomb_iy - i][bomb_ix] == BLOCK) break;
+		//바위 체크
+		if (selectedMap[bomb_iy - i][bomb_ix] == ROCK) {
+			selectedMap[bomb_iy - i][bomb_ix] = EMPTY;
+
+			//?�괴??바위 벡터???�기
+			//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy - i);
+			//_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+			break;
+		}
+		selectedMap[bomb_iy - i][bomb_ix] = EXPLOSION;
+
+		//??��좌표 벡터???�기
+		//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy - i);
+		//_explosionPositions.push_back(make_pair(window_x, window_y));
+	}
+
+	//??�� ?�래 체크
+	for (int i = 1; i <= _power + 1; ++i) {
+		//범위 체크
+		if (bomb_iy + i == tile_max_h_num + 1) break;
+		//블럭 체크
+		if (selectedMap[bomb_iy + i][bomb_ix] == BLOCK) break;
+		//바위 체크
+		if (selectedMap[bomb_iy + i][bomb_ix] == ROCK) {
+			selectedMap[bomb_iy + i][bomb_ix] = EMPTY;
+
+			//?�괴??바위 벡터???�기
+			//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy + i);
+			//_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+			break;
+		}
+		selectedMap[bomb_iy + i][bomb_ix] = EXPLOSION;
+
+		//??��좌표 벡터???�기
+		//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy + i);
+		//_explosionPositions.push_back(make_pair(window_x, window_y));
+	}
+
+	//??�� ?�쪽 체크
+	for (int i = 1; i <= _power + 1; ++i) {
+		//범위 체크
+		if (bomb_ix - i == -1) break;
+		//블럭 체크
+		if (selectedMap[bomb_iy][bomb_ix - i] == BLOCK) break;
+		//바위 체크
+		if (selectedMap[bomb_iy][bomb_ix - i] == ROCK) {
+			selectedMap[bomb_iy][bomb_ix - i] = EMPTY;
+
+			//?�괴??바위 벡터???�기
+			//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix - i, bomb_iy);
+			//_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+			break;
+		}
+		selectedMap[bomb_iy][bomb_ix - i] = EXPLOSION;
+
+		//??��좌표 벡터???�기
+		//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix - i, bomb_iy);
+		//_explosionPositions.push_back(make_pair(window_x, window_y));
+	}
+
+	//??�� ?�른�?체크
+	for (int i = 1; i <= _power + 1; ++i) {
+		//범위 체크
+		if (bomb_ix + i == tile_max_w_num + 1) break;
+		//블럭 체크
+		if (selectedMap[bomb_iy][bomb_ix + i] == BLOCK) break;
+		//바위 체크
+		if (selectedMap[bomb_iy][bomb_ix + i] == ROCK) {
+			selectedMap[bomb_iy][bomb_ix + i] = EMPTY;
+
+			//?�괴??바위 벡터???�기
+			//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix + i, bomb_iy);
+			//_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+			break;
+		}
+		selectedMap[bomb_iy][bomb_ix + _power] = EXPLOSION;
+
+		//??��좌표 벡터???�기
+		//auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix + i, bomb_iy);
+		//_explosionPositions.push_back(make_pair(window_x, window_y));
+	}
+
 }
