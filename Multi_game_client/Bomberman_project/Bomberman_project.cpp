@@ -1077,7 +1077,7 @@ void Process_packet(char* p)
 
 		//임시코드
 		for (int i = 0; i < bombs.size(); ++i) {
-			bombs[i]._explode = true;
+			bombs[i]._isExploded = true;
 			bombs[i].ExplodeBomb(selectedMap);
 			bombs.pop_back();
 		}
