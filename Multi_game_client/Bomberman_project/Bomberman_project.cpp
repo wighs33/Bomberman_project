@@ -455,7 +455,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 	case WM_KEYDOWN:
 		switch (wParam) {
-		
+		case VK_RIGHT:
+			players[my_index].InputMoveKey(send_queue, send_buf, RIGHT);
+			SetEvent(hEvent);
+			break;
+
+		case VK_LEFT:
+			players[my_index].InputMoveKey(send_queue, send_buf, LEFT);
+			SetEvent(hEvent);
+			break;
+
+		case VK_UP:
+			players[my_index].InputMoveKey(send_queue, send_buf, UP);
+			SetEvent(hEvent);
+			break;
+
+		case VK_DOWN:
+			players[my_index].InputMoveKey(send_queue, send_buf, DOWN);
+			SetEvent(hEvent);
+			break;
+
 		case VK_SPACE:
 		{
 			int px = players[my_index]._x;
@@ -481,24 +500,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_TIMER:
-		//[움직임 입력 처리]
-		if (GetAsyncKeyState(VK_RIGHT)) {
-			players[my_index].InputMoveKey(send_queue, send_buf, RIGHT);
-			SetEvent(hEvent);
-		}
-		if (GetAsyncKeyState(VK_LEFT)) {
-			players[my_index].InputMoveKey(send_queue, send_buf, LEFT);
-			SetEvent(hEvent);
-		}
-		if (GetAsyncKeyState(VK_UP)) {
-			players[my_index].InputMoveKey(send_queue, send_buf, UP);
-			SetEvent(hEvent);
-		}
-		if (GetAsyncKeyState(VK_DOWN)) {
-			players[my_index].InputMoveKey(send_queue, send_buf, DOWN);
-			SetEvent(hEvent);
-		}
-
 
 		//[연산처리]
 		//--- 레디 텍스트 이동
@@ -1077,7 +1078,7 @@ void Process_packet(char* p)
 
 		//임시코드
 		for (int i = 0; i < bombs.size(); ++i) {
-			bombs[i]._isExploded = true;
+			bombs[i]._explode = true;
 			bombs[i].ExplodeBomb(selectedMap);
 			bombs.pop_back();
 		}

@@ -8,7 +8,7 @@ class Object
 public:
 	bool _isActive;
 	int _x, _y;
-	int _object_index;	// ì˜¤ë¸Œì íŠ¸ ì¸ë±ìŠ¤ ê°’
+	int _object_index;	// ¿ÀºêÁ§Æ® ÀÎµ¦½º °ª
 	std::mutex _active_lock;
 
 	Object()
@@ -36,7 +36,7 @@ public:
 	}
 };
 
-class Block : public Object	// ë¸”ë¡ - [íŒŒê´´ ë¶ˆê°€ëŠ¥í•¨]
+class Block : public Object	// ºí·Ï - [ÆÄ±« ºÒ°¡´ÉÇÔ]
 {
 public:
 	Block(int X, int Y, int OBJ_INDX) : Object(X, Y, OBJ_INDX) { }
@@ -44,7 +44,7 @@ public:
 	explicit Block(const Block& copy) : Object(copy._x, copy._y, copy._object_index) { }
 };
 
-class Rock : public Object	// ë°”ìœ„ - [íŒŒê´´ ê°€ëŠ¥í•¨]
+class Rock : public Object	// ¹ÙÀ§ - [ÆÄ±« °¡´ÉÇÔ]
 {
 public:
 	Rock(int X, int Y, int OBJ_INDX) : Object(X, Y, OBJ_INDX) { };
@@ -55,36 +55,35 @@ public:
 class Bomb : public Object
 {
 public:
-	int _timer;		// 'í­íƒ„ ëŒ€ê¸° ì‹œê°„ + í›„í­í’ ìœ ì§€ ì‹œê°„' ì„ ëª¨ë‘ ë”í•œ ê°’ì—ì„œ ì‹œì‘ [ex) 6 = 5(í­íƒ„ ëŒ€ê¸° ì‹œê°„) + 1(í›„í­í’ ì§€ì†ì‹œê°„)]
-	int _power; // í­íƒ„ íŒŒì›Œ
+	int _timer;		// 'ÆøÅº ´ë±â ½Ã°£ + ÈÄÆøÇ³ À¯Áö ½Ã°£' À» ¸ğµÎ ´õÇÑ °ª¿¡¼­ ½ÃÀÛ [ex) 6 = 5(ÆøÅº ´ë±â ½Ã°£) + 1(ÈÄÆøÇ³ Áö¼Ó½Ã°£)]
+	int _power; // ÆøÅº ÆÄ¿ö
 
-	bool _isExploded = false;
-	vector<pair<int, int>> _explosionPositions;
+	bool _explode = false;
 	vector<pair<int, int>> _destroyedRockPositions;
 
 
 	Bomb(int X, int Y, int OBJ_INDX, int power) : Object(X, Y, OBJ_INDX)
 	{
-		//timer = fuse_bomb_timer + explode_bomb_timer;	// 6 = 5(í­íƒ„ ëŒ€ê¸° ì‹œê°„) + 1(í›„í­í’ ì§€ì†ì‹œê°„)
+		//timer = fuse_bomb_timer + explode_bomb_timer;	// 6 = 5(ÆøÅº ´ë±â ½Ã°£) + 1(ÈÄÆøÇ³ Áö¼Ó½Ã°£)
 
-		_power = power; // í­íƒ„ íŒŒì›Œ ì´ˆê¸°í™”
+		_power = power; // ÆøÅº ÆÄ¿ö ÃÊ±âÈ­
 	}
 
 	explicit Bomb(const Bomb& copy) : Object(copy._x, copy._y, copy._object_index)
 	{
 		_timer = copy._timer;
 
-		_power = copy._power; // í­íƒ„ íŒŒì›Œ ì´ˆê¸°í™”
+		_power = copy._power; // ÆøÅº ÆÄ¿ö ÃÊ±âÈ­
 	}
 
 
-	//void ExplodeBomb(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap);						// _timerê°€ í›„í­í’ ìœ ì§€ ì‹œê°„ì— ë„ë‹¬í•  ì‹œ ì¶©ëŒì²´í¬
+	void ExplodeBomb(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap);						// _timer°¡ ÈÄÆøÇ³ À¯Áö ½Ã°£¿¡ µµ´ŞÇÒ ½Ã Ãæµ¹Ã¼Å©
 };
 
 class Item : public Object
 {
 public:
-	int item_type;		// ì•„ì´í…œ íƒ€ì… (HEART, MORE_BOMB, MORE_POWER, ROCK)
+	int item_type;		// ¾ÆÀÌÅÛ Å¸ÀÔ (HEART, MORE_BOMB, MORE_POWER, ROCK)
 
 	Item(int X, int Y, int OBJ_INDX, int ITEM_TYPE) : Object(X, Y, OBJ_INDX)
 	{

@@ -515,24 +515,24 @@ int Check_Collision(int source_type, int source_index)
 
 				break;
 			}
-			//case BOMB:			//ÆøÅº
-			//{
-			//	RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+			case BOMB:			//ÆøÅº
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
-			//	if (IntersectRect(&temp, &source_rt, &target_rt))
-			//		return BOMB;
+				if (IntersectRect(&temp, &source_rt, &target_rt))
+					return BOMB;
 
-			//	break;
-			//}
-			//case EXPLOSION:		//Æø¹ß
-			//{
-			//	RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+				break;
+			}
+			case EXPLOSION:		//Æø¹ß
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
-			//	if (IntersectRect(&temp, &source_rt, &target_rt))
-			//		return EXPLOSION;
+				if (IntersectRect(&temp, &source_rt, &target_rt))
+					return EXPLOSION;
 
-			//	break;
-			//}
+				break;
+			}
 			default:
 				break;
 			}
@@ -732,30 +732,6 @@ void process_packet(int client_index, char* p)
 			}
 		};
 		timer_queue.push(ev);
-
-
-		//SetEvent(hEvent);
-		
-		//cout << "??ƒ„" << endl;
-
-		//Æø¹ßÇÔ¼ö Å×½ºÆ® ÄÚµå
-
-		for (int i = 0; bombs.size(); ++i) {
-			bombs[i]._isExploded = true;
-			//bombs[i].ExplodeBomb(selectedMap);
-
-		for (auto d : bombs[i]._explosionPositions)
-				cout << d.first << ", " << d.second << endl;
-			cout << "\nÆø¹ß ÁÂÇ¥\n";
-			for (auto d : bombs[i]._explosionPositions)
-				cout << d.first << ", " << d.second << endl;
-
-			cout << "\nÆÄ±«µÈ¹ÙÀ§ ÁÂÇ¥\n";
-			for (auto d : bombs[i]._destroyedRockPositions)
-				cout << d.first << ", " << d.second << endl;
-
-			bombs.pop_back();
-		}
 
 		//cout << "ÆøÅº" << endl;
 		//cout << packet->x << endl;
