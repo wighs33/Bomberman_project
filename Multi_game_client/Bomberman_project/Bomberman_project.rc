@@ -106,6 +106,10 @@ IDB_BITMAP27            BITMAP                  "maps_bmp\\play.bmp"
 
 IDB_BITMAP28            BITMAP                  "maps_bmp\\dead.bmp"
 
+IDB_BITMAP29            BITMAP                  "objects_bmp\\bomb_fuse.bmp"
+
+IDB_BITMAP30            BITMAP                  "effects_bmp\\explode_2_.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

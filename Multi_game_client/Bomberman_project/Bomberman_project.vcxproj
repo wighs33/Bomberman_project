@@ -164,6 +164,7 @@
     <Image Include="characters_bmp\Eve.bmp" />
     <Image Include="characters_bmp\Lazarus.bmp" />
     <Image Include="characters_bmp\Magdalene.bmp" />
+    <Image Include="effects_bmp\explode_2_.bmp" />
     <Image Include="icon_ico\terror_man.ico" />
     <Image Include="maps_bmp\al_p.bmp" />
     <Image Include="maps_bmp\backboard.bmp" />
@@ -182,6 +183,7 @@
     <Image Include="objects_bmp\block.bmp" />
     <Image Include="characters_bmp\Isaac.bmp" />
     <Image Include="objects_bmp\bomb.bmp" />
+    <Image Include="objects_bmp\bomb_fuse.bmp" />
     <Image Include="objects_bmp\heart_1.bmp" />
     <Image Include="objects_bmp\heart_2.bmp" />
     <Image Include="objects_bmp\more_bomb.bmp" />

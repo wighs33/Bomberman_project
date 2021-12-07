@@ -130,6 +130,12 @@
     <Image Include="maps_bmp\dead.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
+    <Image Include="effects_bmp\explode_2_.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="objects_bmp\bomb_fuse.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bomberman_project.cpp">

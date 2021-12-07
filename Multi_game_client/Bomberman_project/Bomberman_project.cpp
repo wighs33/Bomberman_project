@@ -6,12 +6,12 @@
 #include "stdafx.h"
 
 ////////////////////////////////////////////////////////////////////////////
-//--- ì „ì—­ ë³€ìˆ˜
+//--- Àü¿ª º¯¼ö
 
 HWND g_hwnd;
 HINSTANCE g_hInst;
 LPCTSTR lpszClass = "Window Class Name";
-LPCTSTR lpszWindowName = "í…ŒëŸ¬ë§¨";
+LPCTSTR lpszWindowName = "Å×·¯¸Ç";
 
 //random_device rd;
 //default_random_engine dre{ rd() };
@@ -31,9 +31,9 @@ TCHAR input_port_str[5+1];
 
 TCHAR input_id_str[edit_box_max_size];
 
-int my_index;	//í˜„ì¬ í´ë¼ì´ì–¸íŠ¸ì˜ í”Œë ˆì´ì–´ ë°°ì—´ì—ì„œ ì¸ë±ìŠ¤
+int my_index;	//ÇöÀç Å¬¶óÀÌ¾ğÆ®ÀÇ ÇÃ·¹ÀÌ¾î ¹è¿­¿¡¼­ ÀÎµ¦½º
 
-int map_num;	//ëª‡ ë²ˆ ë§µ ì„ íƒ?
+int map_num;	//¸î ¹ø ¸Ê ¼±ÅÃ?
 
 bool isLogin =  FALSE;
 bool isReady = FALSE;
@@ -44,31 +44,31 @@ bool setfocus_idedit = FALSE;
 
 
 ////////////////////////////////////////////////////////////////////////////
-//--- ì»¨í…Œì´ë„ˆ
+//--- ÄÁÅ×ÀÌ³Ê
 
-//ë§µ
+//¸Ê
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_1;
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
 tileArr<int, tile_max_w_num, tile_max_h_num>	selectedMap;
 
-//í”Œë ˆì´ì–´
+//ÇÃ·¹ÀÌ¾î
 playerArr<Player, MAX_USER>	players;
 
-//ë¸”ë¡ - [íŒŒê´´ ë¶ˆê°€ëŠ¥]
-vector <Block>	blocks;
+//ºí·Ï - [ÆÄ±« ºÒ°¡´É]
+//vector <Block>	blocks;
 
-//ë°”ìœ„ - [íŒŒê´´ ê°€ëŠ¥]
-vector <Rock>	rocks;
+//¹ÙÀ§ - [ÆÄ±« °¡´É]
+//vector <Rock>	rocks;
 
-//ì•„ì´í…œ
+//¾ÆÀÌÅÛ
 vector <Item>	items;
 
-//í­íƒ„
+//ÆøÅº
 vector <Bomb>	bombs;
 
 
 ////////////////////////////////////////////////////////////////////////////
-//--- ì‚¬ìš©ì ì •ì˜ í•¨ìˆ˜
+//--- »ç¿ëÀÚ Á¤ÀÇ ÇÔ¼ö
 
 DWORD WINAPI ClientMain(LPVOID arg);
 DWORD WINAPI RecvThread(LPVOID arg);
@@ -89,7 +89,7 @@ void Display_Players_Info(HDC, HDC, int, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBI
 std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
 std::pair<int, int> WindowPosToMapIndex(int x, int y);
 
-//í…ŒìŠ¤íŠ¸
+//Å×½ºÆ®
 void PrintMap() {
 	for (int i = 0; i < tile_max_h_num; ++i) {
 		for (int j = 0; j < tile_max_w_num; ++j)
@@ -101,21 +101,21 @@ void PrintMap() {
 
 
 ////////////////////////////////////////////////////////////////////////////
-//--- ìœˆë„ìš° ë©”ì¸ (ìœˆë„ìš° í´ë˜ìŠ¤, ë©”ì„¸ì§€ í”„ë¡œì‹œì €, ì“°ë ˆë“œí•¨ìˆ˜ ìƒì„±)
+//--- À©µµ¿ì ¸ŞÀÎ (À©µµ¿ì Å¬·¡½º, ¸Ş¼¼Áö ÇÁ·Î½ÃÀú, ¾²·¹µåÇÔ¼ö »ı¼º)
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
-	//AllocConsole();
-	//freopen("CONOUT$", "wt", stdout);
+	/*AllocConsole();
+	freopen("CONOUT$", "wt", stdout);*/
 	
-	//ìë™ ë¦¬ì…‹ ì´ë²¤íŠ¸ ìƒì„± (ë¹„ì‹ í˜¸ ì‹œì‘)
+	//ÀÚµ¿ ¸®¼Â ÀÌº¥Æ® »ı¼º (ºñ½ÅÈ£ ½ÃÀÛ)
 	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (hEvent == NULL) return 1;
 
-	//ì†Œì¼“ í†µì‹  ìŠ¤ë ˆë“œ ìƒì„±
+	//¼ÒÄÏ Åë½Å ½º·¹µå »ı¼º
 	CreateThread(NULL, 0, ClientMain, NULL, 0, NULL);
 
-	//map ë¡œë“œ
+	//map ·Îµå
 	Load_Map(map_1, "maps_json/map_1.json");
 	Load_Map(map_2, "maps_json/map_2.json");
 
@@ -156,9 +156,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 
 
 ////////////////////////////////////////////////////////////////////////////
-//--- í†µì‹ ìš© ì“°ë ˆë“œ í•¨ìˆ˜ë“¤
+//--- Åë½Å¿ë ¾²·¹µå ÇÔ¼öµé
 
-//ê²Œì„ í”Œë¡œìš° ì“°ë ˆë“œ (ì†¡ì‹  ì—­í™œ & ìˆ˜ì‹ ìš© ì“°ë˜ë“œ ìƒì„±)
+//°ÔÀÓ ÇÃ·Î¿ì ¾²·¹µå (¼Û½Å ¿ªÈ° & ¼ö½Å¿ë ¾²·¡µå »ı¼º)
 DWORD WINAPI ClientMain(LPVOID arg) 
 {
 	WSADATA wsa;
@@ -168,7 +168,7 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == INVALID_SOCKET) err_quit("socket()");
 
-	//ì•„ì´í”¼, í¬íŠ¸ë²ˆí˜¸ ì…ë ¥ ëŒ€ê¸°
+	//¾ÆÀÌÇÇ, Æ÷Æ®¹øÈ£ ÀÔ·Â ´ë±â
 	//WaitForSingleObject(hEvent, INFINITE);
 
 	char IP_NUM[16 + 3 + 1];
@@ -184,18 +184,18 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	SOCKADDR_IN serveraddr;
 	ZeroMemory(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
-	//serveraddr.sin_addr.s_addr = inet_addr(IP_NUM);
-	//serveraddr.sin_port = htons(PORT_NUM);
+	/*serveraddr.sin_addr.s_addr = inet_addr(IP_NUM);
+	serveraddr.sin_port = htons(PORT_NUM);*/
 	serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	serveraddr.sin_port = htons(10000);
 
 	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("connect()");
 
-	//ì•„ì´ë”” ì…ë ¥ ëŒ€ê¸°
+	//¾ÆÀÌµğ ÀÔ·Â ´ë±â
 	WaitForSingleObject(hEvent, INFINITE);
 
-	//ìˆ˜ì‹ ìš© ì“°ë ˆë“œ ìƒì„±
+	//¼ö½Å¿ë ¾²·¹µå »ı¼º
 	CreateThread(NULL, 0, RecvThread, (LPVOID)sock, 0, NULL);
 
 	while (true)
@@ -206,7 +206,7 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	}
 }
 
-//ìˆ˜ì‹ ìš© ì“°ë ˆë“œ
+//¼ö½Å¿ë ¾²·¹µå
 DWORD WINAPI RecvThread(LPVOID arg)
 {
 	while (true)
@@ -219,9 +219,9 @@ DWORD WINAPI RecvThread(LPVOID arg)
 
 
 ////////////////////////////////////////////////////////////////////////////
-//--- ë©”ì„¸ì§€ í”„ë¡œì‹œì €
+//--- ¸Ş¼¼Áö ÇÁ·Î½ÃÀú
 
-//ì ‘ì†ì„¤ì • ëŒ€í™”ìƒì ë©”ì„¸ì§€ í”„ë¡œì‹œì € (ì•„ì´í”¼, í¬íŠ¸ë²ˆí˜¸ ì…ë ¥)
+//Á¢¼Ó¼³Á¤ ´ëÈ­»óÀÚ ¸Ş¼¼Áö ÇÁ·Î½ÃÀú (¾ÆÀÌÇÇ, Æ÷Æ®¹øÈ£ ÀÔ·Â)
 BOOL CALLBACK ConnectSettingDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 {
 	static HWND hEdit_IP_M, hEdit_PORT_M;
@@ -231,9 +231,9 @@ BOOL CALLBACK ConnectSettingDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
 	{
 	case WM_INITDIALOG:
 		hEdit_IP_M = GetDlgItem(hwnd, IDC_EDIT_1);
-		DisplayText(hEdit_IP_M, "ì•„ì´í”¼");
+		DisplayText(hEdit_IP_M, "¾ÆÀÌÇÇ");
 		hEdit_PORT_M = GetDlgItem(hwnd, IDC_EDIT_2);
-		DisplayText(hEdit_PORT_M, "í¬íŠ¸ë²ˆí˜¸");
+		DisplayText(hEdit_PORT_M, "Æ÷Æ®¹øÈ£");
 		hEdit_IP_1 = GetDlgItem(hwnd, IDC_EDIT_3);
 		hEdit_IP_2 = GetDlgItem(hwnd, IDC_EDIT_4);
 		hEdit_IP_3 = GetDlgItem(hwnd, IDC_EDIT_5);
@@ -241,7 +241,7 @@ BOOL CALLBACK ConnectSettingDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
 		hEdit_PORT = GetDlgItem(hwnd, IDC_EDIT_7);
 		SetFocus(hEdit_IP_1);
 		return FALSE;
-		//return TRUE; ë¡œ í•˜ë©´ í¬ì»¤ìŠ¤ê°€ ê¸°ë³¸ì ìœ¼ë¡œ IDOK ë²„íŠ¼ìœ¼ë¡œ ì˜®ê²¨ê°„ë‹¤.
+		//return TRUE; ·Î ÇÏ¸é Æ÷Ä¿½º°¡ ±âº»ÀûÀ¸·Î IDOK ¹öÆ°À¸·Î ¿Å°Ü°£´Ù.
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
@@ -271,7 +271,7 @@ BOOL CALLBACK ConnectSettingDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPA
 	return  FALSE;
 }
 
-//ë¡œê·¸ì¸ ëŒ€í™”ìƒì ë©”ì„¸ì§€ í”„ë¡œì‹œì €
+//·Î±×ÀÎ ´ëÈ­»óÀÚ ¸Ş¼¼Áö ÇÁ·Î½ÃÀú
 BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 {
 	static HWND hEdit_ID, hEdit_PW, hEdit_ID_T, hEdit_PW_T;
@@ -282,13 +282,13 @@ BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lPara
 		hEdit_ID = GetDlgItem(hwnd, IDC_EDIT1);
 		hEdit_PW = GetDlgItem(hwnd, IDC_EDIT2);
 		hEdit_ID_T = GetDlgItem(hwnd, IDC_EDIT3);
-		DisplayText(hEdit_ID_T, "ì•„ì´ë””");
+		DisplayText(hEdit_ID_T, "¾ÆÀÌµğ");
 		hEdit_PW_T = GetDlgItem(hwnd, IDC_EDIT4);
-		DisplayText(hEdit_PW_T, "íŒ¨ìŠ¤ì›Œë“œ");
+		DisplayText(hEdit_PW_T, "ÆĞ½º¿öµå");
 		SetFocus(hEdit_ID);
 		SetTimer(hwnd, 1, game_mil_sec, NULL);
 		return FALSE;
-		//return TRUE; ë¡œ í•˜ë©´ í¬ì»¤ìŠ¤ê°€ ê¸°ë³¸ì ìœ¼ë¡œ IDOK ë²„íŠ¼ìœ¼ë¡œ ì˜®ê²¨ê°„ë‹¤.
+		//return TRUE; ·Î ÇÏ¸é Æ÷Ä¿½º°¡ ±âº»ÀûÀ¸·Î IDOK ¹öÆ°À¸·Î ¿Å°Ü°£´Ù.
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
@@ -301,7 +301,7 @@ BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lPara
 				SetEvent(hEvent);
 			}
 			else {
-				MessageBox(NULL, "ì•„ì´ë””ë¥¼ ì…ë ¥í•´ì£¼ì„¸ìš”.", "ì˜¤ë¥˜", MB_ICONWARNING);
+				MessageBox(NULL, "¾ÆÀÌµğ¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä.", "¿À·ù", MB_ICONWARNING);
 				SetFocus(hEdit_ID);
 			}
 			return TRUE;
@@ -332,25 +332,25 @@ BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lPara
 	return  FALSE;
 }
 
-//ìœˆë„ìš° ë©”ì„¸ì§€ í”„ë¡œì‹œì €
+//À©µµ¿ì ¸Ş¼¼Áö ÇÁ·Î½ÃÀú
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc;
 	PAINTSTRUCT ps;
 	HDC mem1dc, mem2dc;
 
-	static HBITMAP hBit_main, hBit_bg, hBit_issac, hBit_magdalene, hBit_lazarus, hBit_samson, hBit_eve, hBit_block, hBit_bomb, hBit_rock, hBit_heart, hBit_explosion;
+	static HBITMAP hBit_main, hBit_bg, hBit_issac, hBit_magdalene, hBit_lazarus, hBit_samson, hBit_eve, hBit_block, hBit_bomb, hBit_bomb_fuse, hBit_rock, hBit_heart, hBit_explosion;
 	static HBITMAP hBit_item_more_heart, hBit_item_more_power, hBit_item_more_bomb;
 	static HBITMAP hBit_backboard, hBit_num_0, hBit_num_1, hBit_num_2, hBit_num_3, hBit_num_4, hBit_num_5, hBit_al_p, hBit_empty, hBit_idle, hBit_ready, hBit_play, hBit_dead;
 	static HBITMAP oldBit1, oldBit2;
 	static HFONT hFont_name, oldFont_name, hFont_msg, oldFont_msg;
 
-	//ì• ë‹ˆë©”ì´ì…˜ ê´€ë ¨ ë³€ìˆ˜ë“¤
+	//¾Ö´Ï¸ŞÀÌ¼Ç °ü·Ã º¯¼öµé
 	static int timecnt{ 0 };
 	static int p_head_idx{ 0 };
 	static int p_body_idx{ 0 };
 
-	static char* str_ready{ (char*)"ë ˆë””ë¥¼ ëˆŒëŸ¬ì£¼ì„¸ìš”..." };
+	static char* str_ready{ (char*)"·¹µğ¸¦ ´­·¯ÁÖ¼¼¿ä..." };
 	static int str_ready_x{ -100 };
 
 	static HWND hButton;
@@ -359,22 +359,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	switch (iMessage) {
 	case WM_CREATE:
 
-		//ì ‘ì†ì„¤ì • ëŒ€í™”ìƒì ìƒì„± (ì•„ì´í”¼, í¬íŠ¸ë²ˆí˜¸ ì…ë ¥)
+		//Á¢¼Ó¼³Á¤ ´ëÈ­»óÀÚ »ı¼º (¾ÆÀÌÇÇ, Æ÷Æ®¹øÈ£ ÀÔ·Â)
 		//DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG2), hwnd, (DLGPROC)ConnectSettingDlgProc);
 
-		//ë¡œê·¸ì¸ ëŒ€í™”ìƒì ìƒì„±
+		//·Î±×ÀÎ ´ëÈ­»óÀÚ »ı¼º
 		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG1), hwnd, (DLGPROC)LoginDlgProc);
 
 		hdc = GetDC(hwnd);
 		hBit_main = CreateCompatibleBitmap(hdc, bg_w + backboard_w, bg_h);
 		ReleaseDC(hwnd, hdc);
 
-		//í°íŠ¸ ì„¤ì •
+		//ÆùÆ® ¼³Á¤
 		hFont_name = CreateFont(15, 10, 0, 0, FW_HEAVY, FALSE, FALSE, FALSE, HANGEUL_CHARSET,
-			3, 2, 1, VARIABLE_PITCH | FF_ROMAN, "êµ´ë¦¼ì²´");
+			3, 2, 1, VARIABLE_PITCH | FF_ROMAN, "±¼¸²Ã¼");
 
 		hFont_msg = CreateFont(40, 0, 0, 0, FW_HEAVY, FALSE, FALSE, FALSE, HANGEUL_CHARSET,
-			3, 2, 1, VARIABLE_PITCH | FF_ROMAN, "êµ´ë¦¼ì²´");
+			3, 2, 1, VARIABLE_PITCH | FF_ROMAN, "±¼¸²Ã¼");
 
 		hBit_bg = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP1));
 
@@ -386,7 +386,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		hBit_block = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP2));
 		hBit_bomb = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP10));
-		hBit_explosion = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP10));  //ì„ì‹œ ì´ë¯¸ì§€
+		hBit_bomb_fuse = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP29));
+		hBit_explosion = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP30));
 		hBit_rock = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP13));
 		hBit_heart = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP5));
 
@@ -455,34 +456,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 	case WM_KEYDOWN:
 		switch (wParam) {
-		case VK_RIGHT:
-			players[my_index].InputMoveKey(send_queue, send_buf, RIGHT);
-			SetEvent(hEvent);
-			break;
-
-		case VK_LEFT:
-			players[my_index].InputMoveKey(send_queue, send_buf, LEFT);
-			SetEvent(hEvent);
-			break;
-
-		case VK_UP:
-			players[my_index].InputMoveKey(send_queue, send_buf, UP);
-			SetEvent(hEvent);
-			break;
-
-		case VK_DOWN:
-			players[my_index].InputMoveKey(send_queue, send_buf, DOWN);
-			SetEvent(hEvent);
-			break;
-
 		case VK_SPACE:
 		{
 			int px = players[my_index]._x;
 			int py = players[my_index]._y;
 			auto [map_ix, map_iy] = WindowPosToMapIndex(px, py);
 			auto [bomb_x, bomb_y] = MapIndexToWindowPos(map_ix, map_iy);
+
+			//ÀÓ½Ã ÄÚµå
+			bombs.push_back(Bomb(bomb_x, bomb_y, 0, 35, 1));
 			
-			//ì´ê±´ ì„œë²„ì—ì„œ ìƒì„±í•˜ë¼ í• ë•Œ ìƒì„±
+			//¼­¹ö·Î ÆøÅº ¼³Ä¡ ¿äÃ» ÆĞÅ¶ Àü¼Û
 			players[my_index].InputSpaceBar(send_queue, send_buf, bomb_x, bomb_y);
 			SetEvent(hEvent);
 			break;
@@ -500,35 +484,52 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_TIMER:
+		//[ÀÌµ¿ Ã³¸®]
+		if (GetAsyncKeyState(VK_RIGHT)) {
+			players[my_index].InputMoveKey(send_queue, send_buf, RIGHT);
+			SetEvent(hEvent);
+		}
+		if (GetAsyncKeyState(VK_LEFT)) {
+			players[my_index].InputMoveKey(send_queue, send_buf, LEFT);
+			SetEvent(hEvent);
+		}
+		if (GetAsyncKeyState(VK_UP)) {
+			players[my_index].InputMoveKey(send_queue, send_buf, UP);
+			SetEvent(hEvent);
+		}
+		if (GetAsyncKeyState(VK_DOWN)) {
+			players[my_index].InputMoveKey(send_queue, send_buf, DOWN);
+			SetEvent(hEvent);
+		}
 
-		//[ì—°ì‚°ì²˜ë¦¬]
-		//--- ë ˆë”” í…ìŠ¤íŠ¸ ì´ë™
+		//[¿¬»êÃ³¸®]
+		//--- ·¹µğ ÅØ½ºÆ® ÀÌµ¿
 		if (!isReady) {
 			str_ready_x += 3;
 			if (str_ready_x > bg_w + backboard_w)
 				str_ready_x = -500;
 		}
 		
-		//ë²„íŠ¼ ë¹„í™œì„±í™”
+		//¹öÆ° ºñÈ°¼ºÈ­
 		if (destroyButton) {
 			DestroyWindow(hButton);
 			destroyButton = FALSE;
 		}
 
-		//--- ì• ë‹ˆë©”ì´ì…˜
+		//--- ¾Ö´Ï¸ŞÀÌ¼Ç
 		timecnt++;
 		if (timecnt >= 100) 
 			timecnt = 0;
 
-		//í”Œë ˆì´ì–´
-		//ëª¸ ìŠ¤í”„ë¼ì´íŠ¸ êµì²´
+		//ÇÃ·¹ÀÌ¾î
+		//¸ö ½ºÇÁ¶óÀÌÆ® ±³Ã¼
 		if (timecnt % 3 == 0) {
 			p_body_idx++;
 
 			if (p_body_idx >= 10)
 				p_body_idx = 0;
 		}
-		//ë¨¸ë¦¬ ìŠ¤í”„ë¼ì´íŠ¸ êµì²´
+		//¸Ó¸® ½ºÇÁ¶óÀÌÆ® ±³Ã¼
 		if (timecnt % 8 == 0) {
 			p_head_idx++;
 
@@ -536,33 +537,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				p_head_idx = 0;
 		}
 
+		//ÆøÅº
+		for (auto& bomb : bombs) {
+			if (bomb._isActive) {
+				if (timecnt % 4 == 0) {
+					bomb._timer -= 1;
 
-		//[ë Œí„°ë§ì²˜ë¦¬ - ë”ë¸” ë²„í¼ë§]
+					//»èÁ¦
+					if (bomb._timer < 0) {
+						bomb._isActive = FALSE;
+						//bombs.erase(bombs.begin());
+					}
+				}
+			}
+		}
+
+
+		//[·»ÅÍ¸µÃ³¸® - ´õºí ¹öÆÛ¸µ]
 		hdc = GetDC(hwnd);
 
 		mem1dc = CreateCompatibleDC(hdc);
 
 		mem2dc = CreateCompatibleDC(mem1dc);
 
-		//ì‹¤ì œ ê·¸ë¦¼ì´ ê·¸ë ¤ì§€ëŠ” DC (í™”ë©´)
+		//½ÇÁ¦ ±×¸²ÀÌ ±×·ÁÁö´Â DC (È­¸é)
 		oldBit1 = (HBITMAP)SelectObject(mem1dc, hBit_main);
 
-		//í°íŠ¸
+		//ÆùÆ®
 		oldFont_name = (HFONT)SelectObject(mem1dc, hFont_name);
 
-		SetBkMode(mem1dc, TRANSPARENT);		//í°íŠ¸ ë°°ê²½ íˆ¬ëª… ì„¤ì •
+		SetBkMode(mem1dc, TRANSPARENT);		//ÆùÆ® ¹è°æ Åõ¸í ¼³Á¤
 
-		//ë°°ê²½
+		//¹è°æ
 		oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bg);
 
 		StretchBlt(mem1dc, 0, 0, bg_w, bg_h, mem2dc, 0, 0, bg_img_w, bg_img_h, SRCCOPY);
 
-		//í˜„í™©íŒ
+		//ÇöÈ²ÆÇ
 		oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_backboard);
 
 		StretchBlt(mem1dc, bg_w, 0, backboard_w, bg_h, mem2dc, 0, 0, backboard_img_w, backboard_img_h, SRCCOPY);
 
-		//player ì •ë³´ (ui)
+		//player Á¤º¸ (ui)
 		for (int i = 0; i < MAX_USER; ++i) {
 			if (players[i]._state != NO_ACCEPT) {
 				HBITMAP hBit_num = NULL, hBit_character = NULL, hBit_state = NULL;
@@ -628,41 +644,50 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 		}
 
-		//ì ‘ì† í›„ í™”ë©´ ì¶œë ¥
+		//Á¢¼Ó ÈÄ È­¸é Ãâ·Â
 		if (retval) {
-			for (int iy = 0; iy < tile_max_h_num; ++iy)
+
+			//¸Ê ±×¸®±â
+			for (int iy = 0; iy < tile_max_h_num; ++iy) {
 				for (int ix = 0; ix < tile_max_w_num; ++ix) {
-					//ìœˆë„ìš° ìƒ ì¢Œí‘œ
 					auto [window_x, window_y] = MapIndexToWindowPos(ix, iy);
 
-					//ì˜¤ë¸Œì íŠ¸ ê·¸ë¦¬ê¸°
 					switch (selectedMap[iy][ix]) {
-					case EMPTY:			//ë•…
+					case EMPTY:			//¶¥
 						break;
-					case BLOCK:			//ë¸”ë¡
+
+					case BLOCK:			//ºí·Ï
 						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_block);
 						TransparentBlt(mem1dc, window_x, window_y, block_size, block_size, mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
 						break;
-					case ROCK:			//ëŒ
+
+					case ROCK:			//µ¹
 						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_rock);
 						TransparentBlt(mem1dc, window_x, window_y, rock_size, rock_size, mem2dc, 0, 0, rock_img_size, rock_img_size, RGB(79, 51, 44));
 						break;
-					case BOMB:			//í­íƒ„
-						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
-						TransparentBlt(mem1dc, window_x, window_y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 255, 255));
-						break;
-					case EXPLOSION:		//í­ë°œ
-						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_explosion);
-						//ê·¸ë¦¼ ìˆ˜ì •í•„ìš”
-						TransparentBlt(mem1dc, window_x, window_y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 0, 0));
-						break;
+
 					default:
 						break;
 					}
-				};
+				}
+			}
+
+			//ÆøÅº
+			for (auto& bomb : bombs) {
+				if (bomb._isActive && bomb._timer > 5) {
+					oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
+					TransparentBlt(mem1dc, bomb._x, bomb._y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 255, 255));
+
+					oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb_fuse);
+					unsigned int animation_loc = (int)(bomb_fuse_w_count_size - (((bomb._timer - bomb_explode_timer) * bomb_fuse_w_count_size) / bomb_fuse_timer));
+					TransparentBlt(mem1dc, bomb._x, bomb._y, bomb_fuse_w, bomb_fuse_h, mem2dc, bomb_fuse_img_size_w_gap * animation_loc , 0, bomb_fuse_img_size_w_gap, bomb_fuse_img_size_h, RGB(255, 255, 255));
+				}
+			}
+
+			//Æø¹ß
 
 
-			//í”Œë ˆì´ì–´
+			//ÇÃ·¹ÀÌ¾î
 			for (int i = 0; i < MAX_USER; ++i) {
 				if (players[i]._state != NO_ACCEPT) {
 					HBITMAP hBit_character;
@@ -677,63 +702,63 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 					oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_character);
 
-					//ìš° ì´ë™ì‹œ
+					//¿ì ÀÌµ¿½Ã
 					if (players[i]._dir == 1) {
-						//ëª¸í†µ
+						//¸öÅë
 						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
 							mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
-						//ë¨¸ë¦¬
+						//¸Ó¸®
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 2), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 					}
-					//ì¢Œ ì´ë™ì‹œ 
+					//ÁÂ ÀÌµ¿½Ã 
 					else if (players[i]._dir == 2) {
-						//ëª¸í†µ
+						//¸öÅë
 						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
 							mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
-						//ë¨¸ë¦¬
+						//¸Ó¸®
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 6), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 					}
-					//í•˜ ì´ë™ì‹œ
+					//ÇÏ ÀÌµ¿½Ã
 					else if (players[i]._dir == 3) {
-						//ëª¸í†µ
+						//¸öÅë
 						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
 							mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
-						//ë¨¸ë¦¬
+						//¸Ó¸®
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 					}
-					//ìƒ ì´ë™ì‹œ
+					//»ó ÀÌµ¿½Ã
 					else if (players[i]._dir == 4) {
-						//ëª¸í†µ
+						//¸öÅë
 						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
 							mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
-						//ë¨¸ë¦¬
+						//¸Ó¸®
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 4), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 					}
-					//ì´ë™X
+					//ÀÌµ¿X
 					else if (players[i]._dir == 0) {
-						//ëª¸í†µ
+						//¸öÅë
 						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
 							mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
-						//ë¨¸ë¦¬
+						//¸Ó¸®
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 							mem2dc, p_head_img_w_start, p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 					}
 				}
 			}
 
-			//í”Œë ˆì´ì–´ ìƒíƒœê°€ ëŒ€ê¸°(IDLE) ìƒíƒœì¼ ì‹œ
+			//ÇÃ·¹ÀÌ¾î »óÅÂ°¡ ´ë±â(IDLE) »óÅÂÀÏ ½Ã
 			if (!isReady) {
 				oldFont_msg = (HFONT)SelectObject(mem1dc, hFont_msg);
 
-				SetBkMode(mem1dc, TRANSPARENT);		//í°íŠ¸ ë°°ê²½ íˆ¬ëª… ì„¤ì •
+				SetBkMode(mem1dc, TRANSPARENT);		//ÆùÆ® ¹è°æ Åõ¸í ¼³Á¤
 
-				SetTextColor(mem1dc, RGB(255, 255, 0));	//í°íŠ¸ ìƒ‰ ë…¸ë‘ ì„¤ì •
+				SetTextColor(mem1dc, RGB(255, 255, 0));	//ÆùÆ® »ö ³ë¶û ¼³Á¤
 
-				TextOut(mem1dc, str_ready_x, bg_h / 2, "READY ë²„íŠ¼ë¥¼ ëˆŒëŸ¬ì£¼ì„¸ìš”...", _tcslen("READY ë²„íŠ¼ë¥¼ ëˆŒëŸ¬ì£¼ì„¸ìš”..."));
+				TextOut(mem1dc, str_ready_x, bg_h / 2, "READY ¹öÆ°¸¦ ´­·¯ÁÖ¼¼¿ä...", _tcslen("READY ¹öÆ°¸¦ ´­·¯ÁÖ¼¼¿ä..."));
 			}
 
 		}
@@ -765,7 +790,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 
 ////////////////////////////////////////////////////////////////////////////
-//--- ì‚¬ìš©ì ì •ì˜ í•¨ìˆ˜ ì •ì˜
+//--- »ç¿ëÀÚ Á¤ÀÇ ÇÔ¼ö Á¤ÀÇ
 
 void Display_Players_Info(HDC mem1dc, HDC mem2dc, int player_num, HBITMAP old_bitmap, HBITMAP num_bitmap, HBITMAP al_p_bitmap, HBITMAP player_bitmap, HBITMAP state_bitmap,
 	HBITMAP heart_bitmap, HBITMAP h_num_bitmap, HBITMAP more_bomb_bitmap, HBITMAP mb_num_bitmap, HBITMAP more_power_bitmap, HBITMAP mp_num_bitmap, HBITMAP rock_bitmap, HBITMAP r_num_bitmap)
@@ -846,9 +871,9 @@ void err_quit(const char* msg)
 		strcat(IP_NUM, input_ip_str[3]);
 
 		strcpy(msg_, msg);
-		strcat(msg_, "           ì•„ì´í”¼ - ");
+		strcat(msg_, "           ¾ÆÀÌÇÇ - ");
 		strcat(msg_, IP_NUM);
-		strcat(msg_, ", í¬íŠ¸ë²ˆí˜¸ - ");
+		strcat(msg_, ", Æ÷Æ®¹øÈ£ - ");
 		strcat(msg_, input_port_str);
 
 		MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg_, MB_ICONERROR);
@@ -871,7 +896,7 @@ void err_display(const char* msg)
 	LocalFree(lpMsgBuf);
 }
 
-//ì„œë²„ì— íŒ¨í‚· ì „ì†¡
+//¼­¹ö¿¡ ÆĞÅ¶ Àü¼Û
 void Send_packet()
 {
 	if (send_queue.empty())
@@ -890,7 +915,7 @@ void Send_packet()
 	send_queue.pop();
 }
 
-//ì„œë²„ì—ì„œ íŒ¨í‚· ìˆ˜ì‹ 
+//¼­¹ö¿¡¼­ ÆĞÅ¶ ¼ö½Å
 void Recv_packet()
 {
 	ZeroMemory(recv_buf, sizeof(recv_buf));
@@ -934,7 +959,7 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map, const char* map
 	}
 	else {
 		char msg[256]{ "" };
-		char _msg[]{ " ë§µì„ ë¶ˆëŸ¬ì˜¤ì§€ ëª»í•˜ì˜€ìŠµë‹ˆë‹¤." } ;
+		char _msg[]{ " ¸ÊÀ» ºÒ·¯¿ÀÁö ¸øÇÏ¿´½À´Ï´Ù." } ;
 		strcat(msg, map_path);
 		strcat(msg, _msg);
 		MessageBox(NULL, msg , "ERROR - Parse failed", MB_ICONERROR);
@@ -945,7 +970,7 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map, const char* map
 	json_map.close();
 }
 
-//ë§µ ì„¸íŒ…
+//¸Ê ¼¼ÆÃ
 void Setting_Map()
 {
 	int bl_indx = 0;
@@ -966,20 +991,20 @@ void Setting_Map()
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
-			blocks.push_back(Block(X, Y, bl_indx));
+			//blocks.push_back(Block(X, Y, bl_indx));
 			bl_indx++;
 		}
 		else if (selectedMap[i / tile_max_w_num][i % tile_max_w_num] == ROCK) {
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
-			rocks.push_back(Rock(X, Y, r_indx));
+			//rocks.push_back(Rock(X, Y, r_indx));
 			r_indx++;
 		}
 	}
 }
 
-//ìˆ˜ì‹ í•œ íŒ¨í‚· íŒë³„ í•¨ìˆ˜
+//¼ö½ÅÇÑ ÆĞÅ¶ ÆÇº° ÇÔ¼ö
 void Process_packet(char* p)
 {
 	char packet_type = p[1];
@@ -995,7 +1020,7 @@ void Process_packet(char* p)
 
 		strcpy_s(players[my_index]._id, input_id_str);
 
-		//cout << "[ìˆ˜ì‹  ì„±ê³µ] \'" << players[my_index]._id << "\' (ìê¸°ìì‹ ) ë¡œê·¸ì¸ í™•ì¸" << endl;
+		//cout << "[¼ö½Å ¼º°ø] \'" << players[my_index]._id << "\' (ÀÚ±âÀÚ½Å) ·Î±×ÀÎ È®ÀÎ" << endl;
 
 		players[my_index]._state = ACCEPT;
 		players[my_index]._x = packet->x;
@@ -1016,7 +1041,7 @@ void Process_packet(char* p)
 	}
 
 	case LOGIN_ERROR: {
-		MessageBox(NULL, "ë¡œê·¸ì¸ ì •ë³´ê°€ ì¼ì¹˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.", "ë¡œê·¸ì¸ ì‹¤íŒ¨", MB_ICONWARNING);
+		MessageBox(NULL, "·Î±×ÀÎ Á¤º¸°¡ ÀÏÄ¡ÇÏÁö ¾Ê½À´Ï´Ù.", "·Î±×ÀÎ ½ÇÆĞ", MB_ICONWARNING);
 		setfocus_idedit = TRUE;
 		
 		break;
@@ -1027,12 +1052,12 @@ void Process_packet(char* p)
 
 		int index = packet->index;
 
-		//ì¤‘ë³µ ì´ˆê¸°í™” ë°©ì§€
+		//Áßº¹ ÃÊ±âÈ­ ¹æÁö
 		if (players[index]._state == ACCEPT) break;
 
 		strcpy_s(players[index]._id, packet->id);
 
-		//cout << "[ìˆ˜ì‹  ì„±ê³µ] \'" << players[index]._id << "\' (íƒ€ í”Œë ˆì´ì–´) ë¡œê·¸ì¸ í™•ì¸" << endl;
+		//cout << "[¼ö½Å ¼º°ø] \'" << players[index]._id << "\' (Å¸ ÇÃ·¹ÀÌ¾î) ·Î±×ÀÎ È®ÀÎ" << endl;
 
 		players[index]._state = packet->state;
 		players[index]._x = packet->x;
@@ -1071,12 +1096,12 @@ void Process_packet(char* p)
 
 	case INIT_BOMB: {
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
-		bombs.emplace_back(packet->x, packet->y, 0, 3, packet->power);	//íƒ€ì´ë¨¸ ì„ì‹œê°’
+		bombs.emplace_back(packet->x, packet->y, 0, 3, packet->power);	//Å¸ÀÌ¸Ó ÀÓ½Ã°ª
 		bombs[bombs.size() - 1]._object_index = bombs.size() - 1;
 
 		auto [map_ix, map_iy] = WindowPosToMapIndex(packet->x, packet->y);
 
-		//ì„ì‹œì½”ë“œ
+		//ÀÓ½ÃÄÚµå
 		for (int i = 0; i < bombs.size(); ++i) {
 			bombs[i]._explode = true;
 			bombs[i].ExplodeBomb(selectedMap);
@@ -1110,7 +1135,7 @@ void Process_packet(char* p)
 					
 
 	default: {
-		MessageBox(NULL, "[ì—ëŸ¬] UnKnown Packet", "ì—ëŸ¬", MB_ICONERROR);
+		MessageBox(NULL, "[¿¡·¯] UnKnown Packet", "¿¡·¯", MB_ICONERROR);
 		err_quit("UnKnown Packet");
 	}
 

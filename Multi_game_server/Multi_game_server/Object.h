@@ -1,5 +1,4 @@
 #pragma once
-
 #include "stdafx.h"
 #include "protocol.h"
 
@@ -55,7 +54,7 @@ public:
 class Bomb : public Object
 {
 public:
-	int _timer;		// '폭탄 대기 시간 + 후폭풍 유지 시간' 을 모두 더한 값에서 시작 [ex) 6 = 5(폭탄 대기 시간) + 1(후폭풍 지속시간)]
+	int _timer;		// '폭탄 대기 시간 + 후폭풍 유지 시간' 을 모두 더한 값에서 시작 (+ 참고로 1초가 10이다.) [ex) 35(3.5초) = 30(폭탄 대기 시간) + 5(후폭풍 지속시간)] 
 	int _power; // 폭탄 파워
 
 	bool _explode = false;
@@ -64,7 +63,7 @@ public:
 
 	Bomb(int X, int Y, int OBJ_INDX, int power) : Object(X, Y, OBJ_INDX)
 	{
-		//timer = fuse_bomb_timer + explode_bomb_timer;	// 6 = 5(폭탄 대기 시간) + 1(후폭풍 지속시간)
+		//_timer = bomb_fuse_timer + bomb_explode_timer;
 
 		_power = power; // 폭탄 파워 초기화
 	}
@@ -75,7 +74,6 @@ public:
 
 		_power = copy._power; // 폭탄 파워 초기화
 	}
-
 
 	void ExplodeBomb(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap);						// _timer가 후폭풍 유지 시간에 도달할 시 충돌체크
 };

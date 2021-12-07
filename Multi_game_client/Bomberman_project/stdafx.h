@@ -63,6 +63,16 @@ const int bomb_img_size_h{ 105 };	//실제 폭탄 이미지 비트크기
 const int bomb_w{ 50 };				//화면상 폭탄 크기
 const int bomb_h{ 52 };				//화면상 폭탄 크기
 
+const int bomb_fuse_img_size_w_gap{ 30 };	//실제 폭탄 퓨즈 이미지 하나 스프라이트 비트크기
+const int bomb_fuse_img_size_h{ 20 };		//실제 폭탄 퓨즈 이미지 하나 스프라이트 비트크기
+const int bomb_fuse_w{ bomb_w * 30 / 100 };			//화면상 폭탄 퓨즈 크기
+const int bomb_fuse_h{ bomb_h * 20 / 105 };			//화면상 폭탄 퓨즈 크기
+const int bomb_fuse_w_count_size{ 20 };	//폭탄 퓨즈 스프라이트 갯수
+
+const int expolde_img_size_w{ 2000 };
+const int expolde_img_size_h{ 275 };
+
+
 const int item_more_bomb_img_size_w{ 167 };	//실제 폭탄추가 아이템 이미지 비트크기
 const int item_more_bomb_img_size_h{ 164 };	//실제 폭탄추가 아이템 이미지 비트크기
 
@@ -95,13 +105,13 @@ const int adj_obstacle_size_br{ 10 };		 //장애물(블록, 바위)과 충돌체크시 사용 -
 ////////////////////////////////////////////////////////////////////////////
 // 폭발 타이머 관련 상수들
 
-const int fuse_bomb_timer{ 5 };			//폭탄이 터지기 까지 시간
-const int explode_bomb_timer{ 1 };		//폭발의 후폭풍 지속 시간
+const int bomb_fuse_timer{ 30 };			//폭탄이 터지기 까지 시간
+const int bomb_explode_timer{ 5 };		//폭발의 후폭풍 지속 시간
 
 ////////////////////////////////////////////////////////////////////////////
 //속도 관련 상수들
 
-const int pl_speed{ 4 };
+const int pl_speed{ 4 };	//플레이어 기본 속도
 
 const int game_mil_sec{ 30 };		//게임 프레임 시간간격 - 밀리초
 
@@ -141,6 +151,7 @@ using tileArr = array<array<T, X>, Y>;
 template<typename T, size_t N>
 using playerArr = array<T, N>;
 
+//////////////////////////////////////////////////////////////////////////
 
 enum Packet_Type {
 	LOGIN,

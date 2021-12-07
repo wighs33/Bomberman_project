@@ -96,6 +96,4 @@ void Bomb::ExplodeBomb(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap)
 
 		objectMap[bomb_iy][bomb_ix + _power] = EXPLOSION;
 	}
-
-}
 }
