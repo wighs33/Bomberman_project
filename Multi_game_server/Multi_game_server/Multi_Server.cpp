@@ -485,6 +485,7 @@ int Check_Collision(int source_type, int source_index)
 	if (s_y <= outer_wall_start - p_size / 3)
 		return 1;
 
+<<<<<<< HEAD
 	for (int iy = 0; iy < tile_max_h_num; ++iy)
 		for (int ix = 0; ix < tile_max_w_num; ++ix) {
 			//ìœˆë„ìš° ìƒ ì¢Œí‘œ
@@ -534,6 +535,82 @@ int Check_Collision(int source_type, int source_index)
 		};
 
 	return EMPTY;	//ì¶©ëŒX
+=======
+	for (auto& bl : blocks) {
+		if (bl._isActive) {
+			RECT target_rt{ bl._x + adj_obstacle_size_tl, bl._y + adj_obstacle_size_tl, bl._x + tile_size - adj_obstacle_size_br, bl._y + tile_size - adj_obstacle_size_br };
+			if (IntersectRect(&temp, &source_rt, &target_rt))
+				return BLOCK;
+		}
+	}
+
+	for (auto& ro : rocks) {
+		if (ro._isActive) {
+			RECT target_rt{ ro._x + adj_obstacle_size_tl, ro._y + adj_obstacle_size_tl, ro._x + tile_size - adj_obstacle_size_br, ro._y + tile_size - adj_obstacle_size_br };
+			if (IntersectRect(&temp, &source_rt, &target_rt))
+				return ROCK;
+		}
+	}
+	
+	for (auto& bo : bombs) {
+		if (bo._isActive) {
+			RECT target_rt{ bo._x + adj_obstacle_size_tl, bo._y + adj_obstacle_size_tl, bo._x + tile_size - adj_obstacle_size_br, bo._y + tile_size - adj_obstacle_size_br };
+			//if (IntersectRect(&temp, &source_rt, &target_rt))
+				//return BOMB;
+		}
+	}
+	
+	//for (int iy = 0; iy < tile_max_h_num; ++iy)
+	//	for (int ix = 0; ix < tile_max_w_num; ++ix) {
+	//		//À©µµ¿ì »ó ÁÂÇ¥
+	//		auto [window_x, window_y] = MapIndexToWindowPos(ix, iy);
+
+	//		//¿ÀºêÁ§Æ® ±×¸®±â
+	//		switch (selectedMap[iy][ix]) {
+	//		case BLOCK:			//ºí·Ï
+	//		{
+	//			
+	//			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+	//			if (IntersectRect(&temp, &source_rt, &target_rt))
+	//				return BLOCK;
+
+	//			break;
+	//		}
+	//		case ROCK:			//µ¹
+	//		{
+	//			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+	//			if (IntersectRect(&temp, &source_rt, &target_rt))
+	//				return ROCK;
+
+	//			break;
+	//		}
+	//		case BOMB:			//ÆøÅº
+	//		{
+	//			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+	//			if (IntersectRect(&temp, &source_rt, &target_rt))
+	//				return BOMB;
+
+	//			break;
+	//		}
+	//		case EXPLOSION:		//Æø¹ß
+	//		{
+	//			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+	//			if (IntersectRect(&temp, &source_rt, &target_rt))
+	//				return EXPLOSION;
+
+	//			break;
+	//		}
+	//		default:
+	//			break;
+	//		}
+	//	};
+
+	return EMPTY;	//Ãæµ¹X
+>>>>>>> parent of 6b3dbea (í­ë°œ íƒ€ì´ë¨¸ ìˆ˜ì • 1)
 }
 
 void process_packet(int client_index, char* p)
@@ -709,7 +786,11 @@ void process_packet(int client_index, char* p)
 	}
 
 	case INIT_BOMB: {
+<<<<<<< HEAD
 		//if (í­íƒ„ ìƒì„± í–ˆë‹¤ë©´)
+=======
+		//if (ÆøÅº »ı¼º Çß´Ù¸é)
+>>>>>>> parent of 6b3dbea (í­ë°œ íƒ€ì´ë¨¸ ìˆ˜ì • 1)
 		timer_event ev;
 		ev.obj_id = ++g_b_count;
 		
@@ -725,6 +806,7 @@ void process_packet(int client_index, char* p)
 			}
 		};
 		timer_queue.push(ev);
+<<<<<<< HEAD
 
 		//í­ë°œí•¨ìˆ˜ í…ŒìŠ¤íŠ¸ ì½”ë“œ
 		for (int i = 0; bombs.size(); ++i) {
@@ -743,6 +825,9 @@ void process_packet(int client_index, char* p)
 		}
 
 		//cout << "í­íƒ„" << endl;
+=======
+		//cout << "ÆøÅº" << endl;
+>>>>>>> parent of 6b3dbea (í­ë°œ íƒ€ì´ë¨¸ ìˆ˜ì • 1)
 		//cout << packet->x << endl;
 		//cout << packet->y << endl;
 		//cout << packet->power << endl;
