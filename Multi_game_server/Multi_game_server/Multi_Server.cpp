@@ -7,13 +7,13 @@
 
 ///////////////////////////////////////////////////////////
 
-//ÇÃ·¹ÀÌ¾î
+//í”Œë ˆì´ì–´
 array<Session, MAX_USER> clients;
 
 vector<Session_DB> clients_DB;
 char g_id_buf[BUFSIZE] = " ";
 
-//¸Ê
+//ë§µ
 template<typename T, size_t X, size_t Y>
 using tileArr = array<array<T, X>, Y>;
 
@@ -21,18 +21,18 @@ tileArr<int, tile_max_w_num, tile_max_h_num>	map_1;
 tileArr<int, tile_max_w_num, tile_max_h_num>	map_2;
 tileArr<int, tile_max_w_num, tile_max_h_num>	selectedMap;
 
-int map_num;	//¸î ¹ø ¸Ê ¼±ÅÃ?
+int map_num;	//ëª‡ ë²ˆ ë§µ ì„ íƒ?
 
-//ºí·Ï - [ÆÄ±« ºÒ°¡´É]
+//ë¸”ë¡ - [íŒŒê´´ ë¶ˆê°€ëŠ¥]
 vector <Block>	blocks;
 
-//¹ÙÀ§ - [ÆÄ±« °¡´É]
+//ë°”ìœ„ - [íŒŒê´´ ê°€ëŠ¥]
 vector <Rock>	rocks;
 
-//¾ÆÀÌÅÛ
+//ì•„ì´í…œ
 vector <Item>	items;
 
-//ÆøÅº
+//í­íƒ„
 vector <Bomb>	bombs;
 
 //atomic<bool> g_item[MAX_ITEM_SIZE];
@@ -89,51 +89,51 @@ std::pair<int, int> WindowPosToMapIndex(int x, int y);
 
 int main(int argc, char* argv[])
 {
-	//ÇÃ·¹ÀÌ¾î DB ÀĞ±â
+	//í”Œë ˆì´ì–´ DB ì½ê¸°
 	clients_DB.reserve(MAX_USER);
 
-	ifstream in("ÇÃ·¹ÀÌ¾î_Á¤º¸.txt");
+	ifstream in("í”Œë ˆì´ì–´_ì •ë³´.txt");
 	if (!in) {
-		cout << "DB ÆÄÀÏ ÀĞ±â ½ÇÆĞ" << endl;
+		cout << "DB íŒŒì¼ ì½ê¸° ì‹¤íŒ¨" << endl;
 		getchar();
 		exit(1);
 	}
 
-	for (int i = 0; i < MAX_USER; ++i) {                         //v_idÀÇ º¤ÅÍ´Â ºñ¿öÁ® ÀÖ°í iÀÇ Ä«¿îÆ®´ç ¿ø¼Ò°¡ Ã¤¿öÁö¹Ç·Î i°ªÀ» º¤ÅÍÀÇ ÀÎµ¦½º·Î »ı°¢ÇÏ¸ç µÎ°³ÀÇ map¿¡ v_id[i]ÀÇ °ªÀ» ³Ö¾îÁÜ 
+	for (int i = 0; i < MAX_USER; ++i) {                         //v_idì˜ ë²¡í„°ëŠ” ë¹„ì›Œì ¸ ìˆê³  iì˜ ì¹´ìš´íŠ¸ë‹¹ ì›ì†Œê°€ ì±„ì›Œì§€ë¯€ë¡œ iê°’ì„ ë²¡í„°ì˜ ì¸ë±ìŠ¤ë¡œ ìƒê°í•˜ë©° ë‘ê°œì˜ mapì— v_id[i]ì˜ ê°’ì„ ë„£ì–´ì¤Œ 
 		clients_DB.push_back(Session_DB(in));
 	}
 
-	//¸Ê ÀĞ±â
+	//ë§µ ì½ê¸°
 	Load_Map(map_1, "maps_json/map_1.json");
 	Load_Map(map_2, "maps_json/map_2.json");
 
 	while (TRUE) {
-		cout << "¸î¹ø ¸ÊÀ» ÇÃ·¹ÀÌ ÇÏ½Ç²«°¡¿ä?(1, 2 Áß ¼±ÅÃ): ";
+		cout << "ëª‡ë²ˆ ë§µì„ í”Œë ˆì´ í•˜ì‹¤ê»€ê°€ìš”?(1, 2 ì¤‘ ì„ íƒ): ";
 		scanf("%d", &map_num);
 		//map_num = 1;
 
 		if (map_num == 1 || map_num == 2) {
-			cout << map_num << " ¹ø ¸ÊÀ» ¼±ÅÃÇÏ¿´½À´Ï´Ù." << endl << endl;
+			cout << map_num << " ë²ˆ ë§µì„ ì„ íƒí•˜ì˜€ìŠµë‹ˆë‹¤." << endl << endl;
 			break;
 		}
 		else {
-			cout << "Àß¸ø ÀÔ·ÂÇÏ¼Ì½À´Ï´Ù. (1, 2 Áß ÇÏ³ª¸¦ ¼±ÅÃÇÏ¿© ÁÖ¼¼¿ä.)" << endl << endl;
+			cout << "ì˜ëª» ì…ë ¥í•˜ì…¨ìŠµë‹ˆë‹¤. (1, 2 ì¤‘ í•˜ë‚˜ë¥¼ ì„ íƒí•˜ì—¬ ì£¼ì„¸ìš”.)" << endl << endl;
 		}
 	}
 
 	Setting_Map();
 
 
-	//for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                    //v_idÀÇ º¤ÅÍ´Â ºñ¿öÁ® ÀÖ°í iÀÇ Ä«¿îÆ®´ç ¿ø¼Ò°¡ Ã¤¿öÁö¹Ç·Î i°ªÀ» º¤ÅÍÀÇ ÀÎµ¦½º·Î »ı°¢ÇÏ¸ç µÎ°³ÀÇ map¿¡ v_id[i]ÀÇ °ªÀ» ³Ö¾îÁÜ 
+	//for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                    //v_idì˜ ë²¡í„°ëŠ” ë¹„ì›Œì ¸ ìˆê³  iì˜ ì¹´ìš´íŠ¸ë‹¹ ì›ì†Œê°€ ì±„ì›Œì§€ë¯€ë¡œ iê°’ì„ ë²¡í„°ì˜ ì¸ë±ìŠ¤ë¡œ ìƒê°í•˜ë©° ë‘ê°œì˜ mapì— v_id[i]ì˜ ê°’ì„ ë„£ì–´ì¤Œ 
 	//	g_item[i] = true;                                            
 	//}
 
-	//À©¼Ó ÃÊ±âÈ­
+	//ìœˆì† ì´ˆê¸°í™”
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 		return 1;
 
-	//¸®½¼ ¼ÒÄÏ »ı¼º
+	//ë¦¬ìŠ¨ ì†Œì¼“ ìƒì„±
 	SOCKET listen_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (listen_socket == INVALID_SOCKET) err_quit("socket()");
 
@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
 	listen(listen_socket, SOMAXCONN);
 
 	for (int i = 0; i < MAX_USER; ++i) {
-		// µ¥ÀÌÅÍ Åë½Å¿¡ »ç¿ëÇÒ º¯¼ö
+		// ë°ì´í„° í†µì‹ ì— ì‚¬ìš©í•  ë³€ìˆ˜
 		SOCKET client_sock;
 		SOCKADDR_IN clientaddr;
 		int addrlen;
@@ -155,9 +155,9 @@ int main(int argc, char* argv[])
 		client_sock = accept(listen_socket, (SOCKADDR*)&clientaddr, &addrlen);
 
 
-		// Á¢¼ÓÇÑ Å¬¶óÀÌ¾ğÆ® Á¤º¸ Ãâ·Â
-		std::cout << "[TCP ¼­¹ö] Å¬¶óÀÌ¾ğÆ® Á¢¼Ó: IP ÁÖ¼Ò " <<
-			inet_ntoa(clientaddr.sin_addr) << "  Æ÷Æ® ¹øÈ£ : " << ntohs(clientaddr.sin_port) << endl;
+		// ì ‘ì†í•œ í´ë¼ì´ì–¸íŠ¸ ì •ë³´ ì¶œë ¥
+		std::cout << "[TCP ì„œë²„] í´ë¼ì´ì–¸íŠ¸ ì ‘ì†: IP ì£¼ì†Œ " <<
+			inet_ntoa(clientaddr.sin_addr) << "  í¬íŠ¸ ë²ˆí˜¸ : " << ntohs(clientaddr.sin_port) << endl;
 
 
 		CreateThread(NULL, 0, Thread_1, (LPVOID)client_sock, 0, NULL);
@@ -248,7 +248,7 @@ void err_quit(const char* msg)
 
 bool get_status(int client_index, char* id)
 {
-	//¾ÆÀÌµğ °Ë»ö
+	//ì•„ì´ë”” ê²€ìƒ‰
 	strcpy_s(g_id_buf, id);
 	auto b_n = find_if(clients_DB.cbegin(), clients_DB.cend(), [](const Session_DB& a) {
 		return strcmp(a._id, g_id_buf) == 0;
@@ -257,21 +257,21 @@ bool get_status(int client_index, char* id)
 		return false;
 	}
 
-	//·¹º§, °æÇèÄ¡ DB¿ë µ¥ÀÌÅÍ ÃÊ±âÈ­
+	//ë ˆë²¨, ê²½í—˜ì¹˜ DBìš© ë°ì´í„° ì´ˆê¸°í™”
 	strcpy_s(clients[client_index]._id, id);
 	clients[client_index]._level = b_n->_level;
 	clients[client_index]._exp = b_n->_exp;
 
-	//±âÅ¸ ÀÎ°ÔÀÓ µ¥ÀÌÅÍ ÃÊ±âÈ­
+	//ê¸°íƒ€ ì¸ê²Œì„ ë°ì´í„° ì´ˆê¸°í™”
 	init_client(client_index);
 
 	return true;
 }
 
-//ÀÎ°ÔÀÓ µ¥ÀÌÅÍ ÃÊ±âÈ­
+//ì¸ê²Œì„ ë°ì´í„° ì´ˆê¸°í™”
 void init_client(int client_index)
 {
-	//¸Êº° À§Ä¡ ÁöÁ¤
+	//ë§µë³„ ìœ„ì¹˜ ì§€ì •
 	if (map_num == 1) {
 		switch (client_index) {
 		case 0:
@@ -327,8 +327,8 @@ void init_client(int client_index)
 	clients[client_index]._state = ACCEPT;
 }
 
-//¸ğµç ÇÃ·¹ÀÌ¾î°¡ READY »óÅÂÀÎÁö °Ë»ç
-//¸ğµÎ READY »óÅÂ¶ó¸é PLAY »óÅÂ·Î º¯°æ
+//ëª¨ë“  í”Œë ˆì´ì–´ê°€ READY ìƒíƒœì¸ì§€ ê²€ì‚¬
+//ëª¨ë‘ READY ìƒíƒœë¼ë©´ PLAY ìƒíƒœë¡œ ë³€ê²½
 bool check_all_ready()
 {
 	for (auto& cl : clients)
@@ -338,13 +338,13 @@ bool check_all_ready()
 	}
 
 	cout << endl;
-	cout << "<<°ÔÀÓ ½ºÅ¸Æ®>>" << endl;
+	cout << "<<ê²Œì„ ìŠ¤íƒ€íŠ¸>>" << endl;
 
 	for (auto& cl : clients)
 	{
 		if (cl.in_use == TRUE) {
-			cout << "Å¬¶óÀÌ¾ğÆ® \'" << cl._id << "\' - ÇÃ·¹ÀÌ »óÅÂ" << endl;
-			//ÀÎ°ÔÀÓ µ¥ÀÌÅÍ ÃÊ±âÈ­ - À§Ä¡ µîµî...
+			cout << "í´ë¼ì´ì–¸íŠ¸ \'" << cl._id << "\' - í”Œë ˆì´ ìƒíƒœ" << endl;
+			//ì¸ê²Œì„ ë°ì´í„° ì´ˆê¸°í™” - ìœ„ì¹˜ ë“±ë“±...
 			init_client(cl._index);
 			cl._state = PLAY;
 		}
@@ -410,7 +410,7 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map
 	}
 	else {
 		char msg[256]{ "" };
-		char _msg[]{ " ¸ÊÀ» ºÒ·¯¿ÀÁö ¸øÇÏ¿´½À´Ï´Ù." };
+		char _msg[]{ " ë§µì„ ë¶ˆëŸ¬ì˜¤ì§€ ëª»í•˜ì˜€ìŠµë‹ˆë‹¤." };
 		strcat(msg, map_path);
 		strcat(msg, _msg);
 		MessageBox(NULL, (LPCWSTR)msg, L"ERROR - Parse failed", MB_ICONERROR);
@@ -421,7 +421,7 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map
 	json_map.close();
 }
 
-//¸Ê ¼¼ÆÃ
+//ë§µ ì„¸íŒ…
 void Setting_Map()
 {
 	int bl_indx = 0;
@@ -455,9 +455,9 @@ void Setting_Map()
 	}
 }
 
-//Ãæµ¹Ã¼Å©
-//Ãæµ¹ ¹ß»ı½Ã ÇØ´ç ¿ÀºêÁ§Æ® ÀÎµ¦½º ¹øÈ£ + 1 ¸®ÅÏ / Ãæµ¹ÀÌ ¾øÀ¸¸é 0 ¸®ÅÏ
-//µû¶ó¼­!! Ãæµ¹ÀÌ ¾ÈÀÏ¾î³¯½Ã 0À» ¸®ÅÏÇÏ¹Ç·Î, 0¹øÂ° ÀÎµ¦½º¸¦ ±¸ºĞÇÏ±â À§ÇØ¼­ + 1À» ÇØÁØ´Ù.
+//ì¶©ëŒì²´í¬
+//ì¶©ëŒ ë°œìƒì‹œ í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ ì¸ë±ìŠ¤ ë²ˆí˜¸ + 1 ë¦¬í„´ / ì¶©ëŒì´ ì—†ìœ¼ë©´ 0 ë¦¬í„´
+//ë”°ë¼ì„œ!! ì¶©ëŒì´ ì•ˆì¼ì–´ë‚ ì‹œ 0ì„ ë¦¬í„´í•˜ë¯€ë¡œ, 0ë²ˆì§¸ ì¸ë±ìŠ¤ë¥¼ êµ¬ë¶„í•˜ê¸° ìœ„í•´ì„œ + 1ì„ í•´ì¤€ë‹¤.
 
 int Check_Collision(int source_type, int source_index)
 {
@@ -465,7 +465,7 @@ int Check_Collision(int source_type, int source_index)
 	int s_x_bias{ 0 }, s_y_bias{ 0 };
 
 	switch (source_type) {
-	case 0:	//ÇÃ·¹ÀÌ¾î
+	case 0:	//í”Œë ˆì´ì–´
 		s_x = clients[source_index]._x;
 		s_y = clients[source_index]._y;
 		s_x_bias = p_size;
@@ -487,12 +487,12 @@ int Check_Collision(int source_type, int source_index)
 
 	for (int iy = 0; iy < tile_max_h_num; ++iy)
 		for (int ix = 0; ix < tile_max_w_num; ++ix) {
-			//À©µµ¿ì »ó ÁÂÇ¥
+			//ìœˆë„ìš° ìƒ ì¢Œí‘œ
 			auto [window_x, window_y] = MapIndexToWindowPos(ix, iy);
 
-			//¿ÀºêÁ§Æ® ±×¸®±â
+			//ì˜¤ë¸Œì íŠ¸ ê·¸ë¦¬ê¸°
 			switch (selectedMap[iy][ix]) {
-			case BLOCK:			//ºí·Ï
+			case BLOCK:			//ë¸”ë¡
 			{
 				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
@@ -501,7 +501,7 @@ int Check_Collision(int source_type, int source_index)
 
 				break;
 			}
-			case ROCK:			//µ¹
+			case ROCK:			//ëŒ
 			{
 				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
@@ -510,7 +510,7 @@ int Check_Collision(int source_type, int source_index)
 
 				break;
 			}
-			//case BOMB:			//ÆøÅº
+			//case BOMB:			//í­íƒ„
 			//{
 			//	RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
@@ -519,7 +519,7 @@ int Check_Collision(int source_type, int source_index)
 
 			//	break;
 			//}
-			//case EXPLOSION:		//Æø¹ß
+			//case EXPLOSION:		//í­ë°œ
 			//{
 			//	RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
@@ -533,7 +533,7 @@ int Check_Collision(int source_type, int source_index)
 			}
 		};
 
-	return EMPTY;	//Ãæµ¹X
+	return EMPTY;	//ì¶©ëŒX
 }
 
 void process_packet(int client_index, char* p)
@@ -557,7 +557,7 @@ void process_packet(int client_index, char* p)
 		}
 
 		for (auto& other : clients) {
-			// ÇÃ·¹ÀÌ¾î°¡ ·Î±×ÀÎ ¿äÃ»
+			// í”Œë ˆì´ì–´ê°€ ë¡œê·¸ì¸ ìš”ì²­
 			if (other._index == client_index) {
 				LOGIN_OK_packet L_packet;
 				L_packet.type = LOGIN_OK;
@@ -574,7 +574,7 @@ void process_packet(int client_index, char* p)
 			};
 			if (NO_ACCEPT == other._state) continue;
 
-			// ÇöÀç Á¢¼ÓÇÑ ÇÃ·¹ÀÌ¾î¿¡°Ô ÀÌ¹Ì Á¢¼ÓÇØ ÀÖ´Â Å¸ ÇÃ·¹ÀÌ¾îµéÀÇ Á¤º¸ Àü¼Û
+			// í˜„ì¬ ì ‘ì†í•œ í”Œë ˆì´ì–´ì—ê²Œ ì´ë¯¸ ì ‘ì†í•´ ìˆëŠ” íƒ€ í”Œë ˆì´ì–´ë“¤ì˜ ì •ë³´ ì „ì†¡
 			INIT_PLAYER_packet IN_Player;
 			IN_Player.size = sizeof(INIT_PLAYER_packet);
 			IN_Player.type = INIT_PLAYER;
@@ -588,7 +588,7 @@ void process_packet(int client_index, char* p)
 			strcpy_s(IN_Player.id, other._id);
 			cl.do_send(sizeof(IN_Player), &IN_Player);
 
-			// ÀÌ¹Ì Á¢¼ÓÇØ ÀÖ´Â ÇÃ·¹ÀÌ¾îµé¿¡°Ô ÇöÀç Á¢¼ÓÇÑ ÇÃ·¹ÀÌ¾îÀÇ Á¤º¸ Àü¼Û
+			// ì´ë¯¸ ì ‘ì†í•´ ìˆëŠ” í”Œë ˆì´ì–´ë“¤ì—ê²Œ í˜„ì¬ ì ‘ì†í•œ í”Œë ˆì´ì–´ì˜ ì •ë³´ ì „ì†¡
 			INIT_PLAYER_packet IN_Other;
 			IN_Other.size = sizeof(INIT_PLAYER_packet);
 			IN_Other.type = INIT_PLAYER;
@@ -604,7 +604,7 @@ void process_packet(int client_index, char* p)
 
 		}
 
-		cout << "[¼ö½Å ¼º°ø] \'" << cl._id << "\' (" << client_index + 1 << " ¹øÂ° ÇÃ·¹ÀÌ¾î) ·Î±×ÀÎ ¿äÃ»" << endl;
+		cout << "[ìˆ˜ì‹  ì„±ê³µ] \'" << cl._id << "\' (" << client_index + 1 << " ë²ˆì§¸ í”Œë ˆì´ì–´) ë¡œê·¸ì¸ ìš”ì²­" << endl;
 
 		break;
 	}
@@ -629,7 +629,7 @@ void process_packet(int client_index, char* p)
 		cl._y += y_bias;
 		cl._dir = packet->dir;
 
-		//ºí·Ï°ú Ãæµ¹Ã¼Å©
+		//ë¸”ë¡ê³¼ ì¶©ëŒì²´í¬
 		if (Check_Collision(0, cl._index)) {
 			cl._x -= x_bias;
 			cl._y -= y_bias;
@@ -674,10 +674,10 @@ void process_packet(int client_index, char* p)
 		//{
 		//	g_item[i_index] = false;
 		//	switch (packet->item_type) {
-		//	case 0: cl._power++; break; // ÆøÅº ¼¼±â
-		//	case 1:  cl._heart++; break; // ÇÏÆ®
-		//	case 2: cl._bomb_count++; break; //ÆøÅº °³¼ö
-		//	case 3: cl._rock_count; break; //ºí·Ï °³¼ö
+		//	case 0: cl._power++; break; // í­íƒ„ ì„¸ê¸°
+		//	case 1:  cl._heart++; break; // í•˜íŠ¸
+		//	case 2: cl._bomb_count++; break; //í­íƒ„ ê°œìˆ˜
+		//	case 3: cl._rock_count; break; //ë¸”ë¡ ê°œìˆ˜
 		//	default:
 		//		cout << "Invalid item in client " << cl._id << endl;
 		//		getchar();
@@ -709,7 +709,7 @@ void process_packet(int client_index, char* p)
 	}
 
 	case INIT_BOMB: {
-		//if (ÆøÅº »ı¼º Çß´Ù¸é)
+		//if (í­íƒ„ ìƒì„± í–ˆë‹¤ë©´)
 		timer_event ev;
 		ev.obj_id = ++g_b_count;
 		
@@ -726,23 +726,23 @@ void process_packet(int client_index, char* p)
 		};
 		timer_queue.push(ev);
 
-		//Æø¹ßÇÔ¼ö Å×½ºÆ® ÄÚµå
-		for (int i = 0; bombs.size(); ++i) {
-			bombs[i]._isExploded = true;
-			bombs[i].ExplodeBomb(selectedMap);
+		//í­ë°œí•¨ìˆ˜ í…ŒìŠ¤íŠ¸ ì½”ë“œ
+		//for (int i = 0; bombs.size(); ++i) {
+		//	bombs[i]._isExploded = true;
+		//	bombs[i].ExplodeBomb(selectedMap);
 
-			cout << "\nÆø¹ß ÁÂÇ¥\n";
-			for (auto d : bombs[i]._explosionPositions)
-				cout << d.first << ", " << d.second << endl;
+		//	cout << "\ní­ë°œ ì¢Œí‘œ\n";
+		//	for (auto d : bombs[i]._explosionPositions)
+		//		cout << d.first << ", " << d.second << endl;
 
-			cout << "\nÆÄ±«µÈ¹ÙÀ§ ÁÂÇ¥\n";
-			for (auto d : bombs[i]._destroyedRockPositions)
-				cout << d.first << ", " << d.second << endl;
+		//	cout << "\níŒŒê´´ëœë°”ìœ„ ì¢Œí‘œ\n";
+		//	for (auto d : bombs[i]._destroyedRockPositions)
+		//		cout << d.first << ", " << d.second << endl;
 
-			bombs.pop_back();
-		}
+		//	bombs.pop_back();
+		//}
 
-		//cout << "ÆøÅº" << endl;
+		//cout << "í­íƒ„" << endl;
 		//cout << packet->x << endl;
 		//cout << packet->y << endl;
 		//cout << packet->power << endl;
@@ -761,7 +761,7 @@ void process_packet(int client_index, char* p)
 			cl._x = packet->x;
 			cl._y = packet->y;
 			cl._state = packet->state;
-			cout << "Å¬¶óÀÌ¾ğÆ® \'" << cl._id << "\' - ÁØºñ »óÅÂ" << endl;
+			cout << "í´ë¼ì´ì–¸íŠ¸ \'" << cl._id << "\' - ì¤€ë¹„ ìƒíƒœ" << endl;
 
 			if (check_all_ready()) {
 				send_all_play_start();
@@ -802,7 +802,7 @@ void process_packet(int client_index, char* p)
 			cl._x = packet->x;
 			cl._y = packet->y;
 			cl._state = packet->state;
-			cout << "Å¬¶óÀÌ¾ğÆ® \'" << cl._id << "\' - ÁØºñ Ãë¼Ò »óÅÂ" << endl;
+			cout << "í´ë¼ì´ì–¸íŠ¸ \'" << cl._id << "\' - ì¤€ë¹„ ì·¨ì†Œ ìƒíƒœ" << endl;
 
 			for (auto& other : clients) {
 				if (true == other.in_use) {
@@ -835,7 +835,7 @@ void process_packet(int client_index, char* p)
 		}
 
 
-				   // ÁØºñ
+				   // ì¤€ë¹„
 				   //case DEAD: { 
 				   //	for (auto& pl : clients) {
 				   //		if (true == pl.in_use)
@@ -851,7 +851,7 @@ void process_packet(int client_index, char* p)
 				   //		}
 				   //	}
 				   //	break; 
-				   //}// ÇÏÆ®
+				   //}// í•˜íŠ¸
 		default: {
 			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;
 			cout << "packet state number: " << packet->state << endl;
@@ -865,7 +865,7 @@ void process_packet(int client_index, char* p)
 	}
 
 	default: {
-		cout << "[¿¡·¯] UnKnown Packet" << endl;
+		cout << "[ì—ëŸ¬] UnKnown Packet" << endl;
 		err_quit("UnKnown Packet");
 	}
 
@@ -898,7 +898,7 @@ DWORD WINAPI Thread_1(LPVOID arg)
 	player._index = index;
 
 	while (1) {
-		// µ¥ÀÌÅÍ ¹Ş±â
+		// ë°ì´í„° ë°›ê¸°
 		player.do_recv();
 		//int remain_data = num_byte + cl._prev_size;
 		char* packet_start = clients[index]._recv_buf;
@@ -939,3 +939,105 @@ std::pair<int, int> WindowPosToMapIndex(int x, int y)
 	int map_y = (y - outer_wall_start) / tile_size;
 	return std::make_pair(map_x, map_y);
 }
+
+
+//void ExplodeBomb(int _x, int _y, int _power)
+//{
+//	//ë§µì¸ë±ìŠ¤ì˜ í­íƒ„ ì¢Œí‘œ
+//	auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(_x, _y);
+//
+//	//í˜„ì¬í­íƒ„ìœ„ì¹˜
+//	objectMap[bomb_iy][bomb_ix] = EXPLOSION;
+//
+//	//í­ë°œì¢Œí‘œ ë²¡í„°ì— ë‹´ê¸°
+//	auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy);
+//	_explosionPositions.push_back(make_pair(window_x, window_y));
+//
+//	//í­íƒ„ ìœ„ ì²´í¬
+//	for (int i = 1; i <= _power + 1; ++i) {
+//		//ë²”ìœ„ ì²´í¬
+//		if (bomb_iy - i == -1) break;
+//		//ë¸”ëŸ­ ì²´í¬
+//		if (objectMap[bomb_iy - i][bomb_ix] == BLOCK) break;
+//		//ë°”ìœ„ ì²´í¬
+//		if (objectMap[bomb_iy - i][bomb_ix] == ROCK) {
+//			objectMap[bomb_iy - i][bomb_ix] = EMPTY;
+//
+//			//íŒŒê´´ëœ ë°”ìœ„ ë²¡í„°ì— ë‹´ê¸°
+//			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy - i);
+//			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+//			break;
+//		}
+//		objectMap[bomb_iy - i][bomb_ix] = EXPLOSION;
+//
+//		//í­ë°œì¢Œí‘œ ë²¡í„°ì— ë‹´ê¸°
+//		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy - i);
+//		_explosionPositions.push_back(make_pair(window_x, window_y));
+//	}
+//
+//	//í­íƒ„ ì•„ë˜ ì²´í¬
+//	for (int i = 1; i <= _power + 1; ++i) {
+//		//ë²”ìœ„ ì²´í¬
+//		if (bomb_iy + i == tile_max_h_num + 1) break;
+//		//ë¸”ëŸ­ ì²´í¬
+//		if (objectMap[bomb_iy + i][bomb_ix] == BLOCK) break;
+//		//ë°”ìœ„ ì²´í¬
+//		if (objectMap[bomb_iy + i][bomb_ix] == ROCK) {
+//			objectMap[bomb_iy + i][bomb_ix] = EMPTY;
+//
+//			//íŒŒê´´ëœ ë°”ìœ„ ë²¡í„°ì— ë‹´ê¸°
+//			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy + i);
+//			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+//			break;
+//		}
+//		objectMap[bomb_iy + i][bomb_ix] = EXPLOSION;
+//
+//		//í­ë°œì¢Œí‘œ ë²¡í„°ì— ë‹´ê¸°
+//		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix, bomb_iy + i);
+//		_explosionPositions.push_back(make_pair(window_x, window_y));
+//	}
+//
+//	//í­íƒ„ ì™¼ìª½ ì²´í¬
+//	for (int i = 1; i <= _power + 1; ++i) {
+//		//ë²”ìœ„ ì²´í¬
+//		if (bomb_ix - i == -1) break;
+//		//ë¸”ëŸ­ ì²´í¬
+//		if (objectMap[bomb_iy][bomb_ix - i] == BLOCK) break;
+//		//ë°”ìœ„ ì²´í¬
+//		if (objectMap[bomb_iy][bomb_ix - i] == ROCK) {
+//			objectMap[bomb_iy][bomb_ix - i] = EMPTY;
+//
+//			//íŒŒê´´ëœ ë°”ìœ„ ë²¡í„°ì— ë‹´ê¸°
+//			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix - i, bomb_iy);
+//			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+//			break;
+//		}
+//		objectMap[bomb_iy][bomb_ix - i] = EXPLOSION;
+//
+//		//í­ë°œì¢Œí‘œ ë²¡í„°ì— ë‹´ê¸°
+//		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix - i, bomb_iy);
+//		_explosionPositions.push_back(make_pair(window_x, window_y));
+//	}
+//
+//	//í­íƒ„ ì˜¤ë¥¸ìª½ ì²´í¬
+//	for (int i = 1; i <= _power + 1; ++i) {
+//		//ë²”ìœ„ ì²´í¬
+//		if (bomb_ix + i == tile_max_w_num + 1) break;
+//		//ë¸”ëŸ­ ì²´í¬
+//		if (objectMap[bomb_iy][bomb_ix + i] == BLOCK) break;
+//		//ë°”ìœ„ ì²´í¬
+//		if (objectMap[bomb_iy][bomb_ix + i] == ROCK) {
+//			objectMap[bomb_iy][bomb_ix + i] = EMPTY;
+//
+//			//íŒŒê´´ëœ ë°”ìœ„ ë²¡í„°ì— ë‹´ê¸°
+//			auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix + i, bomb_iy);
+//			_destroyedRockPositions.push_back(make_pair(window_x, window_y));
+//			break;
+//		}
+//		objectMap[bomb_iy][bomb_ix + _power] = EXPLOSION;
+//
+//		//í­ë°œì¢Œí‘œ ë²¡í„°ì— ë‹´ê¸°
+//		auto [window_x, window_y] = MapIndexToWindowPos(bomb_ix + i, bomb_iy);
+//		_explosionPositions.push_back(make_pair(window_x, window_y));
+//	}
+//}
