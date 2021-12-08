@@ -107,20 +107,18 @@ int main(int argc, char* argv[])
 	Load_Map(map_1, "maps_json/map_1.json");
 	Load_Map(map_2, "maps_json/map_2.json");
 
-	//while (TRUE) {
-	//	cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
-	//	scanf("%d", &map_num);
+	while (TRUE) {
+		cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
+		scanf("%d", &map_num);
 
-	//	if (map_num == 1 || map_num == 2) {
-	//		cout << map_num << " 번 맵을 선택하였습니다." << endl << endl;
-	//		break;
-	//	}
-	//	else {
-	//		cout << "잘못 입력하셨습니다. (1, 2 중 하나를 선택하여 주세요.)" << endl << endl;
-	//	}
-	//}
-
-	map_num = 1;
+		if (map_num == 1 || map_num == 2) {
+			cout << map_num << " 번 맵을 선택하였습니다." << endl << endl;
+			break;
+		}
+		else {
+			cout << "잘못 입력하셨습니다. (1, 2 중 하나를 선택하여 주세요.)" << endl << endl;
+		}
+	}
 
 	Setting_Map();
 
@@ -726,6 +724,26 @@ void process_packet(int client_index, char* p)
 			}
 		};
 		timer_queue.push(ev);
+
+
+		//폭발함수 테스트 코드
+		for (int i = 0; bombs.size(); ++i) {
+			bombs[i]._isExploded = true;
+			bombs[i].ExplodeBomb(selectedMap);
+
+			cout << "\n폭발 좌표\n";
+			for (auto d : bombs[i]._explosionPositions)
+				cout << d.first << ", " << d.second << endl;
+
+			cout << "\n파괴된바위 좌표\n";
+			for (auto d : bombs[i]._destroyedRockPositions)
+				cout << d.first << ", " << d.second << endl;
+
+			bombs.pop_back();
+		}
+
+
+
 		//cout << "폭탄" << endl;
 		//cout << packet->x << endl;
 		//cout << packet->y << endl;
