@@ -747,6 +747,9 @@ void process_packet(int client_index, char* p)
 
 			bombs.pop_back();
 		}
+
+		PrintMap();
+
 		break;
 	}
 

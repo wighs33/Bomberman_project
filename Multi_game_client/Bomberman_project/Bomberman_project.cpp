@@ -461,7 +461,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			auto [bomb_x, bomb_y] = MapIndexToWindowPos(map_ix, map_iy);
 
 			//임시 코드
-			bombs.push_back(Bomb(bomb_x, bomb_y, 0, 35, 1));
+			bombs.push_back(Bomb(bomb_x, bomb_y, 0, 35, players[my_index]._bomb_power));
 			
 			//서버로 폭탄 설치 요청 패킷 전송
 			players[my_index].InputSpaceBar(send_queue, send_buf, bomb_x, bomb_y);
@@ -536,16 +536,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		//폭탄
 		for (auto& bomb : bombs) {
-			if (bomb._isActive) {
-				if (timecnt % 4 == 0) {
-					bomb._timer -= 1;
+			if (timecnt % 4 == 0) {
+				bomb._timer -= 1;
 
-					//삭제
-					if (bomb._timer < 0) {
-						bomb._isActive = FALSE;
-						//bombs.erase(bombs.begin());
-					}
-				}
+				////삭제		---- 서버에서 요청하면 패킷판별함수에서 처리
+				//if (bomb._timer < 0) {
+				//	bomb._isActive = FALSE;
+				//}
 			}
 		}
 
@@ -671,7 +668,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			//폭탄
 			for (auto& bomb : bombs) {
-				if (bomb._isActive && bomb._timer > 5) {
+				if (bomb._timer > 5) {
 					oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
 					TransparentBlt(mem1dc, bomb._x, bomb._y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 255, 255));
 
@@ -1101,12 +1098,6 @@ void Process_packet(char* p)
 
 		auto [map_ix, map_iy] = WindowPosToMapIndex(packet->x, packet->y);
 
-		//임시코드
-		for (int i = 0; i < bombs.size(); ++i) {
-			bombs[i]._explode = true;
-			bombs.pop_back();
-		}
-
 		selectedMap[map_iy][map_ix] = BOMB;
 
 		break;
@@ -1116,12 +1107,19 @@ void Process_packet(char* p)
 		cout << "\n폭발 발생!!\n";
 		cout << packet->ix << ", " << packet->iy << endl;
 
+		if (packet->isActive)	
+			selectedMap[packet->iy][packet->ix] = EXPLOSION;	//폭발 발생
+		else
+			selectedMap[packet->iy][packet->ix] = EMPTY;	//폭발 끝
+
 		break;
 	}
 	case DELETE_OBJECT: {
 		DELETE_OBJECT_packet* packet = reinterpret_cast<DELETE_OBJECT_packet*>(p);
 		cout << "\n바위 파괴!!\n";
 		cout << packet->ix << ", " << packet->iy << endl;
+
+		selectedMap[packet->iy][packet->ix] = EMPTY;
 
 		break;
 	}

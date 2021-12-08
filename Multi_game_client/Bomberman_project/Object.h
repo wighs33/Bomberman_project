@@ -58,7 +58,6 @@ public:
 	int _power; // ÆøÅº ÆÄ¿ö
 
 	bool _explode = false;
-	vector<pair<int, int>> _explosionPosVec;
 
 
 	Bomb(int X, int Y, int OBJ_INDX, int timer, int power) : Object(X, Y, OBJ_INDX)

@@ -40,6 +40,7 @@ static void SendExplosion(array<Session, MAX_USER>& clients, int ix, int iy) {
 			check_explosion_packet.type = CHECK_EXPLOSION;
 			check_explosion_packet.ix = ix;
 			check_explosion_packet.iy = iy;
+			check_explosion_packet.isActive = true;
 			pl.do_send(sizeof(check_explosion_packet), &check_explosion_packet);
 		}
 	}
@@ -53,7 +54,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 	//ÇöÀçÆøÅºÀ§Ä¡
 	objectMap[bomb_iy][bomb_ix] = EXPLOSION;
 
-	//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+	//Æø¹ß ¸ÊÀÎµ¦½º º¸³»±â
 	SendExplosion(clients, bomb_ix, bomb_iy);
 
 	//ÆøÅº À§ Ã¼Å©
@@ -66,13 +67,12 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		if (objectMap[bomb_iy - i][bomb_ix] == ROCK) {
 			objectMap[bomb_iy - i][bomb_ix] = EMPTY;
 
-			//ÆÄ±«µÈ ¹ÙÀ§ º¤ÅÍ¿¡ ´ã±â
+			//ÆÄ±«µÈ ¹ÙÀ§ ¸ÊÀÎµ¦½º º¸³»±â
 			SendDestroyedRock(clients, bomb_ix, bomb_iy - i);
 			break;
 		}
 		objectMap[bomb_iy - i][bomb_ix] = EXPLOSION;
-
-		//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+		//Æø¹ß ¸ÊÀÎµ¦½º º¸³»±â
 		SendExplosion(clients, bomb_ix, bomb_iy - i);
 	}
 
@@ -86,13 +86,13 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		if (objectMap[bomb_iy + i][bomb_ix] == ROCK) {
 			objectMap[bomb_iy + i][bomb_ix] = EMPTY;
 
-			//ÆÄ±«µÈ ¹ÙÀ§ º¤ÅÍ¿¡ ´ã±â
+			//ÆÄ±«µÈ ¹ÙÀ§ ¸ÊÀÎµ¦½º º¸³»±â
 			SendDestroyedRock(clients, bomb_ix, bomb_iy + i);
 			break;
 		}
 		objectMap[bomb_iy + i][bomb_ix] = EXPLOSION;
 
-		//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+		//Æø¹ß ¸ÊÀÎµ¦½º º¸³»±â
 		SendExplosion(clients, bomb_ix, bomb_iy + i);
 	}
 
@@ -106,13 +106,13 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		if (objectMap[bomb_iy][bomb_ix - i] == ROCK) {
 			objectMap[bomb_iy][bomb_ix - i] = EMPTY;
 
-			//ÆÄ±«µÈ ¹ÙÀ§ º¤ÅÍ¿¡ ´ã±â
+			//ÆÄ±«µÈ ¹ÙÀ§ ¸ÊÀÎµ¦½º º¸³»±â
 			SendDestroyedRock(clients, bomb_ix - i, bomb_iy);
 			break;
 		}
 		objectMap[bomb_iy][bomb_ix - i] = EXPLOSION;
 
-		//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+		//Æø¹ß ¸ÊÀÎµ¦½º º¸³»±â
 		SendExplosion(clients, bomb_ix - i, bomb_iy);
 	}
 
@@ -126,13 +126,13 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		if (objectMap[bomb_iy][bomb_ix + i] == ROCK) {
 			objectMap[bomb_iy][bomb_ix + i] = EMPTY;
 
-			//ÆÄ±«µÈ ¹ÙÀ§ º¤ÅÍ¿¡ ´ã±â
+			//ÆÄ±«µÈ ¹ÙÀ§ ¸ÊÀÎµ¦½º º¸³»±â
 			SendDestroyedRock(clients, bomb_ix + i, bomb_iy);
 			break;
 		}
 		objectMap[bomb_iy][bomb_ix + _power] = EXPLOSION;
 
-		//Æø¹ßÁÂÇ¥ º¤ÅÍ¿¡ ´ã±â
+		//Æø¹ß ¸ÊÀÎµ¦½º º¸³»±â
 		SendExplosion(clients, bomb_ix + i, bomb_iy);
 	}
 }

@@ -94,6 +94,7 @@ struct CHECK_EXPLOSION_packet { // 폭발 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입
 	int ix, iy; // 맵인덱스
+	bool isActive;	//플래그
 };
 
 struct DELETE_OBJECT_packet { // 오브젝트 제거 패킷
