@@ -85,6 +85,18 @@ DWORD WINAPI Thread_1(LPVOID arg);
 std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
 std::pair<int, int> WindowPosToMapIndex(int x, int y);
 
+
+
+//테스트
+void PrintMap() {
+	for (int i = 0; i < tile_max_h_num; ++i) {
+		for (int j = 0; j < tile_max_w_num; ++j)
+			cout << selectedMap[i][j] << ' ';
+		cout << endl;
+	}
+	cout << endl;
+}
+
 //////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -107,18 +119,21 @@ int main(int argc, char* argv[])
 	Load_Map(map_1, "maps_json/map_1.json");
 	Load_Map(map_2, "maps_json/map_2.json");
 
-	while (TRUE) {
-		cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
-		scanf("%d", &map_num);
 
-		if (map_num == 1 || map_num == 2) {
-			cout << map_num << " 번 맵을 선택하였습니다." << endl << endl;
-			break;
-		}
-		else {
-			cout << "잘못 입력하셨습니다. (1, 2 중 하나를 선택하여 주세요.)" << endl << endl;
-		}
-	}
+	//테스트할 때 주석
+	//while (TRUE) {
+	//	cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
+	//	scanf("%d", &map_num);
+
+	//	if (map_num == 1 || map_num == 2) {
+	//		cout << map_num << " 번 맵을 선택하였습니다." << endl << endl;
+	//		break;
+	//	}
+	//	else {
+	//		cout << "잘못 입력하셨습니다. (1, 2 중 하나를 선택하여 주세요.)" << endl << endl;
+	//	}
+	//}
+	map_num = 1;
 
 	Setting_Map();
 
@@ -192,18 +207,18 @@ void do_bomb(int id) {
 			obj._isActive = false;
 			obj._active_lock.unlock();
 			
-			for (auto& pl : clients) {
-				if (true == pl.in_use)
-				{
-					DELETE_OBJECT_packet del_obj_packet;
-					del_obj_packet.size = sizeof(del_obj_packet);
-					del_obj_packet.type = DELETE_OBJECT;
-					del_obj_packet.ob_type = BLOCK;
-					del_obj_packet.x = obj._x;
-					del_obj_packet.y = obj._y;
-					pl.do_send(sizeof(del_obj_packet), &del_obj_packet);
-				}
-			}
+			//for (auto& pl : clients) {
+			//	if (true == pl.in_use)
+			//	{
+			//		DELETE_OBJECT_packet del_obj_packet;
+			//		del_obj_packet.size = sizeof(del_obj_packet);
+			//		del_obj_packet.type = DELETE_OBJECT;
+			//		del_obj_packet.ob_type = BLOCK;
+			//		del_obj_packet.x = obj._x;
+			//		del_obj_packet.y = obj._y;
+			//		pl.do_send(sizeof(del_obj_packet), &del_obj_packet);
+			//	}
+			//}
 
 		}
 	}
@@ -496,7 +511,7 @@ int Check_Collision(int source_type, int source_index)
 				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
 				if (IntersectRect(&temp, &source_rt, &target_rt))
-					return BLOCK;
+					return 1;
 
 				break;
 			}
@@ -505,34 +520,34 @@ int Check_Collision(int source_type, int source_index)
 				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
 				if (IntersectRect(&temp, &source_rt, &target_rt))
-					return ROCK;
+					return 1;
 
 				break;
 			}
-			case BOMB:			//폭탄
-			{
-				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+			//case BOMB:			//폭탄
+			//{
+			//	RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
-				if (IntersectRect(&temp, &source_rt, &target_rt))
-					return BOMB;
+			//	if (IntersectRect(&temp, &source_rt, &target_rt))
+			//		return 1;
 
-				break;
-			}
-			case EXPLOSION:		//폭발
-			{
-				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+			//	break;
+			//}
+			//case EXPLOSION:		//폭발
+			//{
+			//	RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
-				if (IntersectRect(&temp, &source_rt, &target_rt))
-					return EXPLOSION;
+			//	if (IntersectRect(&temp, &source_rt, &target_rt))
+			//		return 1;
 
-				break;
-			}
+			//	break;
+			//}
 			default:
 				break;
 			}
 		};
 
-	return EMPTY;	//충돌X
+	return 0;	//충돌X
 }
 
 void process_packet(int client_index, char* p)
@@ -725,29 +740,13 @@ void process_packet(int client_index, char* p)
 		};
 		timer_queue.push(ev);
 
-
 		//폭발함수 테스트 코드
 		for (int i = 0; bombs.size(); ++i) {
 			bombs[i]._isExploded = true;
-			bombs[i].ExplodeBomb(selectedMap);
-
-			cout << "\n폭발 좌표\n";
-			for (auto d : bombs[i]._explosionPositions)
-				cout << d.first << ", " << d.second << endl;
-
-			cout << "\n파괴된바위 좌표\n";
-			for (auto d : bombs[i]._destroyedRockPositions)
-				cout << d.first << ", " << d.second << endl;
+			bombs[i].Explode(selectedMap, clients);
 
 			bombs.pop_back();
 		}
-
-
-
-		//cout << "폭탄" << endl;
-		//cout << packet->x << endl;
-		//cout << packet->y << endl;
-		//cout << packet->power << endl;
 		break;
 	}
 

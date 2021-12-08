@@ -105,8 +105,8 @@ void PrintMap() {
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
-	/*AllocConsole();
-	freopen("CONOUT$", "wt", stdout);*/
+	AllocConsole();
+	freopen("CONOUT$", "wt", stdout);
 	
 	//자동 리셋 이벤트 생성 (비신호 시작)
 	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -192,17 +192,14 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("connect()");
 
-	//아이디 입력 대기
-	WaitForSingleObject(hEvent, INFINITE);
-
 	//수신용 쓰레드 생성
 	CreateThread(NULL, 0, RecvThread, (LPVOID)sock, 0, NULL);
 
 	while (true)
 	{
-		Send_packet();
-
 		WaitForSingleObject(hEvent, INFINITE);
+
+		Send_packet();
 	}
 }
 
@@ -1094,6 +1091,9 @@ void Process_packet(char* p)
 		break;
 	}
 
+
+	///////////////////////////////////////////////
+	//폭탄 관련
 	case INIT_BOMB: {
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
 		bombs.emplace_back(packet->x, packet->y, 0, 3, packet->power);	//타이머 임시값
@@ -1104,7 +1104,6 @@ void Process_packet(char* p)
 		//임시코드
 		for (int i = 0; i < bombs.size(); ++i) {
 			bombs[i]._explode = true;
-			bombs[i].ExplodeBomb(selectedMap);
 			bombs.pop_back();
 		}
 
@@ -1112,6 +1111,22 @@ void Process_packet(char* p)
 
 		break;
 	}
+	case CHECK_EXPLOSION:{
+		CHECK_EXPLOSION_packet* packet = reinterpret_cast<CHECK_EXPLOSION_packet*>(p);
+		cout << "\n폭발 발생!!\n";
+		cout << packet->ix << ", " << packet->iy << endl;
+
+		break;
+	}
+	case DELETE_OBJECT: {
+		DELETE_OBJECT_packet* packet = reinterpret_cast<DELETE_OBJECT_packet*>(p);
+		cout << "\n바위 파괴!!\n";
+		cout << packet->ix << ", " << packet->iy << endl;
+
+		break;
+	}
+	///////////////////////////////////////////////
+
 
 	case CHANGE_STATE: {
 		PLAYER_CHANGE_STATE_packet* packet = reinterpret_cast<PLAYER_CHANGE_STATE_packet*>(p);

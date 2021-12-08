@@ -84,28 +84,34 @@ struct INIT_OBJECT_packet { // 오브젝트 생성 패킷
 
 struct INIT_BOMB_packet {// 폭탄 생성 패킷
 	unsigned char size; // 패킷 사이즈
-	char type; // 패킷 타입 10
+	char type; // 패킷 타입
 	int id;    // 폭탄 아이디
 	int power; // 폭탄 위력
-	int x, y; // 오브젝트 좌표
+	int x, y; // 좌표
+};
+
+struct CHECK_EXPLOSION_packet { // 폭발 패킷
+	unsigned char size; // 패킷 사이즈
+	char type; // 패킷 타입
+	int ix, iy; // 맵인덱스
 };
 
 struct DELETE_OBJECT_packet { // 오브젝트 제거 패킷
 	unsigned char size; // 패킷 사이즈
-	char type; // 패킷 타입 11
+	char type; // 패킷 타입
 	int ob_type; // 오브젝트 타입
-	int x, y; // 오브젝트 좌표
+	int ix, iy; // 오브젝트 맵인덱스
 };
 
-struct DELETE_ITEM_packet { // 오브젝트 제거 패킷
+struct DELETE_ITEM_packet { // 아이템 제거 패킷
 	unsigned char size; // 패킷 사이즈
-	char type; // 패킷 타입 12
-	int x, y; // 아이템 좌표
+	char type; // 패킷 타입
+	int ix, iy; // 아이템 맵인덱스
 };
 
 struct CHANGE_BUF_packet { // 플레이어 버프 변경 정보 패킷
 	unsigned char size; // 패킷 사이즈
-	char type; // 패킷 타입 13
+	char type; // 패킷 타입
 	int _power; // 폭탄 위력
 	int _bomb_count; // 폭탄개수
 	int _rock_count;

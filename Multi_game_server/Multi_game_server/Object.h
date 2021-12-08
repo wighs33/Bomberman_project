@@ -1,13 +1,14 @@
 #pragma once
 #include "stdafx.h"
 #include "protocol.h"
+#include "Session.h"
 
 class Object
 {
 public:
 	bool _isActive;
 	int _x, _y;
-	int _object_index;	// ¿ÀºêÁ§Æ® ÀÎµ¦½º °ª
+	int _object_index;	// ì˜¤ë¸Œì íŠ¸ ì¸ë±ìŠ¤ ê°’
 	std::mutex _active_lock;
 
 	Object()
@@ -35,7 +36,7 @@ public:
 	}
 };
 
-class Block : public Object	// ºí·Ï - [ÆÄ±« ºÒ°¡´ÉÇÔ]
+class Block : public Object	// ë¸”ë¡ - [íŒŒê´´ ë¶ˆê°€ëŠ¥í•¨]
 {
 public:
 	Block(int X, int Y, int OBJ_INDX) : Object(X, Y, OBJ_INDX) { }
@@ -43,7 +44,7 @@ public:
 	explicit Block(const Block& copy) : Object(copy._x, copy._y, copy._object_index) { }
 };
 
-class Rock : public Object	// ¹ÙÀ§ - [ÆÄ±« °¡´ÉÇÔ]
+class Rock : public Object	// ë°”ìœ„ - [íŒŒê´´ ê°€ëŠ¥í•¨]
 {
 public:
 	Rock(int X, int Y, int OBJ_INDX) : Object(X, Y, OBJ_INDX) { };
@@ -54,35 +55,34 @@ public:
 class Bomb : public Object
 {
 public:
-	int _timer;		// 'ÆøÅº ´ë±â ½Ã°£ + ÈÄÆøÇ³ À¯Áö ½Ã°£' À» ¸ğµÎ ´õÇÑ °ª¿¡¼­ ½ÃÀÛ (+ Âü°í·Î 1ÃÊ°¡ 10ÀÌ´Ù.) [ex) 35(3.5ÃÊ) = 30(ÆøÅº ´ë±â ½Ã°£) + 5(ÈÄÆøÇ³ Áö¼Ó½Ã°£)] 
-	int _power; // ÆøÅº ÆÄ¿ö
+	int _timer;		// 'í­íƒ„ ëŒ€ê¸° ì‹œê°„ + í›„í­í’ ìœ ì§€ ì‹œê°„' ì„ ëª¨ë‘ ë”í•œ ê°’ì—ì„œ ì‹œì‘ (+ ì°¸ê³ ë¡œ 1ì´ˆê°€ 10ì´ë‹¤.) [ex) 35(3.5ì´ˆ) = 30(í­íƒ„ ëŒ€ê¸° ì‹œê°„) + 5(í›„í­í’ ì§€ì†ì‹œê°„)] 
+	int _power; // í­íƒ„ íŒŒì›Œ
 
 	bool _isExploded = false;
-	vector<pair<int, int>> _explosionPositions;
-	vector<pair<int, int>> _destroyedRockPositions;
+
 
 
 	Bomb(int X, int Y, int OBJ_INDX, int power) : Object(X, Y, OBJ_INDX)
 	{
 		//_timer = bomb_fuse_timer + bomb_explode_timer;
 
-		_power = power; // ÆøÅº ÆÄ¿ö ÃÊ±âÈ­
+		_power = power; // í­íƒ„ íŒŒì›Œ ì´ˆê¸°í™”
 	}
 
 	explicit Bomb(const Bomb& copy) : Object(copy._x, copy._y, copy._object_index)
 	{
 		_timer = copy._timer;
 
-		_power = copy._power; // ÆøÅº ÆÄ¿ö ÃÊ±âÈ­
+		_power = copy._power; // í­íƒ„ íŒŒì›Œ ì´ˆê¸°í™”
 	}
 
-	void ExplodeBomb(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap);						// _timer°¡ ÈÄÆøÇ³ À¯Áö ½Ã°£¿¡ µµ´ŞÇÒ ½Ã Ãæµ¹Ã¼Å©
+	void Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, array<Session, MAX_USER>& clients);					// _timerê°€ í›„í­í’ ìœ ì§€ ì‹œê°„ì— ë„ë‹¬í•  ì‹œ ì¶©ëŒì²´í¬
 };
 
 class Item : public Object
 {
 public:
-	int item_type;		// ¾ÆÀÌÅÛ Å¸ÀÔ (HEART, MORE_BOMB, MORE_POWER, ROCK)
+	int item_type;		// ì•„ì´í…œ íƒ€ì… (HEART, MORE_BOMB, MORE_POWER, ROCK)
 
 	Item(int X, int Y, int OBJ_INDX, int ITEM_TYPE) : Object(X, Y, OBJ_INDX)
 	{
