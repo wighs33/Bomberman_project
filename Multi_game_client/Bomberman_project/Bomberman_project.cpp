@@ -656,8 +656,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 						break;
 
 					case ROCK:			//돌
+					case SPECIALROCK:	//돌
 						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_rock);
 						TransparentBlt(mem1dc, window_x, window_y, rock_size, rock_size, mem2dc, 0, 0, rock_img_size, rock_img_size, RGB(79, 51, 44));
+						break;
+
+						//hBit_item_more_heart, hBit_item_more_power, hBit_item_more_bomb;
+
+
+					case ITEM_HEART:			//아이템
+						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_item_more_heart);
+						TransparentBlt(mem1dc, window_x, window_y, tile_size, tile_size, mem2dc, 0, 0, heart_img_size_w, heart_img_size_h, RGB(79, 51, 44));
+						break;
+
+					case ITEM_MORE_BOMB:		//아이템
+						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_item_more_bomb);
+						TransparentBlt(mem1dc, window_x, window_y, tile_size, tile_size, mem2dc, 0, 0, item_more_bomb_img_size_w, item_more_bomb_img_size_h, RGB(79, 51, 44));
+						break;
+
+					case ITEM_MORE_POWER:		//아이템
+						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_item_more_power);
+						TransparentBlt(mem1dc, window_x, window_y, tile_size, tile_size, mem2dc, 0, 0, item_more_power_img_size, item_more_power_img_size, RGB(79, 51, 44));
+						break;
+
+					case ITEM_ROCK:			//아이템
+						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_item_more_heart);
+						TransparentBlt(mem1dc, window_x, window_y, tile_size, tile_size, mem2dc, 0, 0, heart_img_size_w, heart_img_size_h, RGB(79, 51, 44));
 						break;
 
 					default:
@@ -947,6 +971,10 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map, const char* map
 				case 2:
 					map[i][j] = ROCK;
 					break;
+
+				case 3:
+					map[i][j] = SPECIALROCK;
+					break;
 				}
 			}
 		}
@@ -988,7 +1016,7 @@ void Setting_Map()
 			//blocks.push_back(Block(X, Y, bl_indx));
 			bl_indx++;
 		}
-		else if (selectedMap[i / tile_max_w_num][i % tile_max_w_num] == ROCK) {
+		else if (selectedMap[i / tile_max_w_num][i % tile_max_w_num] == ROCK || selectedMap[i / tile_max_w_num][i % tile_max_w_num] == SPECIALROCK) {
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
@@ -1124,7 +1152,15 @@ void Process_packet(char* p)
 		break;
 	}
 	///////////////////////////////////////////////
+	case CREATE_ITEM: {
+		CREATE_ITEM_packet* packet = reinterpret_cast<CREATE_ITEM_packet*>(p);
+		cout << "\n아이템 생성!!\n";
+		cout << packet->ix << ", " << packet->iy << "\t" << packet->item_type << endl;
 
+		selectedMap[packet->iy][packet->ix] = packet->item_type;
+
+		break;
+	}
 
 	case CHANGE_STATE: {
 		PLAYER_CHANGE_STATE_packet* packet = reinterpret_cast<PLAYER_CHANGE_STATE_packet*>(p);

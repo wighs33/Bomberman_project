@@ -44,7 +44,9 @@ public:
 	int _power; // 폭탄 위력
 	int _rock_count;
 	bool in_use;
+
 	std::mutex use_lock;
+	//std::deque<Bomb> bombs;
 
 
 	void do_send(int num_bytes, void* mess)//send 작업은 여러 번 일어나야 하므로 함수 호출 시 새로운 send_buf를 동적 할당 하여 사용 후 작업 완료 시 메모리 해제를 실시 한다. 

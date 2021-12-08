@@ -14,6 +14,7 @@
 #include <atomic>
 #include <concurrent_priority_queue.h>
 #include <mutex>
+#include <random>
 
 #pragma comment(lib, "ws2_32")
 #pragma comment(lib, "json/jsoncpp.lib")
@@ -100,6 +101,7 @@ enum Packet_Type {
 	CHECK_EXPLOSION,
 	INIT_BOMB,
 	DELETE_OBJECT,
+	CREATE_ITEM,
 	DELETE_ITEM,
 	CHANGE_ITEMBUF
 };

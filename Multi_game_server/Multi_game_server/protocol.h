@@ -104,6 +104,13 @@ struct DELETE_OBJECT_packet { // 오브젝트 제거 패킷
 	int ix, iy; // 오브젝트 맵인덱스
 };
 
+struct CREATE_ITEM_packet { // 아이템 생성 패킷
+	unsigned char size; // 패킷 사이즈
+	char type; // 패킷 타입
+	int item_type; // 아이템 타입
+	int ix, iy; // 아이템 맵인덱스
+};
+
 struct DELETE_ITEM_packet { // 오브젝트 제거 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입

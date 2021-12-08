@@ -418,6 +418,10 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map
 				case 2:
 					map[i][j] = ROCK;
 					break;
+
+				case 3:
+					map[i][j] = SPECIALROCK;
+					break;
 				}
 			}
 		}
@@ -459,7 +463,7 @@ void Setting_Map()
 			blocks.push_back(Block(X, Y, bl_indx));
 			bl_indx++;
 		}
-		else if (selectedMap[i / tile_max_w_num][i % tile_max_w_num] == ROCK) {
+		else if (selectedMap[i / tile_max_w_num][i % tile_max_w_num] == ROCK || selectedMap[i / tile_max_w_num][i % tile_max_w_num] == SPECIALROCK) {
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
