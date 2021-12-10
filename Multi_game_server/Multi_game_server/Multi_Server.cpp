@@ -78,6 +78,7 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map
 void Setting_Map();
 int Check_Collision(int source_type, int source_index);
 
+void Disconnect(int c_id);
 DWORD WINAPI do_timer(LPVOID arg);
 DWORD WINAPI Thread_1(LPVOID arg);
 
@@ -85,6 +86,7 @@ std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
 std::pair<int, int> WindowPosToMapIndex(int x, int y);
 
 HANDLE htimerEvent; // 타이머 쓰레드 시작용
+HANDLE hThread[MAX_USER + 1];
 
 void SendExplosionEnd(int ix, int iy) {
 	for (auto& pl : clients) {
@@ -177,9 +179,9 @@ int main(int argc, char* argv[])
 	listen(listen_socket, SOMAXCONN);
 
 	//타이머 쓰레드 만들기
-	CreateThread(NULL, 0, do_timer, NULL, 0, NULL);
+	hThread[0] = CreateThread(NULL, 0, do_timer, NULL, 0, NULL);
 
-	for (int i = 0; i < MAX_USER; ++i) {
+	for (int i = 1; i < MAX_USER + 1; ++i) {
 		// 데이터 통신에 사용할 변수
 		SOCKET client_sock;
 		SOCKADDR_IN clientaddr;
@@ -193,12 +195,23 @@ int main(int argc, char* argv[])
 			inet_ntoa(clientaddr.sin_addr) << "  포트 번호 : " << ntohs(clientaddr.sin_port) << endl;
 
 
-		CreateThread(NULL, 0, Thread_1, (LPVOID)client_sock, 0, NULL);
+		hThread[i] = CreateThread(NULL, 0, Thread_1, (LPVOID)client_sock, 0, NULL);
 
 	}
 
+	WaitForMultipleObjects(MAX_USER + 1, hThread, TRUE, INFINITE);
+
+	for (int i = 0; i < MAX_USER + 1; ++i)
+		CloseHandle(hThread[i]);
+
+	CloseHandle(htimerEvent);
 	closesocket(listen_socket);
 	WSACleanup();
+
+	for (auto& cl : clients) {
+		if (NO_ACCEPT != cl._state)
+			Disconnect(cl._index);
+	}
 
 	return 0;
 }
@@ -1009,6 +1022,14 @@ int get_new_index()
 	return -1;
 }
 
+void Disconnect(int c_id)
+{
+	Session& cl = clients[c_id];
+	clients[c_id]._state = NO_ACCEPT;
+	closesocket(clients[c_id]._cl);
+	cout << "------------??????------------" << endl;   //충돌땜에 한글확인불가
+}
+
 DWORD WINAPI Thread_1(LPVOID arg)
 {
 	SOCKET client_sock = (SOCKET)arg;
@@ -1021,6 +1042,11 @@ DWORD WINAPI Thread_1(LPVOID arg)
 		// 데이터 받기
 		player.do_recv();
 		//int remain_data = num_byte + cl._prev_size;
+		if (clients[index]._recv_buf == 0)
+		{
+			Disconnect(index);
+			return 0;
+		}
 		char* packet_start = clients[index]._recv_buf;
 		char packet_size = packet_start[0];
 
