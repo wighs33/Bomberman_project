@@ -693,11 +693,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			//ÆøÅº
 			for (auto& bomb : bombs) {
-				//auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(bombs.front()._x, bombs.front()._y);
-				//if (selectedMap[bomb_iy][bomb_ix] != BOMB) {
-				//	continue;
-				//}
-
 				if (bomb._timer > 5) {
 					oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
 					TransparentBlt(mem1dc, bomb._x, bomb._y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 255, 255));
@@ -709,11 +704,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 
 			//Æø¹ß
-			//auto [explosion_ix, explosion_iy] = WindowPosToMapIndex(explosions.front()._x, explosions.front()._y);
-			//if (selectedMap[explosion_iy][explosion_ix] != EXPLOSION) {
-			//	//ÆøÅº Å¥¿¡¼­ Ã³À½ ÆøÅº »èÁ¦
-			//	explosions.pop_front();
-			//}
 
 			//Æø¹ßÀÌ¹ÌÁö ÇÊ¿ä
 			//for (auto& explosion : explosions) {
