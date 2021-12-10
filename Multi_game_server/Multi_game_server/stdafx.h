@@ -15,6 +15,7 @@
 #include <concurrent_priority_queue.h>
 #include <mutex>
 #include <random>
+#include <deque>
 
 #pragma comment(lib, "ws2_32")
 #pragma comment(lib, "json/jsoncpp.lib")

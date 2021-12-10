@@ -33,7 +33,7 @@ vector <Rock>	rocks;
 vector <Item>	items;
 
 //폭탄
-vector <Bomb>	bombs;
+std::deque <Bomb>	bombs;
 
 //atomic<bool> g_item[MAX_ITEM_SIZE];
 
@@ -744,14 +744,21 @@ void process_packet(int client_index, char* p)
 		};
 		timer_queue.push(ev);
 
-		//폭발함수 테스트 코드
-		for (int i = 0; bombs.size(); ++i) {
+
+		////////////////////////////////////////////////////////////
+		//여기에 타이머 추가
+		for (int i = 0; i < bombs.size(); ++i) {
+			//if(bombs[i]._timer) - 해당 폭탄의 타이머가 완료되면 플래그 true로 바꾸기
 			bombs[i]._isExploded = true;
-			bombs[i].Explode(selectedMap, clients);
 
-			bombs.pop_back();
+			if (bombs[i]._isExploded)
+				bombs[i].Explode(selectedMap, clients);
+
+			bombs.pop_front();
 		}
+		//////////////////////////////////////////////////////////////
 
+		//임시출력
 		PrintMap();
 
 		break;
