@@ -230,7 +230,7 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				for (auto& explosionMapIndex : explosionVecs.front()) {
 					auto [ix, iy] = explosionMapIndex;
 					selectedMap[iy][ix] = EMPTY;
-					//5. Æø¹ß ¸ÊÀÎµ¦½º¸¦ ÇÏ³ª¾¿ Å¬¶ó·Î º¸³½´Ù.
+					//5. Æø¹ß ÁßÀÎ ¸ÊÀÎµ¦½º¸¦ ÇÏ³ª¾¿ Å¬¶ó·Î º¸³½´Ù. - Å¬¶ó¿¡¼­ Æø¹ß ³¡³¿
 					SendExplosionEnd(ix, iy);
 				}
 				//6. Æø¹ß»èÁ¦
@@ -758,10 +758,12 @@ void process_packet(int client_index, char* p)
 
 		//2. ÆøÅº Å¥¿¡ ³ÖÀ½
 		bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, packet->power));
+
 		packet->id = ev.obj_id;
 		for (auto& pl : clients) {
 			if (true == pl.in_use)
 			{
+				cout <<"\n¾ÆÀÌµğ: "<< pl._id << endl;
 				// 3. ÆøÅº»ı¼º¸í·É ¸ğµç ÇÃ·¹ÀÌ¾î¿¡°Ô º¸³¿
 				pl.do_send(sizeof(INIT_BOMB_packet), packet);
 			}

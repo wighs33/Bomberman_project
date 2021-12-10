@@ -64,7 +64,10 @@ playerArr<Player, MAX_USER>	players;
 vector <Item>	items;
 
 //폭탄
-vector <Bomb>	bombs;
+deque <Bomb>	bombs;
+
+//폭발
+deque <Explosion>	explosions;
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -459,9 +462,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			int py = players[my_index]._y;
 			auto [map_ix, map_iy] = WindowPosToMapIndex(px, py);
 			auto [bomb_x, bomb_y] = MapIndexToWindowPos(map_ix, map_iy);
-
-			//임시 코드
-			bombs.push_back(Bomb(bomb_x, bomb_y, 0, 35, players[my_index]._bomb_power));
 			
 			//서버로 폭탄 설치 요청 패킷 전송
 			players[my_index].InputSpaceBar(send_queue, send_buf, bomb_x, bomb_y);
@@ -539,9 +539,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			if (timecnt % 4 == 0) {
 				bomb._timer -= 1;
 
-				////삭제		---- 서버에서 요청하면 패킷판별함수에서 처리
+				//삭제		---- 서버에서 요청하면 패킷판별함수에서 처리
 				//if (bomb._timer < 0) {
-				//	bomb._isActive = FALSE;
+				//	auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(bomb._x, bomb._y);
+				//	selectedMap[bomb_iy][bomb_ix] = EMPTY;
 				//}
 			}
 		}
@@ -692,9 +693,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			//폭탄
 			for (auto& bomb : bombs) {
-				auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(bomb._x, bomb._y);
-				if (selectedMap[bomb_iy][bomb_ix] != BOMB) break;
-
+				//auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(bombs.front()._x, bombs.front()._y);
+				//if (selectedMap[bomb_iy][bomb_ix] != BOMB) {
+				//	continue;
+				//}
 
 				if (bomb._timer > 5) {
 					oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
@@ -707,6 +709,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 
 			//폭발
+			//auto [explosion_ix, explosion_iy] = WindowPosToMapIndex(explosions.front()._x, explosions.front()._y);
+			//if (selectedMap[explosion_iy][explosion_ix] != EXPLOSION) {
+			//	//폭탄 큐에서 처음 폭탄 삭제
+			//	explosions.pop_front();
+			//}
+
+			//폭발이미지 필요
+			//for (auto& explosion : explosions) {
+			//	if (explosion._timer > 5) {
+			//		oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
+			//		TransparentBlt(mem1dc, explosion._x, explosion._y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 255, 255));
+
+			//		oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb_fuse);
+			//		unsigned int animation_loc = (int)(bomb_fuse_w_count_size - (((explosion._timer - bomb_explode_timer) * bomb_fuse_w_count_size) / bomb_fuse_timer));
+			//		TransparentBlt(mem1dc, explosion._x, explosion._y, bomb_fuse_w, bomb_fuse_h, mem2dc, bomb_fuse_img_size_w_gap * animation_loc, 0, bomb_fuse_img_size_w_gap, bomb_fuse_img_size_h, RGB(255, 255, 255));
+			//	}
+			//}
 
 
 			//플레이어
@@ -1125,27 +1144,38 @@ void Process_packet(char* p)
 	//폭탄 관련
 	case INIT_BOMB: {
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
-		bombs.emplace_back(packet->x, packet->y, 0, 3, packet->power);	//타이머 임시값
-		bombs[bombs.size() - 1]._object_index = bombs.size() - 1;
+		bombs.emplace_back(packet->x, packet->y, bombs.size(), 3, packet->power);	//타이머 임시값
 
 		auto [map_ix, map_iy] = WindowPosToMapIndex(packet->x, packet->y);
 
 		selectedMap[map_iy][map_ix] = BOMB;
-
 		break;
 	}
 	case CHECK_EXPLOSION:{
 		CHECK_EXPLOSION_packet* packet = reinterpret_cast<CHECK_EXPLOSION_packet*>(p);
 
+		if (bombs.size()) {
+			if (selectedMap[packet->iy][packet->ix] == BOMB) {
+				//폭탄 큐에서 처음 폭탄 삭제
+				bombs.pop_front();
+			}
+		}
+
 		if (packet->isActive) {
 			cout << "\n폭발 발생!!\n";
 			cout << packet->ix << ", " << packet->iy << endl;
 			selectedMap[packet->iy][packet->ix] = EXPLOSION;	//폭발 발생
+
+			auto [explosion_x, explosion_y] = MapIndexToWindowPos(packet->ix, packet->iy);
+			// 폭발 큐에 폭발 넣기- 여러번 보냄
+			explosions.emplace_back(explosion_x, explosion_y, explosions.size(), 1);
 		}
 		else {
 			cout << "\n폭발 끝!!\n";
 			cout << packet->ix << ", " << packet->iy << endl;
 			selectedMap[packet->iy][packet->ix] = EMPTY;	//폭발 끝
+			//폭발 큐에서 처음 폭발 삭제 - 여러번 보냄
+			explosions.pop_front();
 		}
 
 		break;
