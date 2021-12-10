@@ -36,6 +36,8 @@ public:
 	}
 };
 
+///////////////////////////////////////////////////////////////////////
+
 class Block : public Object	// 블록 - [파괴 불가능함]
 {
 public:
@@ -52,32 +54,30 @@ public:
 	explicit Rock(const Rock& copy) : Object(copy._x, copy._y, copy._object_index) { }
 };
 
+///////////////////////////////////////////////////////////////////////////////////////
+// 폭탄
+
 class Bomb : public Object
 {
 public:
-	int _timer;		// '폭탄 대기 시간 + 후폭풍 유지 시간' 을 모두 더한 값에서 시작 (+ 참고로 1초가 10이다.) [ex) 35(3.5초) = 30(폭탄 대기 시간) + 5(후폭풍 지속시간)] 
 	int _power; // 폭탄 파워
-
-	bool _isExploded = false;
-
-
+	vector<pair<int,int>>	explosionMapIndexs;  //폭발 맵위치 벡터
 
 	Bomb(int X, int Y, int OBJ_INDX, int power) : Object(X, Y, OBJ_INDX)
 	{
-		//_timer = bomb_fuse_timer + bomb_explode_timer;
-
 		_power = power; // 폭탄 파워 초기화
 	}
 
 	explicit Bomb(const Bomb& copy) : Object(copy._x, copy._y, copy._object_index)
 	{
-		_timer = copy._timer;
-
 		_power = copy._power; // 폭탄 파워 초기화
 	}
 
 	void Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, array<Session, MAX_USER>& clients);					// _timer가 후폭풍 유지 시간에 도달할 시 충돌체크
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// 아이템
 
 class Item : public Object
 {

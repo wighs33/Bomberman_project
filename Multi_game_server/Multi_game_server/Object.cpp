@@ -46,7 +46,7 @@ static void SendCreatedItem(array<Session, MAX_USER>& clients, int ix, int iy, i
 	}
 }
 
-static void SendExplosion(array<Session, MAX_USER>& clients, int ix, int iy) {
+static void SendExplosionStart(array<Session, MAX_USER>& clients, int ix, int iy) {
 	for (auto& pl : clients) {
 		if (true == pl.in_use)
 		{
@@ -63,7 +63,9 @@ static void SendExplosion(array<Session, MAX_USER>& clients, int ix, int iy) {
 
 void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, array<Session, MAX_USER>& clients)
 {
-	default_random_engine dre;
+	random_device seeder;
+	const auto seed = seeder.entropy() ? seeder() : time(nullptr);
+	mt19937_64 eng(static_cast<mt19937_64::result_type>(seed));
 	uniform_int_distribution<int> itemDist(ITEM_HEART, ITEM_ROCK);
 
 
@@ -74,7 +76,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 	objectMap[bomb_iy][bomb_ix] = EXPLOSION;
 
 	//∆¯πﬂ ∏ ¿Œµ¶Ω∫ ∫∏≥ª±‚
-	SendExplosion(clients, bomb_ix, bomb_iy);
+	explosionMapIndexs.emplace_back(bomb_ix, bomb_iy);
+	SendExplosionStart(clients, bomb_ix, bomb_iy);
 
 	//∆¯≈∫ ¿ß √º≈©
 	for (int i = 1; i <= _power; ++i) {
@@ -92,7 +95,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		}
 		//æ∆¿Ã≈€ πŸ¿ß √º≈©
 		if (objectMap[bomb_iy - i][bomb_ix] == SPECIALROCK) {
-			int item = itemDist(dre);
+			int item = itemDist(eng);
 			objectMap[bomb_iy - i][bomb_ix] = item;
 
 			//∆ƒ±´µ» πŸ¿ß ∏ ¿Œµ¶Ω∫ ∫∏≥ª±‚
@@ -101,7 +104,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		}
 		objectMap[bomb_iy - i][bomb_ix] = EXPLOSION;
 		//∆¯πﬂ ∏ ¿Œµ¶Ω∫ ∫∏≥ª±‚
-		SendExplosion(clients, bomb_ix, bomb_iy - i);
+		explosionMapIndexs.emplace_back(bomb_ix, bomb_iy - i);
+		SendExplosionStart(clients, bomb_ix, bomb_iy - i);
 	}
 
 	//∆¯≈∫ æ∆∑° √º≈©
@@ -120,7 +124,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		}
 		//æ∆¿Ã≈€ πŸ¿ß √º≈©
 		if (objectMap[bomb_iy + i][bomb_ix] == SPECIALROCK) {
-			int item = itemDist(dre);
+			int item = itemDist(eng);
 			objectMap[bomb_iy + i][bomb_ix] = item;
 
 			//∆ƒ±´µ» πŸ¿ß ∏ ¿Œµ¶Ω∫ ∫∏≥ª±‚
@@ -130,7 +134,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		objectMap[bomb_iy + i][bomb_ix] = EXPLOSION;
 
 		//∆¯πﬂ ∏ ¿Œµ¶Ω∫ ∫∏≥ª±‚
-		SendExplosion(clients, bomb_ix, bomb_iy + i);
+		explosionMapIndexs.emplace_back(bomb_ix, bomb_iy + i);
+		SendExplosionStart(clients, bomb_ix, bomb_iy + i);
 	}
 
 	//∆¯≈∫ øﬁ¬  √º≈©
@@ -149,7 +154,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		}
 		//æ∆¿Ã≈€ πŸ¿ß √º≈©
 		if (objectMap[bomb_iy][bomb_ix - i] == SPECIALROCK) {
-			int item = itemDist(dre);
+			int item = itemDist(eng);
 			objectMap[bomb_iy][bomb_ix - i] = item;
 
 			//∆ƒ±´µ» πŸ¿ß ∏ ¿Œµ¶Ω∫ ∫∏≥ª±‚
@@ -159,7 +164,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		objectMap[bomb_iy][bomb_ix - i] = EXPLOSION;
 
 		//∆¯πﬂ ∏ ¿Œµ¶Ω∫ ∫∏≥ª±‚
-		SendExplosion(clients, bomb_ix - i, bomb_iy);
+		explosionMapIndexs.emplace_back(bomb_ix - i, bomb_iy);
+		SendExplosionStart(clients, bomb_ix - i, bomb_iy);
 	}
 
 	//∆¯≈∫ ø¿∏•¬  √º≈©
@@ -178,7 +184,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		}
 		//æ∆¿Ã≈€ πŸ¿ß √º≈©
 		if (objectMap[bomb_iy][bomb_ix + i] == SPECIALROCK) {
-			int item = itemDist(dre);
+			int item = itemDist(eng);
 			objectMap[bomb_iy][bomb_ix + i] = item;
 
 			//∆ƒ±´µ» πŸ¿ß ∏ ¿Œµ¶Ω∫ ∫∏≥ª±‚
@@ -188,6 +194,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		objectMap[bomb_iy][bomb_ix + i] = EXPLOSION;
 
 		//∆¯πﬂ ∏ ¿Œµ¶Ω∫ ∫∏≥ª±‚
-		SendExplosion(clients, bomb_ix + i, bomb_iy);
+		explosionMapIndexs.emplace_back(bomb_ix + i, bomb_iy);
+		SendExplosionStart(clients, bomb_ix + i, bomb_iy);
 	}
 }

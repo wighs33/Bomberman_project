@@ -8,7 +8,7 @@
 struct LOGIN_packet { // 로그인 요청 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 0
-	char id[MAX_NAME_SIZE]; // 플레이어 아이디
+	char id[BUFSIZE]; // 플레이어 아이디
 };
 
 struct LOGIN_OK_packet {// 로그인 허락 패킷
@@ -31,26 +31,19 @@ struct INIT_PLAYER_packet { // 플레이어 생성 패킷
 	char type; // 패킷 타입 3	
 	int x, y; // 플레이어 좌표
 	int dir; // 이동 방향  ( 좌 - 2 / 우 - 1 / 상 - 4 / 하 - 3 )
-	Player_Condition state; // 플레이어 상태
+	int state; // 플레이어 상태
 	int index; // 플레이어의 인덱스
 	int level; // 플레이어 레벨
 	int exp; // 플레이어 경험치
-	char id[MAX_NAME_SIZE]; // 플레이어 아이디
+	char id[BUFSIZE]; // 플레이어 아이디
 };
 
 struct PLAYER_CHANGE_STATE_packet { // 플레이어 상태 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 4
 	int x, y; // 플레이어 좌표
-	Player_Condition state; // 플레이어 상태
-	char id[MAX_NAME_SIZE]; // 플레이어 아이디
-};
-
-struct PLAYER_BUF_packet {// 플레이어 버프 패킷
-	unsigned char size; // 패킷 사이즈
-	char type; // 패킷 타입 5
-	int power; // 폭탄 위력
-	char id[MAX_NAME_SIZE]; // 플레이어 아이디
+	int state; // 플레이어 상태
+	char id[BUFSIZE]; // 플레이어 아이디
 };
 
 struct GET_ITEM_packet {// 아이템 획득 요청 피킷
@@ -64,7 +57,7 @@ struct MOVE_PLAYER_packet { // 플레이어 이동 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 7
 	int dir; // 이동 방향  ( 좌 - 2 / 우 - 1 / 상 - 4 / 하 - 3 )
-	char id[MAX_NAME_SIZE]; // 플레이어 아이디
+	char id[BUFSIZE]; // 플레이어 아이디
 };
 
 struct MOVE_OK_packet { // 플레이어 이동 확인 패킷
@@ -72,7 +65,7 @@ struct MOVE_OK_packet { // 플레이어 이동 확인 패킷
 	char type; // 패킷 타입 8
 	int x, y; // 플레이어 좌표
 	int dir;	// 이동 방향  ( 좌 - 2 / 우 - 1 / 상 - 4 / 하 - 3 )
-	char id[MAX_NAME_SIZE]; // 플레이어 아이디
+	char id[BUFSIZE]; // 플레이어 아이디
 };
 
 struct INIT_OBJECT_packet { // 오브젝트 생성 패킷
@@ -111,18 +104,11 @@ struct CREATE_ITEM_packet { // 아이템 생성 패킷
 	int ix, iy; // 아이템 맵인덱스
 };
 
-struct DELETE_ITEM_packet { // 오브젝트 제거 패킷
+struct PLAYER_ITEM_BUFF_packet {// 플레이어 버프 패킷 + 아이템 제거 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입
+	int item_type; // 아이템 타입
 	int ix, iy; // 아이템 맵인덱스
-};
-
-struct CHANGE_BUF_packet { // 플레이어 버프 변경 정보 패킷
-	unsigned char size; // 패킷 사이즈
-	char type; // 패킷 타입
-	int _power; // 폭탄 위력
-	int _bomb_count; // 폭탄개수
-	int _rock_count;
-	int _heart; // 목숨
+	char id[BUFSIZE]; // 플레이어 아이디
 };
 #pragma pack(pop)

@@ -34,6 +34,7 @@ vector <Item>	items;
 
 //폭탄
 std::deque <Bomb>	bombs;
+std::deque <vector<pair<int, int>>>	explosionVecs;  //폭발 맵위치 벡터큐
 
 //atomic<bool> g_item[MAX_ITEM_SIZE];
 
@@ -76,16 +77,29 @@ int get_new_index();
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
 int Check_Collision(int source_type, int source_index);
-void Disconnect(int c_id);
+
 DWORD WINAPI do_timer(LPVOID arg);
 DWORD WINAPI Thread_1(LPVOID arg);
 
 std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
 std::pair<int, int> WindowPosToMapIndex(int x, int y);
 
-HANDLE htimerEvent; // 타이머 쓰레드 신호
-HANDLE hThread[MAX_USER + 1]; 
+HANDLE htimerEvent; // 타이머 쓰레드 시작용
 
+void SendExplosionEnd(int ix, int iy) {
+	for (auto& pl : clients) {
+		if (true == pl.in_use)
+		{
+			CHECK_EXPLOSION_packet check_explosion_packet;
+			check_explosion_packet.size = sizeof(check_explosion_packet);
+			check_explosion_packet.type = CHECK_EXPLOSION;
+			check_explosion_packet.ix = ix;
+			check_explosion_packet.iy = iy;
+			check_explosion_packet.isActive = false;
+			pl.do_send(sizeof(check_explosion_packet), &check_explosion_packet);
+		}
+	}
+}
 
 //테스트
 void PrintMap() {
@@ -98,9 +112,6 @@ void PrintMap() {
 }
 
 //////////////////////////////////////////////////////////
-
-
-
 
 int main(int argc, char* argv[])
 {
@@ -166,9 +177,9 @@ int main(int argc, char* argv[])
 	listen(listen_socket, SOMAXCONN);
 
 	//타이머 쓰레드 만들기
-    hThread[0] = CreateThread(NULL, 0, do_timer,(LPVOID)listen_socket, 0, NULL);
+	CreateThread(NULL, 0, do_timer, NULL, 0, NULL);
 
-	for (int i = 1; i < MAX_USER + 1; ++i) {
+	for (int i = 0; i < MAX_USER; ++i) {
 		// 데이터 통신에 사용할 변수
 		SOCKET client_sock;
 		SOCKADDR_IN clientaddr;
@@ -182,57 +193,60 @@ int main(int argc, char* argv[])
 			inet_ntoa(clientaddr.sin_addr) << "  포트 번호 : " << ntohs(clientaddr.sin_port) << endl;
 
 
-		hThread[i] = CreateThread(NULL, 0, Thread_1, (LPVOID)client_sock, 0, NULL);
+		CreateThread(NULL, 0, Thread_1, (LPVOID)client_sock, 0, NULL);
 
 	}
 
-	WaitForMultipleObjects(MAX_USER + 1, hThread, TRUE, INFINITE);
-	
-	for (int i = 0; i < MAX_USER + 1; ++i) 
-		CloseHandle(hThread[i]);
-	
-	CloseHandle(htimerEvent);
 	closesocket(listen_socket);
 	WSACleanup();
-	
-	for (auto& cl : clients) {
-		if (NO_ACCEPT != cl._state)
-			Disconnect(cl._index);
-	}
 
 	return 0;
 }
 
 
 DWORD WINAPI do_timer(LPVOID arg) {
-
-	WaitForSingleObject(htimerEvent,INFINITE);
+	WaitForSingleObject(htimerEvent, INFINITE);
 
 	while (true) {
+
 		timer_event ev;
 		timer_queue.try_pop(ev);
-		int bomb_id = ev.obj_id;
-		if (bombs[bomb_id]._isActive == false) continue;
+
 		if (ev.start_time <= chrono::system_clock::now()) {
-			if (ev.order == START_EXPL) //폭발 시작
+			if (ev.order == START_EXPL) //1. 폭발 시작
 			{
-				bombs[bomb_id]._isExploded = true;
-				bombs[bomb_id].Explode(selectedMap, clients);
-				//bombs.pop_front();
+				bombs.front().Explode(selectedMap, clients);
+				//2. 폭탄이 삭제되기 전 전역큐에 폭발범위에 해당하는 맵인덱스들을 넣는다.
+				explosionVecs.push_back(bombs.front().explosionMapIndexs);
+				//3. 폭탄삭제
+				bombs.pop_front();
+
+				//확인용 출력
+				PrintMap();
 			}
-			else if (ev.order == END_EXPL) //폭발 끝
+			else if (ev.order == END_EXPL) //4. 폭발 끝
 			{
-				
-				bombs[bomb_id]._isActive = false;
-				//bombs.pop_front();
+				// 전역큐의 첫번째 원소에는 폭발범위가 있고
+				for (auto& explosionMapIndex : explosionVecs.front()) {
+					auto [ix, iy] = explosionMapIndex;
+					selectedMap[iy][ix] = EMPTY;
+					//5. 폭발 중인 맵인덱스를 하나씩 클라로 보낸다. - 클라에서 폭발 끝냄
+					SendExplosionEnd(ix, iy);
+				}
+				//6. 폭발삭제
+				explosionVecs.pop_front();
+
+				//확인용 출력
+				PrintMap();
+
+				//1~6 한 사이클 완료
+				WaitForSingleObject(htimerEvent, INFINITE);
 			}
 		}
 		else {
 			timer_queue.push(ev);
 			this_thread::sleep_for(10ms);
 		}
-
-
 	}
 
 }
@@ -518,6 +532,15 @@ int Check_Collision(int source_type, int source_index)
 
 				break;
 			}
+			case SPECIALROCK:			//아이템나오는 돌
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+				if (IntersectRect(&temp, &source_rt, &target_rt))
+					return 1;
+
+				break;
+			}
 			//case BOMB:			//폭탄
 			//{
 			//	RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
@@ -536,6 +559,90 @@ int Check_Collision(int source_type, int source_index)
 
 			//	break;
 			//}
+			case ITEM_HEART:
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+				if (IntersectRect(&temp, &source_rt, &target_rt)) {
+					//패킷 보내기
+					PLAYER_ITEM_BUFF_packet buff_packet;
+					buff_packet.size = sizeof(buff_packet);
+					buff_packet.type = ITEM_BUFF;
+					buff_packet.item_type = ITEM_HEART;
+					buff_packet.ix = ix;
+					buff_packet.iy = iy;
+					strcpy_s(buff_packet.id, clients[source_index]._id);
+					clients[source_index].do_send(sizeof(buff_packet), &buff_packet);
+					++clients[source_index]._heart;
+					selectedMap[iy][ix] = EMPTY;
+					return 0;
+				}
+
+				break;
+			}
+			case ITEM_MORE_BOMB:
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+				if (IntersectRect(&temp, &source_rt, &target_rt)) {
+					//패킷 보내기
+					PLAYER_ITEM_BUFF_packet buff_packet;
+					buff_packet.size = sizeof(buff_packet);
+					buff_packet.type = ITEM_BUFF;
+					buff_packet.item_type = ITEM_MORE_BOMB;
+					buff_packet.ix = ix;
+					buff_packet.iy = iy;
+					strcpy_s(buff_packet.id, clients[source_index]._id);
+					clients[source_index].do_send(sizeof(buff_packet), &buff_packet);
+					++clients[source_index]._bomb_count;
+					selectedMap[iy][ix] = EMPTY;
+					return 0;
+				}
+
+				break;
+			}
+			case ITEM_MORE_POWER:
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+				if (IntersectRect(&temp, &source_rt, &target_rt)) {
+					//패킷 보내기
+					PLAYER_ITEM_BUFF_packet buff_packet;
+					buff_packet.size = sizeof(buff_packet);
+					buff_packet.type = ITEM_BUFF;
+					buff_packet.item_type = ITEM_MORE_POWER;
+					buff_packet.ix = ix;
+					buff_packet.iy = iy;
+					strcpy_s(buff_packet.id, clients[source_index]._id);
+					clients[source_index].do_send(sizeof(buff_packet), &buff_packet);
+					++clients[source_index]._power;
+					selectedMap[iy][ix] = EMPTY;
+					return 0;
+				}
+
+				break;
+			}
+			case ITEM_ROCK:
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+				if (IntersectRect(&temp, &source_rt, &target_rt)) {
+					//패킷 보내기
+					PLAYER_ITEM_BUFF_packet buff_packet;
+					buff_packet.size = sizeof(buff_packet);
+					buff_packet.type = ITEM_BUFF;
+					buff_packet.item_type = ITEM_ROCK;
+					buff_packet.ix = ix;
+					buff_packet.iy = iy;
+					strcpy_s(buff_packet.id, clients[source_index]._id);
+					clients[source_index].do_send(sizeof(buff_packet), &buff_packet);
+					++clients[source_index]._rock_count;
+					selectedMap[iy][ix] = EMPTY;
+					return 0;
+				}
+
+				break;
+			}
 			default:
 				break;
 			}
@@ -566,20 +673,6 @@ void process_packet(int client_index, char* p)
 	case LOGIN: {
 		LOGIN_packet* packet = reinterpret_cast<LOGIN_packet*>(p);
 		//send_login_ok_packet(client_index);
-		bool b_login = true;
-		for (int i = 0; i < MAX_USER; ++i) {
-			if (NO_ACCEPT != clients[i]._state) {
-				if (strcmp(packet->id, clients[i]._id) == 0) {
-					LOGIN_ERROR_packet login_error_packet;
-					login_error_packet.type = LOGIN_ERROR;
-					cl.do_send(sizeof(login_error_packet), &login_error_packet);
-					b_login = false;
-					break;
-				}
-			}
-		}
-
-		if (b_login == false) break;
 
 		if (!get_status(client_index, packet->id)) {
 			LOGIN_ERROR_packet login_error_packet;
@@ -587,7 +680,6 @@ void process_packet(int client_index, char* p)
 			cl.do_send(sizeof(login_error_packet), &login_error_packet);
 			break;
 		}
-
 
 		for (auto& other : clients) {
 			// 플레이어가 로그인 요청
@@ -741,34 +833,38 @@ void process_packet(int client_index, char* p)
 		break;
 	}
 
-	case INIT_BOMB: {
+	case INIT_BOMB: {	// 1. 폭탄 받음
 		timer_event ev;
 		ev.obj_id = g_b_count++;
 		//////////////////////////////////////////////////////////
 
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
+
+		//2. 폭탄 큐에 넣음
 		bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, packet->power));
+
 		packet->id = ev.obj_id;
 		for (auto& pl : clients) {
 			if (true == pl.in_use)
 			{
+				cout <<"\n아이디: "<< pl._id << endl;
+				// 3. 폭탄생성명령 모든 플레이어에게 보냄
 				pl.do_send(sizeof(INIT_BOMB_packet), packet);
 			}
 		};
 
-		//여기 있던 폭발 함수 do_timer에 옮겨짐
-		
-		//타이머 큐에 폭발 이벤트 넣음
-		//3초 뒤에 ev.obj_id란 아이디를 가진 폭탄에 START_EXPL(폭발 시작) 이벤트을 실행 시켜라
+		//4. 타이머 큐에 3초짜리 타이머 넣음
 		Timer_Event(ev.obj_id, START_EXPL, 3000ms);
 		Timer_Event(ev.obj_id, END_EXPL, 4000ms);
 
-		
-		//타이머 쓰레드 신호 true
-		//이거 한번만 실행되게 할수있음??
+		//5. 폭탄 터뜨림
 		SetEvent(htimerEvent);
 		
+		//임시 출력
 		PrintMap();
+
+		//큐에 폭탄 개수
+		cout << "큐에 폭탄 개수: " << bombs.size() << endl;
 
 		break;
 	}
@@ -879,6 +975,8 @@ void process_packet(int client_index, char* p)
 		default: {
 			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;
 			cout << "packet state number: " << packet->state << endl;
+			getchar();
+			exit(-1);
 			break;
 		}
 
@@ -911,26 +1009,6 @@ int get_new_index()
 	return -1;
 }
 
-void Disconnect(int c_id)
-{
-	Session& cl = clients[c_id];
-	cl._state = NO_ACCEPT;
-	cl.in_use = false;
-	for (auto& other : clients) {
-		if (NO_ACCEPT != other._state) {
-			PLAYER_CHANGE_STATE_packet state_packet;
-			state_packet.size = sizeof(state_packet);
-			state_packet.type = CHANGE_STATE;
-			state_packet.x = cl._x;
-			state_packet.y = cl._y;
-			state_packet.state = cl._state;
-			strcpy_s(state_packet.id, cl._id);
-			other.do_send(sizeof(state_packet), &state_packet);
-		}
-	}
-	closesocket(cl._cl);
-}
-
 DWORD WINAPI Thread_1(LPVOID arg)
 {
 	SOCKET client_sock = (SOCKET)arg;
@@ -942,19 +1020,29 @@ DWORD WINAPI Thread_1(LPVOID arg)
 	while (1) {
 		// 데이터 받기
 		player.do_recv();
-		
-		if (clients[index]._recv_buf == 0)
-		{
-			cout << "------------연결 종료------------" << endl;
-			Disconnect(index);
-			return 0;
-		}
-
+		//int remain_data = num_byte + cl._prev_size;
 		char* packet_start = clients[index]._recv_buf;
 		char packet_size = packet_start[0];
 
+		//while (packet_size <= remain_data) {
 		process_packet(index, packet_start);
+		//remain_data -= packet_size;
+	//    packet_start += packet_size;
+		//if (remain_data > 0) packet_size = packet_start[0];
+		//else break;
+	//}
 
+	/*if (0 < remain_data) {
+		cl._prev_size = remain_data;
+		memcpy(&exp_over->_net_buf, packet_start, remain_data);
+	}*/
+
+		if (g_shutdown == true)
+		{
+			// closesocket()
+			closesocket(client_sock);
+			return 0;
+		}
 	}
 }
 
