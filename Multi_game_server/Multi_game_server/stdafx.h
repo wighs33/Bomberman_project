@@ -135,3 +135,10 @@ enum MapData {
 	ITEM_MORE_POWER,
 	ITEM_ROCK
 };
+
+//이벤트 발생 타입
+enum EVENT_TYPE {
+	START_EXPL,  // 폭발 시작
+	END_EXPL     // 폭발 끝
+
+};

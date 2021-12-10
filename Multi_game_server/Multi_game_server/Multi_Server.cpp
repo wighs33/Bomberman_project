@@ -45,12 +45,10 @@ bool g_shutdown = false;
 
 atomic<int> g_b_count = 0;
 
-enum EVENT_TYPE { EVENT_DO_BOMB };
-
 struct timer_event {
 	int obj_id;
 	chrono::system_clock::time_point	start_time;
-	EVENT_TYPE ev;
+	EVENT_TYPE order;
 	int target_id;
 	constexpr bool operator < (const timer_event& _Left) const
 	{
@@ -75,15 +73,17 @@ bool check_all_ready();
 void send_all_play_start();
 void process_packet(int client_index, char* p);
 int get_new_index();
-void do_bomb(int id);
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
 int Check_Collision(int source_type, int source_index);
 
+DWORD WINAPI do_timer(LPVOID arg);
 DWORD WINAPI Thread_1(LPVOID arg);
 
 std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
 std::pair<int, int> WindowPosToMapIndex(int x, int y);
+
+HANDLE htimerEvent; // 타이머 쓰레드 시작용
 
 
 
@@ -137,7 +137,9 @@ int main(int argc, char* argv[])
 
 	Setting_Map();
 
-
+	//타이머 스레드 스위치dyd
+	htimerEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	
 	//for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                    //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
 	//	g_item[i] = true;                                            
 	//}
@@ -159,6 +161,9 @@ int main(int argc, char* argv[])
 	server_addr.sin_port = htons(SERVER_PORT);
 	bind(listen_socket, (SOCKADDR*)&server_addr, sizeof(server_addr));
 	listen(listen_socket, SOMAXCONN);
+
+	//타이머 쓰레드 만들기
+	CreateThread(NULL, 0, do_timer,(LPVOID)listen_socket, 0, NULL);
 
 	for (int i = 0; i < MAX_USER; ++i) {
 		// 데이터 통신에 사용할 변수
@@ -190,51 +195,24 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-bool is_near(int a, int b)
-{
-	int power = bombs[a]._power;
-	if (power < abs(bombs[a]._x - blocks[b]._x)) return false;
-	if (power < abs(bombs[a]._y - blocks[b]._y)) return false;
-	return true;
-}
 
-void do_bomb(int id) {
-	for (auto& obj : blocks) {
-		if (obj._isActive != true) continue;
-		if (true == is_near(id, obj._object_index)) {
 
-			obj._active_lock.lock();
-			obj._isActive = false;
-			obj._active_lock.unlock();
-			
-			//for (auto& pl : clients) {
-			//	if (true == pl.in_use)
-			//	{
-			//		DELETE_OBJECT_packet del_obj_packet;
-			//		del_obj_packet.size = sizeof(del_obj_packet);
-			//		del_obj_packet.type = DELETE_OBJECT;
-			//		del_obj_packet.ob_type = BLOCK;
-			//		del_obj_packet.x = obj._x;
-			//		del_obj_packet.y = obj._y;
-			//		pl.do_send(sizeof(del_obj_packet), &del_obj_packet);
-			//	}
-			//}
+DWORD WINAPI do_timer(LPVOID arg) {
 
-		}
-	}
-}
-
-void do_timer() {
+	WaitForSingleObject(htimerEvent,INFINITE);
 
 	while (true) {
 		timer_event ev;
 		timer_queue.try_pop(ev);
-		auto t = ev.start_time - chrono::system_clock::now();
 		int bomb_id = ev.obj_id;
 		if (bombs[bomb_id]._isActive == false) continue;
 		if (ev.start_time <= chrono::system_clock::now()) {
-			do_bomb(bomb_id);
-			this_thread::sleep_for(10ms);
+			if (ev.order == START_EXPL)
+			{
+				bombs[bomb_id]._isExploded = true;
+				bombs[bomb_id].Explode(selectedMap, clients);
+				//bombs.pop_front();
+			}
 		}
 		else {
 			timer_queue.push(ev);
@@ -554,6 +532,16 @@ int Check_Collision(int source_type, int source_index)
 	return 0;	//충돌X
 }
 
+void Timer_Event(int _obj_id, EVENT_TYPE ev, std::chrono::milliseconds ms)
+{
+	timer_event t;
+	t.obj_id = _obj_id;
+	t.order = ev;
+	t.start_time = chrono::system_clock::now() + ms;
+	timer_queue.push(t);
+}
+
+
 void process_packet(int client_index, char* p)
 {
 
@@ -727,9 +715,9 @@ void process_packet(int client_index, char* p)
 	}
 
 	case INIT_BOMB: {
-		//if (폭탄 생성 했다면)
 		timer_event ev;
-		ev.obj_id = ++g_b_count;
+		ev.obj_id = g_b_count++;
+		
 		
 		//////////////////////////////////////////////////////////
 
@@ -742,23 +730,17 @@ void process_packet(int client_index, char* p)
 				pl.do_send(sizeof(INIT_BOMB_packet), packet);
 			}
 		};
-		timer_queue.push(ev);
 
-
-		////////////////////////////////////////////////////////////
-		//여기에 타이머 추가
-		for (int i = 0; i < bombs.size(); ++i) {
-			//if(bombs[i]._timer) - 해당 폭탄의 타이머가 완료되면 플래그 true로 바꾸기
-			bombs[i]._isExploded = true;
-
-			if (bombs[i]._isExploded)
-				bombs[i].Explode(selectedMap, clients);
-
-			bombs.pop_front();
-		}
-		//////////////////////////////////////////////////////////////
-
-		//임시출력
+		//여기 있던 폭발 함수 do_timer에 옮겨짐
+		
+		//타이머 큐에 폭발 이벤트 넣음
+		//3초 뒤에 ev.obj_id란 아이디를 가진 폭탄에 START_EXPL(폭발 시작)을 실행 시켜라
+		Timer_Event(ev.obj_id, START_EXPL, 3000ms);
+		
+		//타이머 쓰레드 신호 true
+		//이거 한번만 실행되게 할수있음??
+		SetEvent(htimerEvent);
+		
 		PrintMap();
 
 		break;
