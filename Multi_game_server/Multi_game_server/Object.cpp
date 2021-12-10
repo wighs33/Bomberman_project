@@ -63,7 +63,9 @@ static void SendExplosionStart(array<Session, MAX_USER>& clients, int ix, int iy
 
 void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, array<Session, MAX_USER>& clients)
 {
-	default_random_engine dre;
+	random_device seeder;
+	const auto seed = seeder.entropy() ? seeder() : time(nullptr);
+	mt19937_64 eng(static_cast<mt19937_64::result_type>(seed));
 	uniform_int_distribution<int> itemDist(ITEM_HEART, ITEM_ROCK);
 
 
@@ -93,7 +95,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		}
 		//아이템 바위 체크
 		if (objectMap[bomb_iy - i][bomb_ix] == SPECIALROCK) {
-			int item = itemDist(dre);
+			int item = itemDist(eng);
 			objectMap[bomb_iy - i][bomb_ix] = item;
 
 			//파괴된 바위 맵인덱스 보내기
@@ -122,7 +124,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		}
 		//아이템 바위 체크
 		if (objectMap[bomb_iy + i][bomb_ix] == SPECIALROCK) {
-			int item = itemDist(dre);
+			int item = itemDist(eng);
 			objectMap[bomb_iy + i][bomb_ix] = item;
 
 			//파괴된 바위 맵인덱스 보내기
@@ -152,7 +154,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		}
 		//아이템 바위 체크
 		if (objectMap[bomb_iy][bomb_ix - i] == SPECIALROCK) {
-			int item = itemDist(dre);
+			int item = itemDist(eng);
 			objectMap[bomb_iy][bomb_ix - i] = item;
 
 			//파괴된 바위 맵인덱스 보내기
@@ -182,7 +184,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		}
 		//아이템 바위 체크
 		if (objectMap[bomb_iy][bomb_ix + i] == SPECIALROCK) {
-			int item = itemDist(dre);
+			int item = itemDist(eng);
 			objectMap[bomb_iy][bomb_ix + i] = item;
 
 			//파괴된 바위 맵인덱스 보내기
