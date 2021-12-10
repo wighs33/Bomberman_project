@@ -76,15 +76,15 @@ int get_new_index();
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
 int Check_Collision(int source_type, int source_index);
-
+void Disconnect(int c_id);
 DWORD WINAPI do_timer(LPVOID arg);
 DWORD WINAPI Thread_1(LPVOID arg);
 
 std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
 std::pair<int, int> WindowPosToMapIndex(int x, int y);
 
-HANDLE htimerEvent; // 타이머 쓰레드 시작용
-
+HANDLE htimerEvent; // 타이머 쓰레드 신호
+HANDLE hThread[MAX_USER + 1]; 
 
 
 //테스트
@@ -98,6 +98,9 @@ void PrintMap() {
 }
 
 //////////////////////////////////////////////////////////
+
+
+
 
 int main(int argc, char* argv[])
 {
@@ -163,9 +166,9 @@ int main(int argc, char* argv[])
 	listen(listen_socket, SOMAXCONN);
 
 	//타이머 쓰레드 만들기
-	CreateThread(NULL, 0, do_timer,(LPVOID)listen_socket, 0, NULL);
+    hThread[0] = CreateThread(NULL, 0, do_timer,(LPVOID)listen_socket, 0, NULL);
 
-	for (int i = 0; i < MAX_USER; ++i) {
+	for (int i = 1; i < MAX_USER + 1; ++i) {
 		// 데이터 통신에 사용할 변수
 		SOCKET client_sock;
 		SOCKADDR_IN clientaddr;
@@ -179,18 +182,23 @@ int main(int argc, char* argv[])
 			inet_ntoa(clientaddr.sin_addr) << "  포트 번호 : " << ntohs(clientaddr.sin_port) << endl;
 
 
-		CreateThread(NULL, 0, Thread_1, (LPVOID)client_sock, 0, NULL);
+		hThread[i] = CreateThread(NULL, 0, Thread_1, (LPVOID)client_sock, 0, NULL);
 
 	}
 
-	while (1)
-	{
-
-
-	}
-
+	WaitForMultipleObjects(MAX_USER + 1, hThread, TRUE, INFINITE);
+	
+	for (int i = 0; i < MAX_USER + 1; ++i) 
+		CloseHandle(hThread[i]);
+	
+	CloseHandle(htimerEvent);
 	closesocket(listen_socket);
 	WSACleanup();
+	
+	for (auto& cl : clients) {
+		if (NO_ACCEPT != cl._state)
+			Disconnect(cl._index);
+	}
 
 	return 0;
 }
@@ -558,6 +566,20 @@ void process_packet(int client_index, char* p)
 	case LOGIN: {
 		LOGIN_packet* packet = reinterpret_cast<LOGIN_packet*>(p);
 		//send_login_ok_packet(client_index);
+		bool b_login = true;
+		for (int i = 0; i < MAX_USER; ++i) {
+			if (NO_ACCEPT != clients[i]._state) {
+				if (strcmp(packet->id, clients[i]._id) == 0) {
+					LOGIN_ERROR_packet login_error_packet;
+					login_error_packet.type = LOGIN_ERROR;
+					cl.do_send(sizeof(login_error_packet), &login_error_packet);
+					b_login = false;
+					break;
+				}
+			}
+		}
+
+		if (b_login == false) break;
 
 		if (!get_status(client_index, packet->id)) {
 			LOGIN_ERROR_packet login_error_packet;
@@ -565,6 +587,7 @@ void process_packet(int client_index, char* p)
 			cl.do_send(sizeof(login_error_packet), &login_error_packet);
 			break;
 		}
+
 
 		for (auto& other : clients) {
 			// 플레이어가 로그인 요청
@@ -856,8 +879,6 @@ void process_packet(int client_index, char* p)
 		default: {
 			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;
 			cout << "packet state number: " << packet->state << endl;
-			getchar();
-			exit(-1);
 			break;
 		}
 
@@ -893,9 +914,21 @@ int get_new_index()
 void Disconnect(int c_id)
 {
 	Session& cl = clients[c_id];
-	clients[c_id]._state = NO_ACCEPT;
-	closesocket(clients[c_id]._cl);
-	cout << "------------연결 종료------------" << endl;
+	cl._state = NO_ACCEPT;
+	cl.in_use = false;
+	for (auto& other : clients) {
+		if (NO_ACCEPT != other._state) {
+			PLAYER_CHANGE_STATE_packet state_packet;
+			state_packet.size = sizeof(state_packet);
+			state_packet.type = CHANGE_STATE;
+			state_packet.x = cl._x;
+			state_packet.y = cl._y;
+			state_packet.state = cl._state;
+			strcpy_s(state_packet.id, cl._id);
+			other.do_send(sizeof(state_packet), &state_packet);
+		}
+	}
+	closesocket(cl._cl);
 }
 
 DWORD WINAPI Thread_1(LPVOID arg)
@@ -909,34 +942,19 @@ DWORD WINAPI Thread_1(LPVOID arg)
 	while (1) {
 		// 데이터 받기
 		player.do_recv();
-		//int remain_data = num_byte + cl._prev_size;
+		
 		if (clients[index]._recv_buf == 0)
 		{
+			cout << "------------연결 종료------------" << endl;
 			Disconnect(index);
 			return 0;
 		}
+
 		char* packet_start = clients[index]._recv_buf;
 		char packet_size = packet_start[0];
 
-		//while (packet_size <= remain_data) {
 		process_packet(index, packet_start);
-		//remain_data -= packet_size;
-	//    packet_start += packet_size;
-		//if (remain_data > 0) packet_size = packet_start[0];
-		//else break;
-	//}
 
-	/*if (0 < remain_data) {
-		cl._prev_size = remain_data;
-		memcpy(&exp_over->_net_buf, packet_start, remain_data);
-	}*/
-
-		if (g_shutdown == true)
-		{
-			// closesocket()
-			closesocket(client_sock);
-			return 0;
-		}
 	}
 }
 
