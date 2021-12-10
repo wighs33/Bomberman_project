@@ -1176,6 +1176,9 @@ void Process_packet(char* p)
 					player._dir = 0;
 					destroyButton = true;
 				}
+				else if (player._state == NO_ACCEPT) {
+					// 플레이어 나감 
+				}
 			}
 		}
 
