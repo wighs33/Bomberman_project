@@ -559,6 +559,90 @@ int Check_Collision(int source_type, int source_index)
 
 			//	break;
 			//}
+			case ITEM_HEART:
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+				if (IntersectRect(&temp, &source_rt, &target_rt)) {
+					//패킷 보내기
+					PLAYER_ITEM_BUFF_packet buff_packet;
+					buff_packet.size = sizeof(buff_packet);
+					buff_packet.type = ITEM_BUFF;
+					buff_packet.item_type = ITEM_HEART;
+					buff_packet.ix = ix;
+					buff_packet.iy = iy;
+					strcpy_s(buff_packet.id, clients[source_index]._id);
+					clients[source_index].do_send(sizeof(buff_packet), &buff_packet);
+					++clients[source_index]._heart;
+					selectedMap[iy][ix] = EMPTY;
+					return 0;
+				}
+
+				break;
+			}
+			case ITEM_MORE_BOMB:
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+				if (IntersectRect(&temp, &source_rt, &target_rt)) {
+					//패킷 보내기
+					PLAYER_ITEM_BUFF_packet buff_packet;
+					buff_packet.size = sizeof(buff_packet);
+					buff_packet.type = ITEM_BUFF;
+					buff_packet.item_type = ITEM_MORE_BOMB;
+					buff_packet.ix = ix;
+					buff_packet.iy = iy;
+					strcpy_s(buff_packet.id, clients[source_index]._id);
+					clients[source_index].do_send(sizeof(buff_packet), &buff_packet);
+					++clients[source_index]._bomb_count;
+					selectedMap[iy][ix] = EMPTY;
+					return 0;
+				}
+
+				break;
+			}
+			case ITEM_MORE_POWER:
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+				if (IntersectRect(&temp, &source_rt, &target_rt)) {
+					//패킷 보내기
+					PLAYER_ITEM_BUFF_packet buff_packet;
+					buff_packet.size = sizeof(buff_packet);
+					buff_packet.type = ITEM_BUFF;
+					buff_packet.item_type = ITEM_MORE_POWER;
+					buff_packet.ix = ix;
+					buff_packet.iy = iy;
+					strcpy_s(buff_packet.id, clients[source_index]._id);
+					clients[source_index].do_send(sizeof(buff_packet), &buff_packet);
+					++clients[source_index]._power;
+					selectedMap[iy][ix] = EMPTY;
+					return 0;
+				}
+
+				break;
+			}
+			case ITEM_ROCK:
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+				if (IntersectRect(&temp, &source_rt, &target_rt)) {
+					//패킷 보내기
+					PLAYER_ITEM_BUFF_packet buff_packet;
+					buff_packet.size = sizeof(buff_packet);
+					buff_packet.type = ITEM_BUFF;
+					buff_packet.item_type = ITEM_ROCK;
+					buff_packet.ix = ix;
+					buff_packet.iy = iy;
+					strcpy_s(buff_packet.id, clients[source_index]._id);
+					clients[source_index].do_send(sizeof(buff_packet), &buff_packet);
+					++clients[source_index]._rock_count;
+					selectedMap[iy][ix] = EMPTY;
+					return 0;
+				}
+
+				break;
+			}
 			default:
 				break;
 			}

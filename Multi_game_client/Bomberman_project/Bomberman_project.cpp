@@ -1130,7 +1130,7 @@ void Process_packet(char* p)
 	}
 
 
-	///////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////
 	//폭탄 관련
 	case INIT_BOMB: {
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
@@ -1179,7 +1179,8 @@ void Process_packet(char* p)
 
 		break;
 	}
-	///////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	case CREATE_ITEM: {
 		CREATE_ITEM_packet* packet = reinterpret_cast<CREATE_ITEM_packet*>(p);
 		cout << "\n아이템 생성!!\n";
@@ -1209,6 +1210,60 @@ void Process_packet(char* p)
 
 		break;
 	}
+
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+	// 아이템 버프 관련
+
+	case ITEM_BUFF: {
+		PLAYER_ITEM_BUFF_packet* packet = reinterpret_cast<PLAYER_ITEM_BUFF_packet*>(p);
+		for (auto& player : players) {
+			if (strcmp(player._id, packet->id) == 0) {
+				if(packet->item_type == ITEM_HEART)
+				{
+					++player._heart;
+					selectedMap[packet->iy][packet->ix] = EMPTY;
+
+					cout << "\n체력 증가!!\n";
+					cout << player._heart << endl;
+					break;
+				}
+
+				if (packet->item_type == ITEM_MORE_BOMB)
+				{
+					++player._bomb_count;
+					selectedMap[packet->iy][packet->ix] = EMPTY;
+
+					cout << "\n폭탄개수 증가!!\n";
+					cout << player._bomb_count << endl;
+					break;
+				}
+
+				if (packet->item_type == ITEM_MORE_POWER)
+				{
+					++player._bomb_power;
+					selectedMap[packet->iy][packet->ix] = EMPTY;
+
+					cout << "\n폭탄파워 증가!!\n";
+					cout << player._bomb_power << endl;
+					break;
+				}
+
+				if (packet->item_type == ITEM_ROCK)
+				{
+					++player._rock_count;
+					selectedMap[packet->iy][packet->ix] = EMPTY;
+
+					cout << "\n돌아이템 개수 증가!!\n";
+					cout << player._rock_count << endl;
+					break;
+				}
+			}
+		}
+
+		break;
+	}
+	///////////////////////////////////////////////////////////////////////////////////////////////////
 					
 
 	default: {

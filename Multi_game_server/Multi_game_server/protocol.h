@@ -46,13 +46,6 @@ struct PLAYER_CHANGE_STATE_packet { // 플레이어 상태 패킷
 	char id[BUFSIZE]; // 플레이어 아이디
 };
 
-struct PLAYER_BUF_packet {// 플레이어 버프 패킷
-	unsigned char size; // 패킷 사이즈
-	char type; // 패킷 타입 5
-	int power; // 폭탄 위력
-	char id[BUFSIZE]; // 플레이어 아이디
-};
-
 struct GET_ITEM_packet {// 아이템 획득 요청 피킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 6
@@ -111,18 +104,11 @@ struct CREATE_ITEM_packet { // 아이템 생성 패킷
 	int ix, iy; // 아이템 맵인덱스
 };
 
-struct DELETE_ITEM_packet { // 오브젝트 제거 패킷
+struct PLAYER_ITEM_BUFF_packet {// 플레이어 버프 패킷 + 아이템 제거 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입
+	int item_type; // 아이템 타입
 	int ix, iy; // 아이템 맵인덱스
-};
-
-struct CHANGE_BUF_packet { // 플레이어 버프 변경 정보 패킷
-	unsigned char size; // 패킷 사이즈
-	char type; // 패킷 타입
-	int _power; // 폭탄 위력
-	int _bomb_count; // 폭탄개수
-	int _rock_count;
-	int _heart; // 목숨
+	char id[BUFSIZE]; // 플레이어 아이디
 };
 #pragma pack(pop)

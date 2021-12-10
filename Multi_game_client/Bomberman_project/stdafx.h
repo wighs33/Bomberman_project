@@ -159,7 +159,6 @@ enum Packet_Type {
 	LOGIN_ERROR,
 	INIT_PLAYER,
 	CHANGE_STATE,
-	ITEMBUF,
 	GET_ITEM,
 	MOVE,
 	MOVE_OK,
@@ -168,8 +167,7 @@ enum Packet_Type {
 	INIT_BOMB,
 	DELETE_OBJECT,
 	CREATE_ITEM,
-	DELETE_ITEM,
-	CHANGE_ITEMBUF
+	ITEM_BUFF,
 };
 
 enum Player_Condition {
@@ -199,4 +197,11 @@ enum MapData {
 	ITEM_MORE_BOMB,
 	ITEM_MORE_POWER,
 	ITEM_ROCK
+};
+
+//이벤트 발생 타입
+enum EVENT_TYPE {
+	START_EXPL,  // 폭발 시작
+	END_EXPL     // 폭발 끝
+
 };

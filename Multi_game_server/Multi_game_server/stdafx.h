@@ -94,7 +94,6 @@ enum Packet_Type {
 	LOGIN_ERROR,
 	INIT_PLAYER,
 	CHANGE_STATE,
-	ITEMBUF,
 	GET_ITEM,
 	MOVE,
 	MOVE_OK,
@@ -103,8 +102,7 @@ enum Packet_Type {
 	INIT_BOMB,
 	DELETE_OBJECT,
 	CREATE_ITEM,
-	DELETE_ITEM,
-	CHANGE_ITEMBUF
+	ITEM_BUFF,
 };
 
 enum Player_Condition {
