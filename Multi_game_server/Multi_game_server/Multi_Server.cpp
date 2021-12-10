@@ -34,6 +34,7 @@ vector <Item>	items;
 
 //폭탄
 std::deque <Bomb>	bombs;
+std::deque <vector<pair<int, int>>>	explosionVecs;  //폭발 맵위치 벡터큐
 
 //atomic<bool> g_item[MAX_ITEM_SIZE];
 
@@ -85,7 +86,20 @@ std::pair<int, int> WindowPosToMapIndex(int x, int y);
 
 HANDLE htimerEvent; // 타이머 쓰레드 시작용
 
-
+void SendExplosionEnd(int ix, int iy) {
+	for (auto& pl : clients) {
+		if (true == pl.in_use)
+		{
+			CHECK_EXPLOSION_packet check_explosion_packet;
+			check_explosion_packet.size = sizeof(check_explosion_packet);
+			check_explosion_packet.type = CHECK_EXPLOSION;
+			check_explosion_packet.ix = ix;
+			check_explosion_packet.iy = iy;
+			check_explosion_packet.isActive = false;
+			pl.do_send(sizeof(check_explosion_packet), &check_explosion_packet);
+		}
+	}
+}
 
 //테스트
 void PrintMap() {
@@ -163,7 +177,7 @@ int main(int argc, char* argv[])
 	listen(listen_socket, SOMAXCONN);
 
 	//타이머 쓰레드 만들기
-	CreateThread(NULL, 0, do_timer,(LPVOID)listen_socket, 0, NULL);
+	CreateThread(NULL, 0, do_timer, NULL, 0, NULL);
 
 	for (int i = 0; i < MAX_USER; ++i) {
 		// 데이터 통신에 사용할 변수
@@ -183,12 +197,6 @@ int main(int argc, char* argv[])
 
 	}
 
-	while (1)
-	{
-
-
-	}
-
 	closesocket(listen_socket);
 	WSACleanup();
 
@@ -197,34 +205,48 @@ int main(int argc, char* argv[])
 
 
 DWORD WINAPI do_timer(LPVOID arg) {
-
-	WaitForSingleObject(htimerEvent,INFINITE);
+	WaitForSingleObject(htimerEvent, INFINITE);
 
 	while (true) {
+
 		timer_event ev;
 		timer_queue.try_pop(ev);
-		int bomb_id = ev.obj_id;
-		if (bombs[bomb_id]._isActive == false) continue;
+
 		if (ev.start_time <= chrono::system_clock::now()) {
-			if (ev.order == START_EXPL) //폭발 시작
+			if (ev.order == START_EXPL) //1. 폭발 시작
 			{
-				bombs[bomb_id]._isExploded = true;
-				bombs[bomb_id].Explode(selectedMap, clients);
-				//bombs.pop_front();
+				bombs.front().Explode(selectedMap, clients);
+				//2. 폭탄이 삭제되기 전 전역큐에 폭발범위에 해당하는 맵인덱스들을 넣는다.
+				explosionVecs.push_back(bombs.front().explosionMapIndexs);
+				//3. 폭탄삭제
+				bombs.pop_front();
+
+				//확인용 출력
+				PrintMap();
 			}
-			else if (ev.order == END_EXPL) //폭발 끝
+			else if (ev.order == END_EXPL) //4. 폭발 끝
 			{
-				
-				bombs[bomb_id]._isActive = false;
-				//bombs.pop_front();
+				// 전역큐의 첫번째 원소에는 폭발범위가 있고
+				for (auto& explosionMapIndex : explosionVecs.front()) {
+					auto [ix, iy] = explosionMapIndex;
+					selectedMap[iy][ix] = EMPTY;
+					//5. 폭발 맵인덱스를 하나씩 클라로 보낸다.
+					SendExplosionEnd(ix, iy);
+				}
+				//6. 폭발삭제
+				explosionVecs.pop_front();
+
+				//확인용 출력
+				PrintMap();
+
+				//1~6 한 사이클 완료
+				WaitForSingleObject(htimerEvent, INFINITE);
 			}
 		}
 		else {
 			timer_queue.push(ev);
 			this_thread::sleep_for(10ms);
 		}
-
-
 	}
 
 }
@@ -510,6 +532,15 @@ int Check_Collision(int source_type, int source_index)
 
 				break;
 			}
+			case SPECIALROCK:			//아이템나오는 돌
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+				if (IntersectRect(&temp, &source_rt, &target_rt))
+					return 1;
+
+				break;
+			}
 			//case BOMB:			//폭탄
 			//{
 			//	RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
@@ -718,34 +749,36 @@ void process_packet(int client_index, char* p)
 		break;
 	}
 
-	case INIT_BOMB: {
+	case INIT_BOMB: {	// 1. 폭탄 받음
 		timer_event ev;
 		ev.obj_id = g_b_count++;
 		//////////////////////////////////////////////////////////
 
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
+
+		//2. 폭탄 큐에 넣음
 		bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, packet->power));
 		packet->id = ev.obj_id;
 		for (auto& pl : clients) {
 			if (true == pl.in_use)
 			{
+				// 3. 폭탄생성명령 모든 플레이어에게 보냄
 				pl.do_send(sizeof(INIT_BOMB_packet), packet);
 			}
 		};
 
-		//여기 있던 폭발 함수 do_timer에 옮겨짐
-		
-		//타이머 큐에 폭발 이벤트 넣음
-		//3초 뒤에 ev.obj_id란 아이디를 가진 폭탄에 START_EXPL(폭발 시작) 이벤트을 실행 시켜라
+		//4. 타이머 큐에 3초짜리 타이머 넣음
 		Timer_Event(ev.obj_id, START_EXPL, 3000ms);
 		Timer_Event(ev.obj_id, END_EXPL, 4000ms);
 
-		
-		//타이머 쓰레드 신호 true
-		//이거 한번만 실행되게 할수있음??
+		//5. 폭탄 터뜨림
 		SetEvent(htimerEvent);
 		
+		//임시 출력
 		PrintMap();
+
+		//큐에 폭탄 개수
+		cout << "큐에 폭탄 개수: " << bombs.size() << endl;
 
 		break;
 	}

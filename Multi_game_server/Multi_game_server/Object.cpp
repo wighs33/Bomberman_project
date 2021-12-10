@@ -46,7 +46,7 @@ static void SendCreatedItem(array<Session, MAX_USER>& clients, int ix, int iy, i
 	}
 }
 
-static void SendExplosion(array<Session, MAX_USER>& clients, int ix, int iy) {
+static void SendExplosionStart(array<Session, MAX_USER>& clients, int ix, int iy) {
 	for (auto& pl : clients) {
 		if (true == pl.in_use)
 		{
@@ -74,7 +74,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 	objectMap[bomb_iy][bomb_ix] = EXPLOSION;
 
 	//Æø¹ß ¸ÊÀÎµ¦½º º¸³»±â
-	SendExplosion(clients, bomb_ix, bomb_iy);
+	explosionMapIndexs.emplace_back(bomb_ix, bomb_iy);
+	SendExplosionStart(clients, bomb_ix, bomb_iy);
 
 	//ÆøÅº À§ Ã¼Å©
 	for (int i = 1; i <= _power; ++i) {
@@ -101,7 +102,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		}
 		objectMap[bomb_iy - i][bomb_ix] = EXPLOSION;
 		//Æø¹ß ¸ÊÀÎµ¦½º º¸³»±â
-		SendExplosion(clients, bomb_ix, bomb_iy - i);
+		explosionMapIndexs.emplace_back(bomb_ix, bomb_iy - i);
+		SendExplosionStart(clients, bomb_ix, bomb_iy - i);
 	}
 
 	//ÆøÅº ¾Æ·¡ Ã¼Å©
@@ -130,7 +132,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		objectMap[bomb_iy + i][bomb_ix] = EXPLOSION;
 
 		//Æø¹ß ¸ÊÀÎµ¦½º º¸³»±â
-		SendExplosion(clients, bomb_ix, bomb_iy + i);
+		explosionMapIndexs.emplace_back(bomb_ix, bomb_iy + i);
+		SendExplosionStart(clients, bomb_ix, bomb_iy + i);
 	}
 
 	//ÆøÅº ¿ÞÂÊ Ã¼Å©
@@ -159,7 +162,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		objectMap[bomb_iy][bomb_ix - i] = EXPLOSION;
 
 		//Æø¹ß ¸ÊÀÎµ¦½º º¸³»±â
-		SendExplosion(clients, bomb_ix - i, bomb_iy);
+		explosionMapIndexs.emplace_back(bomb_ix - i, bomb_iy);
+		SendExplosionStart(clients, bomb_ix - i, bomb_iy);
 	}
 
 	//ÆøÅº ¿À¸¥ÂÊ Ã¼Å©
@@ -188,6 +192,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		objectMap[bomb_iy][bomb_ix + i] = EXPLOSION;
 
 		//Æø¹ß ¸ÊÀÎµ¦½º º¸³»±â
-		SendExplosion(clients, bomb_ix + i, bomb_iy);
+		explosionMapIndexs.emplace_back(bomb_ix + i, bomb_iy);
+		SendExplosionStart(clients, bomb_ix + i, bomb_iy);
 	}
 }

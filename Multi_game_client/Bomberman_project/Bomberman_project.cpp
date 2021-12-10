@@ -692,6 +692,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			//气藕
 			for (auto& bomb : bombs) {
+				auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(bomb._x, bomb._y);
+				if (selectedMap[bomb_iy][bomb_ix] != BOMB) break;
+
+
 				if (bomb._timer > 5) {
 					oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
 					TransparentBlt(mem1dc, bomb._x, bomb._y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 255, 255));
@@ -1132,13 +1136,17 @@ void Process_packet(char* p)
 	}
 	case CHECK_EXPLOSION:{
 		CHECK_EXPLOSION_packet* packet = reinterpret_cast<CHECK_EXPLOSION_packet*>(p);
-		cout << "\n气惯 惯积!!\n";
-		cout << packet->ix << ", " << packet->iy << endl;
 
-		if (packet->isActive)	
+		if (packet->isActive) {
+			cout << "\n气惯 惯积!!\n";
+			cout << packet->ix << ", " << packet->iy << endl;
 			selectedMap[packet->iy][packet->ix] = EXPLOSION;	//气惯 惯积
-		else
+		}
+		else {
+			cout << "\n气惯 场!!\n";
+			cout << packet->ix << ", " << packet->iy << endl;
 			selectedMap[packet->iy][packet->ix] = EMPTY;	//气惯 场
+		}
 
 		break;
 	}
