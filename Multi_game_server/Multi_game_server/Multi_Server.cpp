@@ -196,7 +196,6 @@ int main(int argc, char* argv[])
 }
 
 
-
 DWORD WINAPI do_timer(LPVOID arg) {
 
 	WaitForSingleObject(htimerEvent,INFINITE);
@@ -207,17 +206,22 @@ DWORD WINAPI do_timer(LPVOID arg) {
 		int bomb_id = ev.obj_id;
 		if (bombs[bomb_id]._isActive == false) continue;
 		if (ev.start_time <= chrono::system_clock::now()) {
-			if (ev.order == START_EXPL)
+			if (ev.order == START_EXPL) //폭발 시작
 			{
 				bombs[bomb_id]._isExploded = true;
 				bombs[bomb_id].Explode(selectedMap, clients);
+				//bombs.pop_front();
+			}
+			else if (ev.order == END_EXPL) //폭발 끝
+			{
+				
+				bombs[bomb_id]._isActive = false;
 				//bombs.pop_front();
 			}
 		}
 		else {
 			timer_queue.push(ev);
 			this_thread::sleep_for(10ms);
-
 		}
 
 
@@ -717,8 +721,6 @@ void process_packet(int client_index, char* p)
 	case INIT_BOMB: {
 		timer_event ev;
 		ev.obj_id = g_b_count++;
-		
-		
 		//////////////////////////////////////////////////////////
 
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
@@ -734,8 +736,10 @@ void process_packet(int client_index, char* p)
 		//여기 있던 폭발 함수 do_timer에 옮겨짐
 		
 		//타이머 큐에 폭발 이벤트 넣음
-		//3초 뒤에 ev.obj_id란 아이디를 가진 폭탄에 START_EXPL(폭발 시작)을 실행 시켜라
+		//3초 뒤에 ev.obj_id란 아이디를 가진 폭탄에 START_EXPL(폭발 시작) 이벤트을 실행 시켜라
 		Timer_Event(ev.obj_id, START_EXPL, 3000ms);
+		Timer_Event(ev.obj_id, END_EXPL, 4000ms);
+
 		
 		//타이머 쓰레드 신호 true
 		//이거 한번만 실행되게 할수있음??
