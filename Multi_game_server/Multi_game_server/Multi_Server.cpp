@@ -890,6 +890,14 @@ int get_new_index()
 	return -1;
 }
 
+void Disconnect(int c_id)
+{
+	Session& cl = clients[c_id];
+	clients[c_id]._state = NO_ACCEPT;
+	closesocket(clients[c_id]._cl);
+	cout << "------------연결 종료------------" << endl;
+}
+
 DWORD WINAPI Thread_1(LPVOID arg)
 {
 	SOCKET client_sock = (SOCKET)arg;
@@ -902,6 +910,11 @@ DWORD WINAPI Thread_1(LPVOID arg)
 		// 데이터 받기
 		player.do_recv();
 		//int remain_data = num_byte + cl._prev_size;
+		if (clients[index]._recv_buf == 0)
+		{
+			Disconnect(index);
+			return 0;
+		}
 		char* packet_start = clients[index]._recv_buf;
 		char packet_size = packet_start[0];
 

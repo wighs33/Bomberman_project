@@ -41,7 +41,7 @@ void Player::InputSpaceBar(std::queue<char*>& send_queue, char send_buf[BUFSIZE]
 	send_queue.push(send_buf);
 }
 
-void Player::ChangeState(std::queue<char*>& send_queue, char send_buf[BUFSIZE], int state)
+void Player::ChangeState(std::queue<char*>& send_queue, char send_buf[BUFSIZE], Player_Condition state)
 {
 	PLAYER_CHANGE_STATE_packet state_packet;
 	state_packet.size = sizeof(state_packet);

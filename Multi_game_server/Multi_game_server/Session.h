@@ -30,6 +30,7 @@ public:
 
 
 	SOCKET _cl; //클라이언트 연결 소켓
+	Player_Condition _state; // 접속, 레디, 게임 중, 사망
 	char _recv_buf[BUFSIZE]; // 리시브 버퍼
 	int	  _prev_size;
 	char _id[BUFSIZE] = " "; // 플레이어 아이디
@@ -38,7 +39,6 @@ public:
 	int _dir;	// 이동 방향 ( 좌 - 2 / 우 - 1 / 상 - 4 / 하 - 3 )
 	int _level;
 	int _exp;
-	int _state; // 접속, 레디, 게임 중, 사망
 	int _heart; // 목숨
 	int _bomb_count; // 폭탄개수
 	int _power; // 폭탄 위력
