@@ -137,6 +137,7 @@ enum MapData {
 //이벤트 발생 타입
 enum EVENT_TYPE {
 	START_EXPL,  // 폭발 시작
-	END_EXPL     // 폭발 끝
-
+	END_EXPL,     // 폭발 끝
+	TURN_Damage   //노 데미지 풀기
+	
 };

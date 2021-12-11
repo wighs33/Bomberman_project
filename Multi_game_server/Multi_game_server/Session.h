@@ -43,6 +43,7 @@ public:
 	int _bomb_count; // ÆøÅº°³¼ö
 	int _power; // ÆøÅº À§·Â
 	int _rock_count;
+	atomic<bool> no_damage = false;
 	bool in_use;
 
 	std::mutex use_lock;
