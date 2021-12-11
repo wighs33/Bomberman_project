@@ -930,15 +930,6 @@ void err_display(const char* msg)
 //서버에 패킷 전송
 void Send_packet()
 {
-	/*if (send_queue.empty())
-	{
-		cout << "ok" << endl;
-		retval = send(sock, send_buf, BUFSIZE, 0);
-		if (retval == SOCKET_ERROR) {
-			err_quit("send()");
-		}
-		return;
-	}*/
 	retval = send(sock, send_queue.front(), BUFSIZE, 0);
 	if (retval == SOCKET_ERROR) {
 		err_quit("send()");
