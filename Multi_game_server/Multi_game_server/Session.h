@@ -54,7 +54,6 @@ public:
 		char _send_buf[BUFSIZE];
 		ZeroMemory(_send_buf, sizeof(_send_buf));
 		memcpy(&_send_buf[0], mess, BUFSIZE);
-		cout << num_bytes << endl;
 		send(_cl, _send_buf, num_bytes, 0);
 	};
 
