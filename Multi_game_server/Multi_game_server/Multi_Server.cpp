@@ -226,12 +226,10 @@ DWORD WINAPI do_timer(LPVOID arg) {
 		timer_event ev;
 		bool ret = timer_queue.try_pop(ev);
 		if (ret == false) continue;
-		//int _id = ev.obj_id;
-		//if (bombs[_id]._isActive == false) continue;
 		if (ev.start_time <= chrono::system_clock::now()) {
 			if (ev.order == START_EXPL) //1. 폭발 시작
 			{
-				//cout << "폭발시작_id" << _id << endl;
+				
 				bombs.front().Explode(selectedMap, clients);
 				//2. 폭탄이 삭제되기 전 전역큐에 폭발범위에 해당하는 맵인덱스들을 넣는다.
 				explosionVecs.push_back(bombs.front().explosionMapIndexs);
@@ -242,8 +240,6 @@ DWORD WINAPI do_timer(LPVOID arg) {
 			}
 			else if (ev.order == END_EXPL) //4. 폭발 끝
 			{
-				//cout << "폭발끝_id"<< _id << endl;
-				//bombs[_id]._isActive = false;
 				// 전역큐의 첫번째 원소에는 폭발범위가 있고
 				for (auto& explosionMapIndex : explosionVecs.front()) {
 					auto [ix, iy] = explosionMapIndex;
@@ -257,8 +253,6 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				//확인용 출력
 				PrintMap();
 
-				//1~6 한 사이클 완료
-				//WaitForSingleObject(htimerEvent, INFINITE);
 			}
 		}
 		else {
@@ -590,9 +584,13 @@ int Check_Collision(int source_type, int source_index)
 					buff_packet.ix = ix;
 					buff_packet.iy = iy;
 					strcpy_s(buff_packet.id, clients[source_index]._id);
-					clients[source_index].do_send(sizeof(buff_packet), &buff_packet);
 					++clients[source_index]._heart;
 					selectedMap[iy][ix] = EMPTY;
+					for (auto& cl : clients) {
+						if (cl.in_use == false) continue;
+						if (cl._state != PLAY) continue;
+						cl.do_send(sizeof(buff_packet), &buff_packet);
+					}
 					return 0;
 				}
 
@@ -611,9 +609,14 @@ int Check_Collision(int source_type, int source_index)
 					buff_packet.ix = ix;
 					buff_packet.iy = iy;
 					strcpy_s(buff_packet.id, clients[source_index]._id);
-					clients[source_index].do_send(sizeof(buff_packet), &buff_packet);
 					++clients[source_index]._bomb_count;
 					selectedMap[iy][ix] = EMPTY;
+					for (auto& cl : clients) {
+						if (cl.in_use == false) continue;
+						if (cl._state != PLAY) continue;
+						cl.do_send(sizeof(buff_packet), &buff_packet);
+					}
+					
 					return 0;
 				}
 
@@ -632,9 +635,13 @@ int Check_Collision(int source_type, int source_index)
 					buff_packet.ix = ix;
 					buff_packet.iy = iy;
 					strcpy_s(buff_packet.id, clients[source_index]._id);
-					clients[source_index].do_send(sizeof(buff_packet), &buff_packet);
 					++clients[source_index]._power;
 					selectedMap[iy][ix] = EMPTY;
+					for (auto& cl : clients) {
+						if (cl.in_use == false) continue;
+						if (cl._state != PLAY) continue;
+						cl.do_send(sizeof(buff_packet), &buff_packet);
+					}
 					return 0;
 				}
 
@@ -653,9 +660,13 @@ int Check_Collision(int source_type, int source_index)
 					buff_packet.ix = ix;
 					buff_packet.iy = iy;
 					strcpy_s(buff_packet.id, clients[source_index]._id);
-					clients[source_index].do_send(sizeof(buff_packet), &buff_packet);
 					++clients[source_index]._rock_count;
 					selectedMap[iy][ix] = EMPTY;
+					for (auto& cl : clients) {
+						if (cl.in_use == false) continue;
+						if (cl._state != PLAY) continue;
+						cl.do_send(sizeof(buff_packet), &buff_packet);
+					}
 					return 0;
 				}
 
@@ -809,60 +820,21 @@ void process_packet(int client_index, char* p)
 		break;
 	}
 
-	case GET_ITEM: {
-		GET_ITEM_packet* packet = reinterpret_cast<GET_ITEM_packet*>(p);
-		int i_index = packet->item_index;
-		cl._power++;
-		//if (g_item[i_index] == true)
-		//{
-		//	g_item[i_index] = false;
-		//	switch (packet->item_type) {
-		//	case 0: cl._power++; break; // 폭탄 세기
-		//	case 1:  cl._heart++; break; // 하트
-		//	case 2: cl._bomb_count++; break; //폭탄 개수
-		//	case 3: cl._rock_count; break; //블록 개수
-		//	default:
-		//		cout << "Invalid item in client " << cl._id << endl;
-		//		getchar();
-		//		exit(-1);
-		//	}
-		//	CHANGE_BUF_packet Buf_Player;
-		//	Buf_Player.size = sizeof(Buf_Player);
-		//	Buf_Player.type = CHANGE_ITEMBUF;
-		//	Buf_Player._heart = cl._heart;
-		//	Buf_Player._power = cl._power;
-		//	Buf_Player._bomb_count = cl._bomb_count;
-		//	Buf_Player._rock_count = cl._rock_count;
-		//	cl.do_send(sizeof(Buf_Player), &Buf_Player);
-		//}
-		//else {
-		//	for (auto& pl : clients) {
-		//		if (true == pl.in_use)
-		//		{
-		//			DELETE_ITEM_packet Del_item;
-		//			Del_item.size = sizeof(Del_item);
-		//			Del_item.type = DELETE_ITEM;
-		//			Del_item.index = i_index;
-		//			pl.do_send(sizeof(Del_item), &Del_item);
-		//		}
-		//	}
-		//}
-
-		break;
-	}
-
 	case INIT_BOMB: {	// 1. 폭탄 받음
 		timer_event ev;
 		ev.obj_id = g_b_count++;
 		//////////////////////////////////////////////////////////
 
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
-
+		
+		if (cl._state != PLAY) break;
+		
 		//2. 폭탄 큐에 넣음
 		bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, packet->power));
 
 		packet->id = ev.obj_id;
 		for (auto& pl : clients) {
+			if (pl._state != PLAY) continue;
 			if (true == pl.in_use)
 			{
 				cout <<"\n아이디: "<< pl._id << endl;
