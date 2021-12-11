@@ -231,7 +231,6 @@ DWORD WINAPI do_timer(LPVOID arg) {
 		if (ev.start_time <= chrono::system_clock::now()) {
 			if (ev.order == START_EXPL) //1. 폭발 시작
 			{
-				
 				bombs.front().Explode(selectedMap, clients);
 				//2. 폭탄이 삭제되기 전 전역큐에 폭발범위에 해당하는 맵인덱스들을 넣는다.
 				explosionVecs.push_back(bombs.front().explosionMapIndexs);
@@ -240,7 +239,6 @@ DWORD WINAPI do_timer(LPVOID arg) {
 					if (cl.in_use == false) continue;
 					if(cl._state != PLAY) continue;
 				     Check_Expl_Collision(0, cl._index,bombs.front().explosionMapIndexs);
-		
 				}
 				//확인용 출력
 				PrintMap();
