@@ -54,7 +54,8 @@ public:
 		char _send_buf[BUFSIZE];
 		ZeroMemory(_send_buf, sizeof(_send_buf));
 		memcpy(&_send_buf[0], mess, BUFSIZE);
-		send(_cl, _send_buf, BUFSIZE, 0);
+		cout << num_bytes << endl;
+		send(_cl, _send_buf, num_bytes, 0);
 	};
 
 	void do_recv()  //recv_buf 객체 당 하나씩 배정되며, 호출 시 메모리 초기화를 통해 재활용 한다.

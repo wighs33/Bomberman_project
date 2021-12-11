@@ -8,7 +8,7 @@
 struct LOGIN_packet { // 로그인 요청 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 0
-	char id[BUFSIZE]; // 플레이어 아이디
+	char id[MAX_NAME_SIZE]; // 플레이어 아이디
 };
 
 struct LOGIN_OK_packet {// 로그인 허락 패킷
@@ -43,7 +43,7 @@ struct PLAYER_CHANGE_STATE_packet { // 플레이어 상태 패킷
 	char type; // 패킷 타입 4
 	int x, y; // 플레이어 좌표
 	Player_Condition state; // 플레이어 상태
-	char id[BUFSIZE]; // 플레이어 아이디
+	char id[MAX_NAME_SIZE]; // 플레이어 아이디
 };
 
 
