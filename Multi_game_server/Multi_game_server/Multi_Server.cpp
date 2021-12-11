@@ -562,15 +562,18 @@ int Check_Collision(int source_type, int source_index)
 
 			//	break;
 			//}
-			//case EXPLOSION:		//폭발
-			//{
-			//	RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+			case EXPLOSION:		//폭발
+			{
+				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
-			//	if (IntersectRect(&temp, &source_rt, &target_rt))
-			//		return 1;
+				if (IntersectRect(&temp, &source_rt, &target_rt)){
+					cout << clients[source_index]._id << "죽음" << endl;
+					return 1;
+				}
+					
 
-			//	break;
-			//}
+				break;
+			}
 			case ITEM_HEART:
 			{
 				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
@@ -999,12 +1002,13 @@ int get_new_index()
 	return -1;
 }
 
+//연결종료
 void Disconnect(int c_id)
 {
 	Session& cl = clients[c_id];
 	clients[c_id]._state = NO_ACCEPT;
 	closesocket(clients[c_id]._cl);
-	cout << "------------??????------------" << endl;   //충돌땜에 한글확인불가
+	cout << "------------???------------" << endl;   //충돌땜에 한글확인불가
 }
 
 DWORD WINAPI Thread_1(LPVOID arg)
