@@ -33,7 +33,8 @@ vector <Rock>	rocks;
 vector <Item>	items;
 
 //폭탄
-std::deque <Bomb>	bombs;
+//std::deque <Bomb>	bombs;
+vector <Bomb>	bombs;
 std::deque <vector<pair<int, int>>>	explosionVecs;  //폭발 맵위치 벡터큐
 
 //atomic<bool> g_item[MAX_ITEM_SIZE];
@@ -221,24 +222,29 @@ DWORD WINAPI do_timer(LPVOID arg) {
 	WaitForSingleObject(htimerEvent, INFINITE);
 
 	while (true) {
-
+		
 		timer_event ev;
-		timer_queue.try_pop(ev);
-
+		bool ret = timer_queue.try_pop(ev);
+		if (ret == false) continue;
+		int _id = ev.obj_id;
+		if (bombs[_id]._isActive == false) continue;
 		if (ev.start_time <= chrono::system_clock::now()) {
 			if (ev.order == START_EXPL) //1. 폭발 시작
 			{
-				bombs.front().Explode(selectedMap, clients);
+				cout << "폭발시작_id" << _id << endl;
+				bombs[_id].Explode(selectedMap, clients);
 				//2. 폭탄이 삭제되기 전 전역큐에 폭발범위에 해당하는 맵인덱스들을 넣는다.
-				explosionVecs.push_back(bombs.front().explosionMapIndexs);
+				explosionVecs.push_back(bombs[_id].explosionMapIndexs);
 				//3. 폭탄삭제
-				bombs.pop_front();
+				//bombs.pop_front();
 
 				//확인용 출력
 				PrintMap();
 			}
 			else if (ev.order == END_EXPL) //4. 폭발 끝
 			{
+				cout << "폭발끝_id"<< _id << endl;
+				bombs[_id]._isActive = false;
 				// 전역큐의 첫번째 원소에는 폭발범위가 있고
 				for (auto& explosionMapIndex : explosionVecs.front()) {
 					auto [ix, iy] = explosionMapIndex;
@@ -253,7 +259,7 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				PrintMap();
 
 				//1~6 한 사이클 완료
-				WaitForSingleObject(htimerEvent, INFINITE);
+				//WaitForSingleObject(htimerEvent, INFINITE);
 			}
 		}
 		else {
