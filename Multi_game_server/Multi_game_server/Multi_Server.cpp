@@ -33,8 +33,8 @@ vector <Rock>	rocks;
 vector <Item>	items;
 
 //ÆøÅº
-//std::deque <Bomb>	bombs;
-vector <Bomb>	bombs;
+std::deque <Bomb>	bombs;
+//vector <Bomb>	bombs;
 std::deque <vector<pair<int, int>>>	explosionVecs;  //Æø¹ß ¸ÊÀ§Ä¡ º¤ÅÍÅ¥
 
 //atomic<bool> g_item[MAX_ITEM_SIZE];
@@ -226,25 +226,24 @@ DWORD WINAPI do_timer(LPVOID arg) {
 		timer_event ev;
 		bool ret = timer_queue.try_pop(ev);
 		if (ret == false) continue;
-		int _id = ev.obj_id;
-		if (bombs[_id]._isActive == false) continue;
+		//int _id = ev.obj_id;
+		//if (bombs[_id]._isActive == false) continue;
 		if (ev.start_time <= chrono::system_clock::now()) {
 			if (ev.order == START_EXPL) //1. Æø¹ß ½ÃÀÛ
 			{
-				cout << "Æø¹ß½ÃÀÛ_id" << _id << endl;
-				bombs[_id].Explode(selectedMap, clients);
+				//cout << "Æø¹ß½ÃÀÛ_id" << _id << endl;
+				bombs.front().Explode(selectedMap, clients);
 				//2. ÆøÅºÀÌ »èÁ¦µÇ±â Àü Àü¿ªÅ¥¿¡ Æø¹ß¹üÀ§¿¡ ÇØ´çÇÏ´Â ¸ÊÀÎµ¦½ºµéÀ» ³Ö´Â´Ù.
-				explosionVecs.push_back(bombs[_id].explosionMapIndexs);
-				//3. ÆøÅº»èÁ¦
-				//bombs.pop_front();
-
+				explosionVecs.push_back(bombs.front().explosionMapIndexs);
 				//È®ÀÎ¿ë Ãâ·Â
 				PrintMap();
+
+				bombs.pop_front();
 			}
 			else if (ev.order == END_EXPL) //4. Æø¹ß ³¡
 			{
-				cout << "Æø¹ß³¡_id"<< _id << endl;
-				bombs[_id]._isActive = false;
+				//cout << "Æø¹ß³¡_id"<< _id << endl;
+				//bombs[_id]._isActive = false;
 				// Àü¿ªÅ¥ÀÇ Ã¹¹øÂ° ¿ø¼Ò¿¡´Â Æø¹ß¹üÀ§°¡ ÀÖ°í
 				for (auto& explosionMapIndex : explosionVecs.front()) {
 					auto [ix, iy] = explosionMapIndex;
