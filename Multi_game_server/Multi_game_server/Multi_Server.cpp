@@ -79,8 +79,9 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map
 void Setting_Map();
 int Check_Collision(int source_type, int source_index);
 int Check_Expl_Collision(int source_type, int source_index, vector<pair<int, int>>& expl);
-
+void Timer_Event(int _obj_id, EVENT_TYPE ev, std::chrono::milliseconds ms);
 void Disconnect(int c_id);
+
 DWORD WINAPI do_timer(LPVOID arg);
 DWORD WINAPI Thread_1(LPVOID arg);
 
@@ -238,8 +239,8 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				for (auto& cl : clients) {
 					if (cl.in_use == false) continue;
 					if(cl._state != PLAY) continue;
-					int ret = Check_Expl_Collision(0, cl._index,bombs.front().explosionMapIndexs);
-					if (ret == 1) cout << cl._id << "사망" << endl;
+				     Check_Expl_Collision(0, cl._index,bombs.front().explosionMapIndexs);
+		
 				}
 				//확인용 출력
 				PrintMap();
@@ -261,6 +262,12 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				//확인용 출력
 				PrintMap();
 
+			}
+			else if (ev.order == TURN_Damage)
+			{
+				cout << "데미지" << endl;
+				clients[ev.obj_id]._heart--;
+				clients[ev.obj_id].no_damage = false;
 			}
 		}
 		else {
@@ -535,7 +542,11 @@ int Check_Expl_Collision(int source_type, int source_index, vector<pair<int, int
 			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
 			if (IntersectRect(&temp, &source_rt, &target_rt)) {
-				return 1;
+				if (clients[source_index].no_damage == false) {
+					clients[source_index].no_damage = true;
+					Timer_Event(source_index, TURN_Damage, 500ms);
+					return 1;
+				}
 			}
 		};
 	return 0;	//충돌X
@@ -615,11 +626,13 @@ int Check_Collision(int source_type, int source_index)
 				RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
 
 				if (IntersectRect(&temp, &source_rt, &target_rt)){
-					cout << clients[source_index]._id << "죽음" << endl;
+					if (clients[source_index].no_damage == false) {
+						clients[source_index].no_damage = true;
+						Timer_Event(source_index, TURN_Damage, 500ms);
+						return 1;
+					}
 					return 1;
 				}
-					
-
 				break;
 			}
 			case ITEM_HEART:
