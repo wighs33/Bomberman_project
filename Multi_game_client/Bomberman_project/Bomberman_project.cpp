@@ -939,9 +939,6 @@ void Send_packet()
 		}
 		return;
 	}*/
-
-	
-
 	retval = send(sock, send_queue.front(), BUFSIZE, 0);
 	if (retval == SOCKET_ERROR) {
 		err_quit("send()");
@@ -1273,7 +1270,7 @@ void Process_packet(char* p)
 					
 
 	default: {
-		cout << packet_type << endl;
+		
 		MessageBox(NULL, "[에러] UnKnown Packet", "에러", MB_ICONERROR);
 		err_display("UnKnown Packet");
 	}
