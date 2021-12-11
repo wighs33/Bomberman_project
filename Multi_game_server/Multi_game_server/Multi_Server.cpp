@@ -78,6 +78,7 @@ int get_new_index();
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
 int Check_Collision(int source_type, int source_index);
+int Check_Expl_Collision(int source_type, int source_index, vector<pair<int, int>>& expl);
 
 void Disconnect(int c_id);
 DWORD WINAPI do_timer(LPVOID arg);
@@ -233,6 +234,13 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				bombs.front().Explode(selectedMap, clients);
 				//2. 폭탄이 삭제되기 전 전역큐에 폭발범위에 해당하는 맵인덱스들을 넣는다.
 				explosionVecs.push_back(bombs.front().explosionMapIndexs);
+				// 폭발 시작 시 정지해 있는 플레이어 체크
+				for (auto& cl : clients) {
+					if (cl.in_use == false) continue;
+					if(cl._state != PLAY) continue;
+					int ret = Check_Expl_Collision(0, cl._index,bombs.front().explosionMapIndexs);
+					if (ret == 1) cout << cl._id << "사망" << endl;
+				}
 				//확인용 출력
 				PrintMap();
 
@@ -492,6 +500,46 @@ void Setting_Map()
 //충돌체크
 //충돌 발생시 해당 오브젝트 인덱스 번호 + 1 리턴 / 충돌이 없으면 0 리턴
 //따라서!! 충돌이 안일어날시 0을 리턴하므로, 0번째 인덱스를 구분하기 위해서 + 1을 해준다.
+
+int Check_Expl_Collision(int source_type, int source_index, vector<pair<int, int>>& expl)
+{
+	int s_x{ 0 }, s_y{ 0 };
+	int s_x_bias{ 0 }, s_y_bias{ 0 };
+
+	switch (source_type) {
+	case 0:	//플레이어
+		s_x = clients[source_index]._x;
+		s_y = clients[source_index]._y;
+		s_x_bias = p_size;
+		s_y_bias = p_size;
+		break;
+	}
+	RECT temp;
+	RECT source_rt{ s_x, s_y, s_x + s_x_bias, s_y + s_y_bias };
+
+	if (s_x >= bg_w - outer_wall_start - p_size / 3)
+		return 1;
+	if (s_x <= outer_wall_start - p_size / 3)
+		return 1;
+	if (s_y >= bg_h - outer_wall_start - p_size / 3)
+		return 1;
+	if (s_y <= outer_wall_start - p_size / 3)
+		return 1;
+
+	for (auto& explosionMapIndex : expl) {
+			
+			auto [ix, iy] = explosionMapIndex;
+		    //윈도우 상 좌표
+			auto [window_x, window_y] = MapIndexToWindowPos(ix, iy);
+
+			RECT target_rt{ window_x + adj_obstacle_size_tl, window_y + adj_obstacle_size_tl, window_x + tile_size - adj_obstacle_size_br, window_y + tile_size - adj_obstacle_size_br };
+
+			if (IntersectRect(&temp, &source_rt, &target_rt)) {
+				return 1;
+			}
+		};
+	return 0;	//충돌X
+}
 
 int Check_Collision(int source_type, int source_index)
 {
