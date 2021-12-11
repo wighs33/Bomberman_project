@@ -46,12 +46,6 @@ struct PLAYER_CHANGE_STATE_packet { // 플레이어 상태 패킷
 	char id[BUFSIZE]; // 플레이어 아이디
 };
 
-struct GET_ITEM_packet {// 아이템 획득 요청 피킷
-	unsigned char size; // 패킷 사이즈
-	char type; // 패킷 타입 6
-	int item_type; // 아이템 타입
-	int item_index; // 아이템 인덱스
-};
 
 struct MOVE_PLAYER_packet { // 플레이어 이동 패킷
 	unsigned char size; // 패킷 사이즈
