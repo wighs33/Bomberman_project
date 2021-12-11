@@ -1273,8 +1273,9 @@ void Process_packet(char* p)
 					
 
 	default: {
+		cout << packet_type << endl;
 		MessageBox(NULL, "[에러] UnKnown Packet", "에러", MB_ICONERROR);
-		err_quit("UnKnown Packet");
+		err_display("UnKnown Packet");
 	}
 
 	}
