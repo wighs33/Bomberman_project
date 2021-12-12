@@ -344,7 +344,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT ps;
 	HDC mem1dc, mem2dc;
 
-	static HBITMAP hBit_main, hBit_bg, hBit_issac, hBit_magdalene, hBit_lazarus, hBit_samson, hBit_eve, hBit_block, hBit_bomb, hBit_bomb_fuse, hBit_rock, hBit_heart, hBit_explosion;
+	static HBITMAP hBit_main, hBit_bg;
+	static HBITMAP hBit_issac, hBit_magdalene, hBit_lazarus, hBit_samson, hBit_eve, hBit_issac_hurt, hBit_magdalene_hurt, hBit_lazarus_hurt, hBit_samson_hurt, hBit_eve_hurt;
+	static HBITMAP hBit_block, hBit_bomb, hBit_bomb_fuse, hBit_rock, hBit_heart, hBit_explosion;
 	static HBITMAP hBit_item_more_heart, hBit_item_more_power, hBit_item_more_bomb, hBit_item_rock;
 	static HBITMAP hBit_backboard, hBit_num_0, hBit_num_1, hBit_num_2, hBit_num_3, hBit_num_4, hBit_num_5, hBit_al_p, hBit_empty, hBit_idle, hBit_ready, hBit_play, hBit_dead;
 	static HBITMAP oldBit1, oldBit2;
@@ -388,6 +390,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		hBit_lazarus = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP7));
 		hBit_samson = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP8));
 		hBit_eve = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP9));
+
+		hBit_issac_hurt = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP33));
+		hBit_magdalene_hurt = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP35));
+		hBit_lazarus_hurt = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP34));
+		hBit_samson_hurt = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP36));
+		hBit_eve_hurt = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP32));
 
 		hBit_block = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP2));
 		hBit_bomb = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP10));
@@ -1079,6 +1087,8 @@ void Process_packet(char* p)
 		strcpy_s(players[index]._id, packet->id);
 
 		//cout << "[수신 성공] \'" << players[index]._id << "\' (타 플레이어) 로그인 확인" << endl;
+
+		//플레이어 초기화
 
 		players[index]._state = packet->state;
 		players[index]._x = packet->x;
