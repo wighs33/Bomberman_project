@@ -139,6 +139,21 @@
     <Image Include="objects_bmp\rock_item.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
+    <Image Include="characters_bmp\Eve_hurt.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="characters_bmp\Isaac_hurt.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="characters_bmp\Lazarus_hurt.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="characters_bmp\Magdalene_hurt.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="characters_bmp\Samson_hurt.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bomberman_project.cpp">

@@ -112,6 +112,16 @@ IDB_BITMAP30            BITMAP                  "effects_bmp\\explode_2_.bmp"
 
 IDB_BITMAP31            BITMAP                  "objects_bmp\\rock_item.bmp"
 
+IDB_BITMAP32            BITMAP                  "characters_bmp\\Eve_hurt.bmp"
+
+IDB_BITMAP33            BITMAP                  "characters_bmp\\Isaac_hurt.bmp"
+
+IDB_BITMAP34            BITMAP                  "characters_bmp\\Lazarus_hurt.bmp"
+
+IDB_BITMAP35            BITMAP                  "characters_bmp\\Magdalene_hurt.bmp"
+
+IDB_BITMAP36            BITMAP                  "characters_bmp\\Samson_hurt.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

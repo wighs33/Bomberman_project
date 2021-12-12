@@ -162,8 +162,13 @@
   <ItemGroup>
     <Image Include="characters_bmp\bitmap15.bmp" />
     <Image Include="characters_bmp\Eve.bmp" />
+    <Image Include="characters_bmp\Eve_hurt.bmp" />
+    <Image Include="characters_bmp\Isaac_hurt.bmp" />
     <Image Include="characters_bmp\Lazarus.bmp" />
+    <Image Include="characters_bmp\Lazarus_hurt.bmp" />
     <Image Include="characters_bmp\Magdalene.bmp" />
+    <Image Include="characters_bmp\Magdalene_hurt.bmp" />
+    <Image Include="characters_bmp\Samson_hurt.bmp" />
     <Image Include="effects_bmp\explode_2_.bmp" />
     <Image Include="icon_ico\terror_man.ico" />
     <Image Include="maps_bmp\al_p.bmp" />

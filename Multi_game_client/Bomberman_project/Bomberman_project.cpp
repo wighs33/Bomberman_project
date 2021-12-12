@@ -344,7 +344,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT ps;
 	HDC mem1dc, mem2dc;
 
-	static HBITMAP hBit_main, hBit_bg, hBit_issac, hBit_magdalene, hBit_lazarus, hBit_samson, hBit_eve, hBit_block, hBit_bomb, hBit_bomb_fuse, hBit_rock, hBit_heart, hBit_explosion;
+	static HBITMAP hBit_main, hBit_bg;
+	static HBITMAP hBit_issac, hBit_magdalene, hBit_lazarus, hBit_samson, hBit_eve, hBit_issac_hurt, hBit_magdalene_hurt, hBit_lazarus_hurt, hBit_samson_hurt, hBit_eve_hurt;
+	static HBITMAP hBit_block, hBit_bomb, hBit_bomb_fuse, hBit_rock, hBit_heart, hBit_explosion;
 	static HBITMAP hBit_item_more_heart, hBit_item_more_power, hBit_item_more_bomb, hBit_item_rock;
 	static HBITMAP hBit_backboard, hBit_num_0, hBit_num_1, hBit_num_2, hBit_num_3, hBit_num_4, hBit_num_5, hBit_al_p, hBit_empty, hBit_idle, hBit_ready, hBit_play, hBit_dead;
 	static HBITMAP oldBit1, oldBit2;
@@ -388,6 +390,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		hBit_lazarus = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP7));
 		hBit_samson = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP8));
 		hBit_eve = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP9));
+
+		hBit_issac_hurt = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP33));
+		hBit_magdalene_hurt = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP35));
+		hBit_lazarus_hurt = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP34));
+		hBit_samson_hurt = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP36));
+		hBit_eve_hurt = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP32));
 
 		hBit_block = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP2));
 		hBit_bomb = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP10));
@@ -538,6 +546,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			if (p_head_idx >= 2)
 				p_head_idx = 0;
+		}
+		//정지상태 체크
+		for (auto& pl : players) {
+			if (pl._heart > 0 && pl._idle_time < idle_time_limit) {
+				pl._idle_time++;
+			}
 		}
 
 		//폭탄
@@ -724,8 +738,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					//우 이동시
 					if (players[i]._dir == 1) {
 						//몸통
-						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-							mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						if (players[i]._idle_time >= idle_time_limit) {	//정지상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
+						else {	//움직이는 상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
 						//머리
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 2), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
@@ -733,8 +753,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					//좌 이동시 
 					else if (players[i]._dir == 2) {
 						//몸통
-						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-							mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						if (players[i]._idle_time >= idle_time_limit) {	//정지상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
+						else {	//움직이는 상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
 						//머리
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 6), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
@@ -742,8 +768,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					//하 이동시
 					else if (players[i]._dir == 3) {
 						//몸통
-						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-							mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						if (players[i]._idle_time >= idle_time_limit) {	//정지상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
+						else {	//움직이는 상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
 						//머리
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
@@ -751,13 +783,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					//상 이동시
 					else if (players[i]._dir == 4) {
 						//몸통
-						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-							mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						if (players[i]._idle_time >= idle_time_limit) {	//정지상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
+						else {	//움직이는 상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
 						//머리
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 4), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 					}
-					//이동X
+					//초기상태
 					else if (players[i]._dir == 0) {
 						//몸통
 						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
@@ -767,6 +805,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 							mem2dc, p_head_img_w_start, p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 					}
 				}
+
 			}
 
 			//플레이어 상태가 대기(IDLE) 상태일 시
@@ -1080,6 +1119,8 @@ void Process_packet(char* p)
 
 		//cout << "[수신 성공] \'" << players[index]._id << "\' (타 플레이어) 로그인 확인" << endl;
 
+		//플레이어 초기화
+
 		players[index]._state = packet->state;
 		players[index]._x = packet->x;
 		players[index]._y = packet->y;
@@ -1091,6 +1132,7 @@ void Process_packet(char* p)
 		players[index]._level = packet->level;
 		players[index]._exp = packet->exp;
 		players[index]._index = packet->index;
+		players[index]._idle_time = 0;
 
 		break;
 	}
@@ -1103,6 +1145,7 @@ void Process_packet(char* p)
 				player._x = packet->x;
 				player._y = packet->y;
 				player._dir = packet->dir;
+				player._idle_time = 0;
 
 				break;
 			}
@@ -1191,22 +1234,18 @@ void Process_packet(char* p)
 				player._y = packet->y;
 				player._heart = packet->hp;
 
-				if (player._state == ACCEPT) {	//게임 시작 직전
+				if (packet->state == PLAY && player._state == ACCEPT) {	//게임 플레이 상태로 바뀔 시
 					player._dir = 0;
 					destroyButton = true;
 				}
-				else if (player._state == PLAY) {	//게임 도중
-					destroyButton = true;
+				else if (packet->state == NO_ACCEPT) {	// 플레이어 나감 
+
+				}
+				else if (packet->state == DEAD) {	// 플레이어 사망
+
 				}
 
 				player._state = packet->state;
-			
-				if (player._state == NO_ACCEPT) {	// 플레이어 나감 
-					
-				}
-				else if (player._state == DEAD) {	// 플레이어 사망
-					
-				}
 			}
 		}
 
