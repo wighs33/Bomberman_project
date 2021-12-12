@@ -1142,7 +1142,7 @@ void Process_packet(char* p)
 			cout << packet->ix << ", " << packet->iy << endl;
 			selectedMap[packet->iy][packet->ix] = EMPTY;	//Æø¹ß ³¡
 			//Æø¹ß Å¥¿¡¼­ Ã³À½ Æø¹ß »èÁ¦ - ¿©·¯¹ø º¸³¿
-			//explosions.pop_front();
+			explosions.pop_front();
 		}
 
 		break;

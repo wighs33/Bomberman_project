@@ -254,14 +254,16 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				bombs.front().Explode(selectedMap, clients);
 				//2. 폭탄이 삭제되기 전 전역큐에 폭발범위에 해당하는 맵인덱스들을 넣는다.
 				explosionVecs.push_back(bombs.front().explosionMapIndexs);
+				
 				// 폭발 시작 시 정지해 있는 플레이어 체크
 				for (auto& cl : clients) {
 					if (cl.in_use == false) continue;
 					if(cl._state != PLAY) continue;
 				     Check_Expl_Collision(0, cl._index,bombs.front().explosionMapIndexs);
 				}
+				
 				//확인용 출력
-				PrintMap();
+				//PrintMap();
 
 				//폭탄 삭제전 플레이어 현재 폭탄 갯수 갱신
 				for (auto& pl : clients) {
@@ -277,15 +279,15 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				// 전역큐의 첫번째 원소에는 폭발범위가 있고
 				for (auto& explosionMapIndex : explosionVecs.front()) {
 					auto [ix, iy] = explosionMapIndex;
-					selectedMap[iy][ix] = EMPTY;
 					//5. 폭발 중인 맵인덱스를 하나씩 클라로 보낸다. - 클라에서 폭발 끝냄
 					SendExplosionEnd(ix, iy);
+					selectedMap[iy][ix] = EMPTY;
 				}
 				//6. 폭발삭제
 				explosionVecs.pop_front();
 
 				//확인용 출력
-				PrintMap();
+				//PrintMap();
 
 			}
 			else if (ev.order == TURN_Damage)
@@ -968,7 +970,7 @@ void process_packet(int client_index, char* p)
 		SetEvent(htimerEvent);
 		
 		//임시 출력
-		PrintMap();
+		//PrintMap();
 
 		//큐에 폭탄 개수
 		cout << "큐에 폭탄 개수: " << bombs.size() << endl;
@@ -985,8 +987,6 @@ void process_packet(int client_index, char* p)
 		switch (packet->state) {
 
 		case READY: {
-			cl._x = packet->x;
-			cl._y = packet->y;
 			cl._state = packet->state;
 			cout << "클라이언트 \'" << cl._id << "\' - 준비 상태" << endl;
 
@@ -1004,6 +1004,7 @@ void process_packet(int client_index, char* p)
 						state_packet.type = CHANGE_STATE;
 						state_packet.x = cl._x;
 						state_packet.y = cl._y;
+						state_packet.hp = cl._heart;
 						state_packet.state = cl._state;
 						state_packet.hp = cl._heart;
 						strcpy_s(state_packet.id, cl._id);
@@ -1016,6 +1017,7 @@ void process_packet(int client_index, char* p)
 						state_packet.type = CHANGE_STATE;
 						state_packet.x = other._x;
 						state_packet.y = other._y;
+						state_packet.hp = other._heart;
 						state_packet.state = other._state;
 						state_packet.hp = cl._heart;
 						strcpy_s(state_packet.id, other._id);
@@ -1028,8 +1030,6 @@ void process_packet(int client_index, char* p)
 		}
 
 		case ACCEPT: {
-			cl._x = packet->x;
-			cl._y = packet->y;
 			cl._state = packet->state;
 			cout << "클라이언트 \'" << cl._id << "\' - 준비 취소 상태" << endl;
 
@@ -1042,6 +1042,7 @@ void process_packet(int client_index, char* p)
 						state_packet.type = CHANGE_STATE;
 						state_packet.x = cl._x;
 						state_packet.y = cl._y;
+						state_packet.hp = cl._heart;
 						state_packet.state = cl._state;
 						state_packet.hp = cl._heart;
 						strcpy_s(state_packet.id, cl._id);
@@ -1054,6 +1055,7 @@ void process_packet(int client_index, char* p)
 						state_packet.type = CHANGE_STATE;
 						state_packet.x = other._x;
 						state_packet.y = other._y;
+						state_packet.hp = other._heart;
 						state_packet.state = other._state;
 						state_packet.hp = cl._heart;
 						strcpy_s(state_packet.id, other._id);

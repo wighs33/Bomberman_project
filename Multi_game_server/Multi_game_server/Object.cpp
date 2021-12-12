@@ -18,6 +18,7 @@ static std::pair<int, int> WindowPosToMapIndex(int x, int y)
 
 static void SendDestroyedRock(array<Session, MAX_USER>& clients, int ix, int iy) {
 	for (auto& pl : clients) {
+		if (pl._state != PLAY) continue;
 		if (true == pl.in_use)
 		{
 			DELETE_OBJECT_packet del_obj_packet;
@@ -27,6 +28,7 @@ static void SendDestroyedRock(array<Session, MAX_USER>& clients, int ix, int iy)
 			del_obj_packet.ix = ix;
 			del_obj_packet.iy = iy;
 			pl.do_send(sizeof(del_obj_packet), &del_obj_packet);
+			cout << ix << ", " << iy << endl;
 		}
 	}
 }
@@ -48,6 +50,7 @@ static void SendCreatedItem(array<Session, MAX_USER>& clients, int ix, int iy, i
 
 static void SendExplosionStart(array<Session, MAX_USER>& clients, int ix, int iy) {
 	for (auto& pl : clients) {
+		if (pl._state != PLAY) continue;
 		if (true == pl.in_use)
 		{
 			CHECK_EXPLOSION_packet check_explosion_packet;
@@ -108,6 +111,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		SendExplosionStart(clients, bomb_ix, bomb_iy - i);
 	}
 
+	Sleep(1);
+
 	//ÆøÅº ¾Æ·¡ Ã¼Å©
 	for (int i = 1; i <= _power; ++i) {
 		//¹üÀ§ Ã¼Å©
@@ -138,6 +143,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		SendExplosionStart(clients, bomb_ix, bomb_iy + i);
 	}
 
+	Sleep(1);
+
 	//ÆøÅº ¿ÞÂÊ Ã¼Å©
 	for (int i = 1; i <= _power; ++i) {
 		//¹üÀ§ Ã¼Å©
@@ -167,6 +174,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		explosionMapIndexs.emplace_back(bomb_ix - i, bomb_iy);
 		SendExplosionStart(clients, bomb_ix - i, bomb_iy);
 	}
+
+	Sleep(1);
 
 	//ÆøÅº ¿À¸¥ÂÊ Ã¼Å©
 	for (int i = 1; i <= _power; ++i) {

@@ -45,7 +45,7 @@ public:
 	int _power; // ÆøÅº À§·Â
 	int _rock_count;
 	atomic<bool> no_damage = false;
-	atomic<bool> in_use;
+	bool in_use;
 
 	std::mutex use_lock;
 	//std::deque<Bomb> bombs;
@@ -63,8 +63,11 @@ public:
 	{
 		ZeroMemory(_recv_buf, sizeof(_recv_buf));
 		int ret = recv(_cl, _recv_buf, BUFSIZE, 0);
-		if (ret == SOCKET_ERROR)
+		if (ret == SOCKET_ERROR) {
+			use_lock.lock();
 			in_use = false;
+			use_lock.unlock();
+		}
 	}
 };
 
