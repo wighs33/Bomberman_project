@@ -189,6 +189,7 @@
     <Image Include="objects_bmp\more_bomb.bmp" />
     <Image Include="objects_bmp\more_power.bmp" />
     <Image Include="objects_bmp\rock1.bmp" />
+    <Image Include="objects_bmp\rock_item.bmp" />
     <Image Include="objects_bmp\tear.bmp" />
     <Image Include="characters_bmp\Samson.bmp" />
   </ItemGroup>

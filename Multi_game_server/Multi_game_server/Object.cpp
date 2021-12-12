@@ -28,7 +28,6 @@ static void SendDestroyedRock(array<Session, MAX_USER>& clients, int ix, int iy)
 			del_obj_packet.ix = ix;
 			del_obj_packet.iy = iy;
 			pl.do_send(sizeof(del_obj_packet), &del_obj_packet);
-			cout << ix << ", " << iy << endl;
 		}
 	}
 }

@@ -110,6 +110,8 @@ IDB_BITMAP29            BITMAP                  "objects_bmp\\bomb_fuse.bmp"
 
 IDB_BITMAP30            BITMAP                  "effects_bmp\\explode_2_.bmp"
 
+IDB_BITMAP31            BITMAP                  "objects_bmp\\rock_item.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -340,7 +340,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	HDC mem1dc, mem2dc;
 
 	static HBITMAP hBit_main, hBit_bg, hBit_issac, hBit_magdalene, hBit_lazarus, hBit_samson, hBit_eve, hBit_block, hBit_bomb, hBit_bomb_fuse, hBit_rock, hBit_heart, hBit_explosion;
-	static HBITMAP hBit_item_more_heart, hBit_item_more_power, hBit_item_more_bomb;
+	static HBITMAP hBit_item_more_heart, hBit_item_more_power, hBit_item_more_bomb, hBit_item_rock;
 	static HBITMAP hBit_backboard, hBit_num_0, hBit_num_1, hBit_num_2, hBit_num_3, hBit_num_4, hBit_num_5, hBit_al_p, hBit_empty, hBit_idle, hBit_ready, hBit_play, hBit_dead;
 	static HBITMAP oldBit1, oldBit2;
 	static HFONT hFont_name, oldFont_name, hFont_msg, oldFont_msg;
@@ -394,6 +394,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		hBit_item_more_heart = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP15));
 		hBit_item_more_power = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP11));
 		hBit_item_more_bomb = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP16));
+		hBit_item_rock = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP31));
 
 		hBit_backboard = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP14));
 		hBit_num_0 = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BITMAP17));
@@ -622,7 +623,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				}
 
 				Display_Players_Info(mem1dc, mem2dc, i, oldBit2, hBit_num, hBit_al_p, hBit_character, hBit_state,
-					hBit_heart, hBit_heart_num, hBit_item_more_bomb, hBit_more_bomb_num, hBit_item_more_power, hBit_more_power_num, hBit_rock, hBit_rock_num);
+					hBit_heart, hBit_heart_num, hBit_item_more_bomb, hBit_more_bomb_num, hBit_item_more_power, hBit_more_power_num, hBit_item_rock, hBit_rock_num);
 
 				TextOut(mem1dc, bg_w + 10 + bb_char_img_size + 40, 25 + h_gap * i, "ID: ", _tcslen("ID: "));
 				TextOut(mem1dc, bg_w + 10 + bb_char_img_size + 75, 25 + h_gap * i, players[i]._id, _tcslen(players[i]._id));
@@ -636,6 +637,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		//접속 후 화면 출력
 		if (retval) {
+
+			int item_size_adj = 20;
 
 			//맵 그리기
 			for (int iy = 0; iy < tile_max_h_num; ++iy) {
@@ -652,32 +655,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 						break;
 
 					case ROCK:			//돌
-					case SPECIALROCK:	//돌
+					case SPECIALROCK:	//돌(아이템이 들어가있는)
 						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_rock);
 						TransparentBlt(mem1dc, window_x, window_y, rock_size, rock_size, mem2dc, 0, 0, rock_img_size, rock_img_size, RGB(79, 51, 44));
 						break;
 
-						//hBit_item_more_heart, hBit_item_more_power, hBit_item_more_bomb;
-
-
-					case ITEM_HEART:			//아이템
+					case ITEM_HEART:			//하트 아이템
 						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_item_more_heart);
-						TransparentBlt(mem1dc, window_x, window_y, tile_size, tile_size, mem2dc, 0, 0, heart_img_size_w, heart_img_size_h, RGB(79, 51, 44));
+						TransparentBlt(mem1dc, window_x + item_size_adj / 2, window_y + item_size_adj / 2, tile_size - item_size_adj, tile_size - item_size_adj, mem2dc, 0, 0, heart_img_size_w, heart_img_size_h, RGB(255, 255, 255));
 						break;
 
-					case ITEM_MORE_BOMB:		//아이템
+					case ITEM_MORE_BOMB:		//더 많은 폭탄 아이템
 						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_item_more_bomb);
-						TransparentBlt(mem1dc, window_x, window_y, tile_size, tile_size, mem2dc, 0, 0, item_more_bomb_img_size_w, item_more_bomb_img_size_h, RGB(79, 51, 44));
+						TransparentBlt(mem1dc, window_x + item_size_adj / 2, window_y + item_size_adj / 2, tile_size - item_size_adj, tile_size - item_size_adj, mem2dc, 0, 0, item_more_bomb_img_size_w, item_more_bomb_img_size_h, RGB(185, 122, 86));
 						break;
 
-					case ITEM_MORE_POWER:		//아이템
+					case ITEM_MORE_POWER:		//더 강한 폭발 아이템
 						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_item_more_power);
-						TransparentBlt(mem1dc, window_x, window_y, tile_size, tile_size, mem2dc, 0, 0, item_more_power_img_size, item_more_power_img_size, RGB(79, 51, 44));
+						TransparentBlt(mem1dc, window_x + item_size_adj / 2, window_y + item_size_adj / 2, tile_size - item_size_adj, tile_size - item_size_adj, mem2dc, 0, 0, item_more_power_img_size, item_more_power_img_size, RGB(255, 0, 0));
 						break;
 
-					case ITEM_ROCK:			//아이템
-						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_item_more_heart);
-						TransparentBlt(mem1dc, window_x, window_y, tile_size, tile_size, mem2dc, 0, 0, heart_img_size_w, heart_img_size_h, RGB(79, 51, 44));
+					case ITEM_ROCK:			//방어용 돌 생성 아이템
+						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_item_rock);
+						TransparentBlt(mem1dc, window_x + item_size_adj / 2, window_y + item_size_adj / 2, tile_size - item_size_adj, tile_size - item_size_adj, mem2dc, 0, 0, heart_img_size_w, heart_img_size_h, RGB(79, 51, 44));
 						break;
 
 					default:
@@ -809,7 +809,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 //--- 사용자 정의 함수 정의
 
 void Display_Players_Info(HDC mem1dc, HDC mem2dc, int player_num, HBITMAP old_bitmap, HBITMAP num_bitmap, HBITMAP al_p_bitmap, HBITMAP player_bitmap, HBITMAP state_bitmap,
-	HBITMAP heart_bitmap, HBITMAP h_num_bitmap, HBITMAP more_bomb_bitmap, HBITMAP mb_num_bitmap, HBITMAP more_power_bitmap, HBITMAP mp_num_bitmap, HBITMAP rock_bitmap, HBITMAP r_num_bitmap)
+	HBITMAP heart_bitmap, HBITMAP h_num_bitmap, HBITMAP more_bomb_bitmap, HBITMAP mb_num_bitmap, HBITMAP more_power_bitmap, HBITMAP mp_num_bitmap, HBITMAP rock_item_bitmap, HBITMAP r_num_bitmap)
 {
 	old_bitmap = (HBITMAP)SelectObject(mem2dc, num_bitmap);
 	TransparentBlt(mem1dc, bg_w + 10, 25 + h_gap * player_num, bb_char_img_size, bb_char_img_size, mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
@@ -846,7 +846,7 @@ void Display_Players_Info(HDC mem1dc, HDC mem2dc, int player_num, HBITMAP old_bi
 	TransparentBlt(mem1dc, bg_w + 5 + 25 * 4 + 5, 25 + bb_char_img_size + 25 * 3 + 10 + h_gap * player_num, heart_img_size_w / 8, heart_img_size_h / 8,
 		mem2dc, 0, 0, bb_char_img_size, bb_char_img_size, RGB(255, 255, 255));
 
-	old_bitmap = (HBITMAP)SelectObject(mem2dc, rock_bitmap);
+	old_bitmap = (HBITMAP)SelectObject(mem2dc, rock_item_bitmap);
 	TransparentBlt(mem1dc, bg_w + 5 + 25 * 6, 25 + bb_char_img_size + 25 * 2 + 5 + h_gap * player_num, heart_img_size_w / 7, heart_img_size_h / 7,
 		mem2dc, 0, 0, bl_img_size, bl_img_size, RGB(79, 51, 44));
 	old_bitmap = (HBITMAP)SelectObject(mem2dc, r_num_bitmap);

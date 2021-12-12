@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 
 	Setting_Map();
 
-	//타이머 스레드 스위치dyd
+	//타이머 스레드 스위치용
 	htimerEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	
 	//for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                    //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
