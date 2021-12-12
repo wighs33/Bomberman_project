@@ -44,7 +44,7 @@ public:
 	int _power; // 폭탄 위력
 	int _rock_count;
 	atomic<bool> no_damage = false;
-	bool in_use;
+	atomic<bool> in_use;
 
 	std::mutex use_lock;
 	//std::deque<Bomb> bombs;
@@ -61,7 +61,9 @@ public:
 	void do_recv()  //recv_buf 객체 당 하나씩 배정되며, 호출 시 메모리 초기화를 통해 재활용 한다.
 	{
 		ZeroMemory(_recv_buf, sizeof(_recv_buf));
-		recv(_cl, _recv_buf, BUFSIZE, 0);
+		int ret = recv(_cl, _recv_buf, BUFSIZE, 0);
+		if (ret == SOCKET_ERROR)
+			in_use = false;
 	}
 };
 
