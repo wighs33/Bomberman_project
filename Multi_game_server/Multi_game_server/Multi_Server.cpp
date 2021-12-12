@@ -254,14 +254,16 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				bombs.front().Explode(selectedMap, clients);
 				//2. 폭탄이 삭제되기 전 전역큐에 폭발범위에 해당하는 맵인덱스들을 넣는다.
 				explosionVecs.push_back(bombs.front().explosionMapIndexs);
+				
 				// 폭발 시작 시 정지해 있는 플레이어 체크
 				for (auto& cl : clients) {
 					if (cl.in_use == false) continue;
 					if(cl._state != PLAY) continue;
 				     Check_Expl_Collision(0, cl._index,bombs.front().explosionMapIndexs);
 				}
+				
 				//확인용 출력
-				PrintMap();
+				//PrintMap();
 
 				bombs.pop_front();
 			}
@@ -278,7 +280,7 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				explosionVecs.pop_front();
 
 				//확인용 출력
-				PrintMap();
+				//PrintMap();
 
 			}
 			else if (ev.order == TURN_Damage)
@@ -938,7 +940,7 @@ void process_packet(int client_index, char* p)
 		SetEvent(htimerEvent);
 		
 		//임시 출력
-		PrintMap();
+		//PrintMap();
 
 		//큐에 폭탄 개수
 		cout << "큐에 폭탄 개수: " << bombs.size() << endl;
