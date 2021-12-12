@@ -117,7 +117,7 @@ void Send_change_player(int _index) {
 			PLAYER_CHANGE_STATE_packet packet;
 			packet.size = sizeof(PLAYER_CHANGE_STATE_packet);
 			packet.type = CHANGE_STATE;
-			packet.y = cl._x;
+			packet.x = cl._x;
 			packet.y = cl._y;
 			packet.state = cl._state;
 			packet.hp = cl._heart;
