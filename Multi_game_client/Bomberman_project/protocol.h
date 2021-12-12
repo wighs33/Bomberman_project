@@ -43,6 +43,7 @@ struct PLAYER_CHANGE_STATE_packet { // 플레이어 상태 패킷
 	char type; // 패킷 타입 4
 	int x, y; // 플레이어 좌표
 	Player_Condition state; // 플레이어 상태
+	int hp;                 //플레이어 hp
 	char id[MAX_NAME_SIZE]; // 플레이어 아이디
 };
 

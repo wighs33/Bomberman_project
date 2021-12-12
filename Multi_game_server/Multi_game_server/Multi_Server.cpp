@@ -93,6 +93,7 @@ HANDLE hThread[MAX_USER + 1];
 
 void SendExplosionEnd(int ix, int iy) {
 	for (auto& pl : clients) {
+		if (pl._state != PLAY) continue;
 		if (true == pl.in_use)
 		{
 			CHECK_EXPLOSION_packet check_explosion_packet;
@@ -106,6 +107,25 @@ void SendExplosionEnd(int ix, int iy) {
 	}
 }
 
+void Send_change_player(int _index) {
+
+	Session& cl = clients[_index];
+	for (auto& pl : clients) {
+		if (pl._state == NO_ACCEPT) continue;
+		if (true == pl.in_use)
+		{
+			PLAYER_CHANGE_STATE_packet packet;
+			packet.size = sizeof(PLAYER_CHANGE_STATE_packet);
+			packet.type = CHANGE_STATE;
+			packet.y = cl._x;
+			packet.y = cl._y;
+			packet.state = cl._state;
+			packet.hp = cl._heart;
+			strcpy_s(packet.id,cl._id);
+			pl.do_send(sizeof(packet), &packet);
+		}
+	}
+}
 //테스트
 void PrintMap() {
 	for (int i = 0; i < tile_max_h_num; ++i) {
@@ -265,7 +285,11 @@ DWORD WINAPI do_timer(LPVOID arg) {
 			{
 				cout << "데미지" << endl;
 				clients[ev.obj_id]._heart--;
+				cout << clients[ev.obj_id]._heart << endl;
+
+				if (clients[ev.obj_id]._heart <= 0) clients[ev.obj_id]._state = DEAD;
 				clients[ev.obj_id].no_damage = false;
+				Send_change_player(ev.obj_id);
 			}
 		}
 		else {
@@ -542,7 +566,7 @@ int Check_Expl_Collision(int source_type, int source_index, vector<pair<int, int
 			if (IntersectRect(&temp, &source_rt, &target_rt)) {
 				if (clients[source_index].no_damage == false) {
 					clients[source_index].no_damage = true;
-					Timer_Event(source_index, TURN_Damage, 500ms);
+					Timer_Event(source_index, TURN_Damage, 1000ms);
 					return 1;
 				}
 			}
@@ -1066,6 +1090,7 @@ void Disconnect(int c_id)
 {
 	Session& cl = clients[c_id];
 	clients[c_id]._state = NO_ACCEPT;
+	Send_change_player(c_id);
 	closesocket(clients[c_id]._cl);
 	cout << "------------???------------" << endl;   //충돌땜에 한글확인불가
 }
@@ -1082,8 +1107,9 @@ DWORD WINAPI Thread_1(LPVOID arg)
 		// 데이터 받기
 		player.do_recv();
 		//int remain_data = num_byte + cl._prev_size;
-		if (clients[index]._recv_buf == 0)
+		if (clients[index].in_use == false)
 		{
+			cout << "종료" << endl;
 			Disconnect(index);
 			return 0;
 		}
