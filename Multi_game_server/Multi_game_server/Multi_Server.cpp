@@ -272,9 +272,9 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				// 전역큐의 첫번째 원소에는 폭발범위가 있고
 				for (auto& explosionMapIndex : explosionVecs.front()) {
 					auto [ix, iy] = explosionMapIndex;
-					selectedMap[iy][ix] = EMPTY;
 					//5. 폭발 중인 맵인덱스를 하나씩 클라로 보낸다. - 클라에서 폭발 끝냄
 					SendExplosionEnd(ix, iy);
+					selectedMap[iy][ix] = EMPTY;
 				}
 				//6. 폭발삭제
 				explosionVecs.pop_front();
