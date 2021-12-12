@@ -466,7 +466,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		{
 			int px = players[my_index]._x;
 			int py = players[my_index]._y;
-			auto [map_ix, map_iy] = WindowPosToMapIndex(px, py);
+			auto [map_ix, map_iy] = WindowPosToMapIndex(px + 10, py + 10);
 			auto [bomb_x, bomb_y] = MapIndexToWindowPos(map_ix, map_iy);
 			
 			//서버로 폭탄 설치 요청 패킷 전송
