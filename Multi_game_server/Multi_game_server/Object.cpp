@@ -18,6 +18,7 @@ static std::pair<int, int> WindowPosToMapIndex(int x, int y)
 
 static void SendDestroyedRock(array<Session, MAX_USER>& clients, int ix, int iy) {
 	for (auto& pl : clients) {
+		if (pl._state != PLAY) continue;
 		if (true == pl.in_use)
 		{
 			DELETE_OBJECT_packet del_obj_packet;
@@ -48,6 +49,7 @@ static void SendCreatedItem(array<Session, MAX_USER>& clients, int ix, int iy, i
 
 static void SendExplosionStart(array<Session, MAX_USER>& clients, int ix, int iy) {
 	for (auto& pl : clients) {
+		if (pl._state != PLAY) continue;
 		if (true == pl.in_use)
 		{
 			CHECK_EXPLOSION_packet check_explosion_packet;
