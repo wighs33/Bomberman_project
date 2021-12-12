@@ -547,6 +547,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			if (p_head_idx >= 2)
 				p_head_idx = 0;
 		}
+		//정지상태 체크
+		for (auto& pl : players) {
+			if (pl._heart > 0 && pl._idle_time < idle_time_limit) {
+				pl._idle_time++;
+			}
+		}
 
 		//폭탄
 		for (auto& bomb : bombs) {
@@ -732,8 +738,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					//우 이동시
 					if (players[i]._dir == 1) {
 						//몸통
-						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-							mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						if (players[i]._idle_time >= idle_time_limit) {	//정지상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
+						else {	//움직이는 상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
 						//머리
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 2), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
@@ -741,8 +753,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					//좌 이동시 
 					else if (players[i]._dir == 2) {
 						//몸통
-						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-							mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						if (players[i]._idle_time >= idle_time_limit) {	//정지상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
+						else {	//움직이는 상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
 						//머리
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 6), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
@@ -750,8 +768,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					//하 이동시
 					else if (players[i]._dir == 3) {
 						//몸통
-						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-							mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						if (players[i]._idle_time >= idle_time_limit) {	//정지상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
+						else {	//움직이는 상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
 						//머리
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
@@ -759,13 +783,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					//상 이동시
 					else if (players[i]._dir == 4) {
 						//몸통
-						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-							mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						if (players[i]._idle_time >= idle_time_limit) {	//정지상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
+						else {	//움직이는 상태일 시
+							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+						}
 						//머리
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
 							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 4), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 					}
-					//이동X
+					//초기상태
 					else if (players[i]._dir == 0) {
 						//몸통
 						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
@@ -775,6 +805,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 							mem2dc, p_head_img_w_start, p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
 					}
 				}
+
 			}
 
 			//플레이어 상태가 대기(IDLE) 상태일 시
@@ -1101,6 +1132,7 @@ void Process_packet(char* p)
 		players[index]._level = packet->level;
 		players[index]._exp = packet->exp;
 		players[index]._index = packet->index;
+		players[index]._idle_time = 0;
 
 		break;
 	}
@@ -1113,6 +1145,7 @@ void Process_packet(char* p)
 				player._x = packet->x;
 				player._y = packet->y;
 				player._dir = packet->dir;
+				player._idle_time = 0;
 
 				break;
 			}
