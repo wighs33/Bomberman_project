@@ -651,7 +651,7 @@ int Check_Collision(int source_type, int source_index)
 				if (IntersectRect(&temp, &source_rt, &target_rt)){
 					if (clients[source_index].no_damage == false) {
 						clients[source_index].no_damage = true;
-						Timer_Event(source_index, TURN_Damage, 500ms);
+						Timer_Event(source_index, TURN_Damage, 1000ms);
 						return 1;
 					}
 					return 1;
