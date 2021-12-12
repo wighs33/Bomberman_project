@@ -1129,7 +1129,7 @@ void Process_packet(char* p)
 		}
 
 		if (packet->isActive) {
-			//cout << "\n气惯 惯积!!\n";
+			cout << "\n气惯 惯积!!\n";
 			cout << packet->ix << ", " << packet->iy << endl;
 			selectedMap[packet->iy][packet->ix] = EXPLOSION;	//气惯 惯积
 
@@ -1138,9 +1138,11 @@ void Process_packet(char* p)
 			explosions.emplace_back(explosion_x, explosion_y, explosions.size(), bomb_explosion_timer);
 		}
 		else {
+			cout << "\n气惯 场!!\n";
+			cout << packet->ix << ", " << packet->iy << endl;
 			selectedMap[packet->iy][packet->ix] = EMPTY;	//气惯 场
 			//气惯 钮俊辑 贸澜 气惯 昏力 - 咯矾锅 焊晨
-			//explosions.pop_front();
+			explosions.pop_front();
 		}
 
 		break;

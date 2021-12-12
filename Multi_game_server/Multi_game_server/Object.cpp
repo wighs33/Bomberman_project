@@ -28,6 +28,7 @@ static void SendDestroyedRock(array<Session, MAX_USER>& clients, int ix, int iy)
 			del_obj_packet.ix = ix;
 			del_obj_packet.iy = iy;
 			pl.do_send(sizeof(del_obj_packet), &del_obj_packet);
+			cout << ix << ", " << iy << endl;
 		}
 	}
 }
@@ -110,6 +111,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		SendExplosionStart(clients, bomb_ix, bomb_iy - i);
 	}
 
+	Sleep(1);
+
 	//气藕 酒贰 眉农
 	for (int i = 1; i <= _power; ++i) {
 		//裹困 眉农
@@ -140,6 +143,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		SendExplosionStart(clients, bomb_ix, bomb_iy + i);
 	}
 
+	Sleep(1);
+
 	//气藕 哭率 眉农
 	for (int i = 1; i <= _power; ++i) {
 		//裹困 眉农
@@ -169,6 +174,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 		explosionMapIndexs.emplace_back(bomb_ix - i, bomb_iy);
 		SendExplosionStart(clients, bomb_ix - i, bomb_iy);
 	}
+
+	Sleep(1);
 
 	//气藕 坷弗率 眉农
 	for (int i = 1; i <= _power; ++i) {
