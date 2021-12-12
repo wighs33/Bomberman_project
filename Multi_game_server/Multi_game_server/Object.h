@@ -62,15 +62,20 @@ class Bomb : public Object
 public:
 	int _power; // 폭탄 파워
 	vector<pair<int,int>>	explosionMapIndexs;  //폭발 맵위치 벡터
+	char _owner_id[BUFSIZE] = " ";		//폭탄 주인
 
-	Bomb(int X, int Y, int OBJ_INDX, int power) : Object(X, Y, OBJ_INDX)
+	Bomb(int X, int Y, int OBJ_INDX, int power, char owner_id[]) : Object(X, Y, OBJ_INDX)
 	{
-		_power = power; // 폭탄 파워 초기화
+		_power = power;
+
+		strcpy_s(_owner_id, owner_id);
 	}
 
 	explicit Bomb(const Bomb& copy) : Object(copy._x, copy._y, copy._object_index)
 	{
-		_power = copy._power; // 폭탄 파워 초기화
+		_power = copy._power; 
+
+		strcpy_s(_owner_id, copy._owner_id);
 	}
 
 	void Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, array<Session, MAX_USER>& clients);					// _timer가 후폭풍 유지 시간에 도달할 시 충돌체크

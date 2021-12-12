@@ -263,6 +263,13 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				//확인용 출력
 				PrintMap();
 
+				//폭탄 삭제전 플레이어 현재 폭탄 갯수 갱신
+				for (auto& pl : clients) {
+					if (strcmp(pl._id, bombs.front()._owner_id) == 0) {
+						pl._current_bomb_count--;
+					}
+				}
+
 				bombs.pop_front();
 			}
 			else if (ev.order == END_EXPL) //4. 폭발 끝
@@ -389,7 +396,8 @@ void init_client(int client_index)
 	clients[client_index]._dir = 0;
 	clients[client_index]._power = 1;
 	clients[client_index]._heart = 3;
-	clients[client_index]._bomb_count = 2;
+	clients[client_index]._bomb_max_count = 2;
+	clients[client_index]._current_bomb_count = 0;
 	clients[client_index]._rock_count = 0;
 	clients[client_index]._state = ACCEPT;
 }
@@ -567,7 +575,7 @@ int Check_Expl_Collision(int source_type, int source_index, vector<pair<int, int
 			if (IntersectRect(&temp, &source_rt, &target_rt)) {
 				if (clients[source_index].no_damage == false) {
 					clients[source_index].no_damage = true;
-					Timer_Event(source_index, TURN_Damage, 1000ms);
+					Timer_Event(source_index, TURN_Damage, 500ms);
 					return 1;
 				}
 			}
@@ -696,7 +704,7 @@ int Check_Collision(int source_type, int source_index)
 					buff_packet.ix = ix;
 					buff_packet.iy = iy;
 					strcpy_s(buff_packet.id, clients[source_index]._id);
-					++clients[source_index]._bomb_count;
+					++clients[source_index]._bomb_max_count;
 					selectedMap[iy][ix] = EMPTY;
 					for (auto& cl : clients) {
 						if (cl.in_use == false) continue;
@@ -915,11 +923,33 @@ void process_packet(int client_index, char* p)
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
 		
 		if (cl._state != PLAY) break;
+
+		cout << "플레이어 - " << packet->owner_id << " 폭탄 설치" << endl;
+
+		bool proceed = FALSE;
+
+		//플레이어 현재 폭탄 개수 검사
+		for (auto& pl : clients) {
+			if (strcmp(pl._id, packet->owner_id) == 0) {
+				//만약 정해진 폭탄 최대 개수보다 현재 놔두려는 폭탄개수가 많거나 같다면 막는다.
+				if (pl._current_bomb_count >= pl._bomb_max_count) 
+					break;
+				
+				else {
+					pl._current_bomb_count++;
+					proceed = TRUE;
+					break;
+				}
+			}
+		}
+
+		if (proceed == FALSE) break;
 		
 		//2. 폭탄 큐에 넣음
-		bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, packet->power));
+		bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, packet->power, packet->owner_id));
 
-		packet->id = ev.obj_id;
+		packet->indx = ev.obj_id;
+
 		for (auto& pl : clients) {
 			if (pl._state != PLAY) continue;
 			if (true == pl.in_use)
@@ -932,7 +962,7 @@ void process_packet(int client_index, char* p)
 
 		//4. 타이머 큐에 3초짜리 타이머 넣음
 		Timer_Event(ev.obj_id, START_EXPL, 3000ms);
-		Timer_Event(ev.obj_id, END_EXPL, 4000ms);
+		Timer_Event(ev.obj_id, END_EXPL, 3500ms);
 
 		//5. 폭탄 터뜨림
 		SetEvent(htimerEvent);
@@ -975,6 +1005,7 @@ void process_packet(int client_index, char* p)
 						state_packet.x = cl._x;
 						state_packet.y = cl._y;
 						state_packet.state = cl._state;
+						state_packet.hp = cl._heart;
 						strcpy_s(state_packet.id, cl._id);
 						other.do_send(sizeof(state_packet), &state_packet);
 					}
@@ -986,6 +1017,7 @@ void process_packet(int client_index, char* p)
 						state_packet.x = other._x;
 						state_packet.y = other._y;
 						state_packet.state = other._state;
+						state_packet.hp = cl._heart;
 						strcpy_s(state_packet.id, other._id);
 						cl.do_send(sizeof(state_packet), &state_packet);
 					}
@@ -1011,6 +1043,7 @@ void process_packet(int client_index, char* p)
 						state_packet.x = cl._x;
 						state_packet.y = cl._y;
 						state_packet.state = cl._state;
+						state_packet.hp = cl._heart;
 						strcpy_s(state_packet.id, cl._id);
 						other.do_send(sizeof(state_packet), &state_packet);
 					}
@@ -1022,6 +1055,7 @@ void process_packet(int client_index, char* p)
 						state_packet.x = other._x;
 						state_packet.y = other._y;
 						state_packet.state = other._state;
+						state_packet.hp = cl._heart;
 						strcpy_s(state_packet.id, other._id);
 						cl.do_send(sizeof(state_packet), &state_packet);
 					}
@@ -1043,6 +1077,7 @@ void process_packet(int client_index, char* p)
 				   //			strcpy_s(con_packet.id, cl._id);
 				   //			con_packet.x = cl._x;
 				   //			con_packet.y = cl._y;
+				   //			con_packet.hp = cl._heart;
 				   //			con_packet.state = DEAD;
 				   //			pl.do_send(sizeof(con_packet), &con_packet);
 				   //		}

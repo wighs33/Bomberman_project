@@ -35,6 +35,7 @@ void Player::InputSpaceBar(std::queue<char*>& send_queue, char send_buf[BUFSIZE]
 	bomb_packet.power = _bomb_power;
 	bomb_packet.x = bomb_x;
 	bomb_packet.y = bomb_y;
+	strcpy_s(bomb_packet.owner_id, _id);
 
 	ZeroMemory(send_buf, sizeof(send_buf));
 	memcpy(&send_buf[0], &bomb_packet, BUFSIZE);

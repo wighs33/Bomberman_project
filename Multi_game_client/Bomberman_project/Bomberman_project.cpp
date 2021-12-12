@@ -596,7 +596,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				case 4: hBit_heart_num = hBit_num_4; break;
 				case 5: hBit_heart_num = hBit_num_5; break;
 				}
-				switch (players[i]._bomb_count) {
+				switch (players[i]._bomb_max_count) {
 				case 0: hBit_more_bomb_num = hBit_num_0; break;
 				case 1: hBit_more_bomb_num = hBit_num_1; break;
 				case 2: hBit_more_bomb_num = hBit_num_2; break;
@@ -1038,7 +1038,7 @@ void Process_packet(char* p)
 		players[my_index]._y = packet->y;
 		players[my_index]._dir = 0;
 		players[my_index]._heart = 3;
-		players[my_index]._bomb_count = 2;
+		players[my_index]._bomb_max_count = 2;
 		players[my_index]._bomb_power = 1;
 		players[my_index]._rock_count = 0;
 		players[my_index]._level = packet->level;
@@ -1075,7 +1075,7 @@ void Process_packet(char* p)
 		players[index]._y = packet->y;
 		players[index]._dir = packet->dir;
 		players[index]._heart = 3;
-		players[index]._bomb_count = 2;
+		players[index]._bomb_max_count = 2;
 		players[index]._bomb_power = 1;
 		players[index]._rock_count = 0;
 		players[index]._level = packet->level;
@@ -1110,8 +1110,8 @@ void Process_packet(char* p)
 	//ÆøÅº °ü·Ã
 	case INIT_BOMB: {
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
-		bombs.emplace_back(packet->x, packet->y, bombs.size(), bomb_fuse_timer, packet->power);	//Å¸ÀÌ¸Ó ÀÓ½Ã°ª
-
+		bombs.emplace_back(packet->x, packet->y, bombs.size(), bomb_fuse_timer, packet->power, packet->owner_id);
+		
 		auto [map_ix, map_iy] = WindowPosToMapIndex(packet->x, packet->y);
 
 		selectedMap[map_iy][map_ix] = BOMB;
@@ -1217,11 +1217,11 @@ void Process_packet(char* p)
 
 				if (packet->item_type == ITEM_MORE_BOMB)
 				{
-					++player._bomb_count;
+					++player._bomb_max_count;
 					selectedMap[packet->iy][packet->ix] = EMPTY;
 
 					cout << "\nÆøÅº°³¼ö Áõ°¡!!\n";
-					cout << player._bomb_count << endl;
+					cout << player._bomb_max_count << endl;
 					break;
 				}
 

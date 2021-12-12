@@ -56,12 +56,15 @@ class Bomb: public Object
 public:
 	int _timer;		// ÆøÅº ´ë±â ½Ã°£ (+ Âü°í·Î 1ÃÊ°¡ 10ÀÌ´Ù.)
 	int _power; // ÆøÅº ÆÄ¿ö
+	char _owner_id[BUFSIZE] = " ";		//ÆøÅº ÁÖÀÎ
 
-	Bomb(int X, int Y, int OBJ_INDX, int timer, int power) : Object(X, Y, OBJ_INDX)
+	Bomb(int X, int Y, int OBJ_INDX, int timer, int power, char owner[]) : Object(X, Y, OBJ_INDX)
 	{
 		_timer = timer;	
 	
 		_power = power;
+
+		strcpy_s(_owner_id, owner);
 	}
 
 	explicit Bomb(const Bomb& copy) : Object(copy._x, copy._y, copy._object_index) 
@@ -69,6 +72,8 @@ public:
 		_timer = copy._timer;
 
 		_power = copy._power;
+
+		strcpy_s(_owner_id, copy._owner_id);
 	}
 };
 
