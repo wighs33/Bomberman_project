@@ -1191,19 +1191,18 @@ void Process_packet(char* p)
 				player._y = packet->y;
 				player._heart = packet->hp;
 
-				if (player._state == ACCEPT && packet->state == PLAY) {	//게임 플레이 상태로 바뀔 시
+				if (packet->state == PLAY && player._state == ACCEPT) {	//게임 플레이 상태로 바뀔 시
 					player._dir = 0;
 					destroyButton = true;
 				}
+				else if (packet->state == NO_ACCEPT) {	// 플레이어 나감 
+
+				}
+				else if (packet->state == DEAD) {	// 플레이어 사망
+
+				}
 
 				player._state = packet->state;
-			
-				if (player._state == NO_ACCEPT) {	// 플레이어 나감 
-					
-				}
-				else if (player._state == DEAD) {	// 플레이어 사망
-					
-				}
 			}
 		}
 
