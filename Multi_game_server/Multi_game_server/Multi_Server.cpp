@@ -567,7 +567,7 @@ int Check_Expl_Collision(int source_type, int source_index, vector<pair<int, int
 			if (IntersectRect(&temp, &source_rt, &target_rt)) {
 				if (clients[source_index].no_damage == false) {
 					clients[source_index].no_damage = true;
-					Timer_Event(source_index, TURN_Damage, 1000ms);
+					Timer_Event(source_index, TURN_Damage, 500ms);
 					return 1;
 				}
 			}
@@ -651,7 +651,7 @@ int Check_Collision(int source_type, int source_index)
 				if (IntersectRect(&temp, &source_rt, &target_rt)){
 					if (clients[source_index].no_damage == false) {
 						clients[source_index].no_damage = true;
-						Timer_Event(source_index, TURN_Damage, 1000ms);
+						Timer_Event(source_index, TURN_Damage, 500ms);
 						return 1;
 					}
 					return 1;
@@ -932,7 +932,7 @@ void process_packet(int client_index, char* p)
 
 		//4. 타이머 큐에 3초짜리 타이머 넣음
 		Timer_Event(ev.obj_id, START_EXPL, 3000ms);
-		Timer_Event(ev.obj_id, END_EXPL, 4000ms);
+		Timer_Event(ev.obj_id, END_EXPL, 3500ms);
 
 		//5. 폭탄 터뜨림
 		SetEvent(htimerEvent);
@@ -955,8 +955,6 @@ void process_packet(int client_index, char* p)
 		switch (packet->state) {
 
 		case READY: {
-			cl._x = packet->x;
-			cl._y = packet->y;
 			cl._state = packet->state;
 			cout << "클라이언트 \'" << cl._id << "\' - 준비 상태" << endl;
 
@@ -974,6 +972,7 @@ void process_packet(int client_index, char* p)
 						state_packet.type = CHANGE_STATE;
 						state_packet.x = cl._x;
 						state_packet.y = cl._y;
+						state_packet.hp = cl._heart;
 						state_packet.state = cl._state;
 						strcpy_s(state_packet.id, cl._id);
 						other.do_send(sizeof(state_packet), &state_packet);
@@ -985,6 +984,7 @@ void process_packet(int client_index, char* p)
 						state_packet.type = CHANGE_STATE;
 						state_packet.x = other._x;
 						state_packet.y = other._y;
+						state_packet.hp = other._heart;
 						state_packet.state = other._state;
 						strcpy_s(state_packet.id, other._id);
 						cl.do_send(sizeof(state_packet), &state_packet);
@@ -996,8 +996,6 @@ void process_packet(int client_index, char* p)
 		}
 
 		case ACCEPT: {
-			cl._x = packet->x;
-			cl._y = packet->y;
 			cl._state = packet->state;
 			cout << "클라이언트 \'" << cl._id << "\' - 준비 취소 상태" << endl;
 
@@ -1010,6 +1008,7 @@ void process_packet(int client_index, char* p)
 						state_packet.type = CHANGE_STATE;
 						state_packet.x = cl._x;
 						state_packet.y = cl._y;
+						state_packet.hp = cl._heart;
 						state_packet.state = cl._state;
 						strcpy_s(state_packet.id, cl._id);
 						other.do_send(sizeof(state_packet), &state_packet);
@@ -1021,6 +1020,7 @@ void process_packet(int client_index, char* p)
 						state_packet.type = CHANGE_STATE;
 						state_packet.x = other._x;
 						state_packet.y = other._y;
+						state_packet.hp = other._heart;
 						state_packet.state = other._state;
 						strcpy_s(state_packet.id, other._id);
 						cl.do_send(sizeof(state_packet), &state_packet);
