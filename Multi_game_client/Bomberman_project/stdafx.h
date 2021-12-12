@@ -5,7 +5,6 @@
 #include <tchar.h>
 //#include <random>
 #include <array>
-#include <vector>
 #include <fstream>
 #include <mutex>
 #include <queue>
@@ -69,9 +68,11 @@ const int bomb_fuse_w{ bomb_w * 30 / 100 };			//화면상 폭탄 퓨즈 크기
 const int bomb_fuse_h{ bomb_h * 20 / 105 };			//화면상 폭탄 퓨즈 크기
 const int bomb_fuse_w_count_size{ 20 };	//폭탄 퓨즈 스프라이트 갯수
 
-const int expolde_img_size_w{ 2000 };
-const int expolde_img_size_h{ 275 };
-
+const int bomb_explosion_img_size_w_gap{ 250 };		//실제 폭발 이미지 하나 스프라이트 비트크기
+const int bomb_explosion_img_size_h{ 275 };		//실제 폭발 이미지 하나 스프라이트 비트크기
+const int bomb_explosion_w{ tile_size + 10 };			//화면상 폭발 크기
+const int bomb_explosion_h{ tile_size + 10 };			//화면상 폭발 크기
+const int bomb_explosion_w_count_size{ 8 };	//폭발 스프라이트 갯수
 
 const int item_more_bomb_img_size_w{ 167 };	//실제 폭탄추가 아이템 이미지 비트크기
 const int item_more_bomb_img_size_h{ 164 };	//실제 폭탄추가 아이템 이미지 비트크기
@@ -106,7 +107,7 @@ const int adj_obstacle_size_br{ 10 };		 //장애물(블록, 바위)과 충돌체크시 사용 -
 // 폭발 타이머 관련 상수들
 
 const int bomb_fuse_timer{ 30 };			//폭탄이 터지기 까지 시간
-const int bomb_explode_timer{ 5 };		//폭발의 후폭풍 지속 시간
+const int bomb_explosion_timer{ 5 };		//폭발의 후폭풍 지속 시간
 
 ////////////////////////////////////////////////////////////////////////////
 //속도 관련 상수들

@@ -61,7 +61,7 @@ playerArr<Player, MAX_USER>	players;
 //vector <Rock>	rocks;
 
 //아이템
-vector <Item>	items;
+//vector <Item>	items;
 
 //폭탄
 deque <Bomb>	bombs;
@@ -506,12 +506,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			if (str_ready_x > bg_w + backboard_w)
 				str_ready_x = -500;
 		}
-		
-		//버튼 비활성화
-		if (destroyButton) {
-			DestroyWindow(hButton);
-			destroyButton = FALSE;
-		}
 
 		//--- 애니메이션
 		timecnt++;
@@ -536,14 +530,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		//폭탄
 		for (auto& bomb : bombs) {
-			if (timecnt % 4 == 0) {
+			if (timecnt % 2 == 0) {
 				bomb._timer -= 1;
+			}
+		}
 
-				//삭제		---- 서버에서 요청하면 패킷판별함수에서 처리
-				//if (bomb._timer < 0) {
-				//	auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(bomb._x, bomb._y);
-				//	selectedMap[bomb_iy][bomb_ix] = EMPTY;
-				//}
+		//폭발
+		for (auto& explosion : explosions) {
+			if (timecnt % 2 == 0) {
+				explosion._timer -= 1;
 			}
 		}
 
@@ -693,30 +688,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 			//폭탄
 			for (auto& bomb : bombs) {
-				if (bomb._timer > 5) {
-					oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
-					TransparentBlt(mem1dc, bomb._x, bomb._y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 255, 255));
+				oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
+				TransparentBlt(mem1dc, bomb._x, bomb._y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 255, 255));
 
-					oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb_fuse);
-					unsigned int animation_loc = (int)(bomb_fuse_w_count_size - (((bomb._timer - bomb_explode_timer) * bomb_fuse_w_count_size) / bomb_fuse_timer));
-					TransparentBlt(mem1dc, bomb._x, bomb._y, bomb_fuse_w, bomb_fuse_h, mem2dc, bomb_fuse_img_size_w_gap * animation_loc , 0, bomb_fuse_img_size_w_gap, bomb_fuse_img_size_h, RGB(255, 255, 255));
-				}
+				oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb_fuse);
+				unsigned int animation_loc = (int)(bomb_fuse_w_count_size - ((bomb._timer * bomb_fuse_w_count_size) / bomb_fuse_timer));
+				TransparentBlt(mem1dc, bomb._x, bomb._y, bomb_fuse_w, bomb_fuse_h, mem2dc, bomb_fuse_img_size_w_gap * animation_loc, 0, bomb_fuse_img_size_w_gap, bomb_fuse_img_size_h, RGB(255, 255, 255));
 			}
-
-			//폭발
-
-			//폭발이미지 필요
-			//for (auto& explosion : explosions) {
-			//	if (explosion._timer > 5) {
-			//		oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb);
-			//		TransparentBlt(mem1dc, explosion._x, explosion._y, bomb_w, bomb_h, mem2dc, 0, 0, bomb_img_size_w, bomb_img_size_h, RGB(255, 255, 255));
-
-			//		oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_bomb_fuse);
-			//		unsigned int animation_loc = (int)(bomb_fuse_w_count_size - (((explosion._timer - bomb_explode_timer) * bomb_fuse_w_count_size) / bomb_fuse_timer));
-			//		TransparentBlt(mem1dc, explosion._x, explosion._y, bomb_fuse_w, bomb_fuse_h, mem2dc, bomb_fuse_img_size_w_gap * animation_loc, 0, bomb_fuse_img_size_w_gap, bomb_fuse_img_size_h, RGB(255, 255, 255));
-			//	}
-			//}
-
 
 			//플레이어
 			for (int i = 0; i < MAX_USER; ++i) {
@@ -790,6 +768,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				SetTextColor(mem1dc, RGB(255, 255, 0));	//폰트 색 노랑 설정
 
 				TextOut(mem1dc, str_ready_x, bg_h / 2, "READY 버튼를 눌러주세요...", _tcslen("READY 버튼를 눌러주세요..."));
+			}
+
+			//폭발
+			for (auto& explosion : explosions) {
+				oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_explosion);
+				unsigned int animation_loc = (int)(bomb_explosion_w_count_size - ((explosion._timer * bomb_explosion_w_count_size) / bomb_explosion_timer));
+				TransparentBlt(mem1dc, explosion._x, explosion._y, bomb_explosion_w, bomb_explosion_h, mem2dc, bomb_explosion_img_size_w_gap * animation_loc, 0, bomb_explosion_img_size_w_gap, bomb_explosion_img_size_h, RGB(0, 0, 0));
 			}
 
 		}
@@ -1125,13 +1110,14 @@ void Process_packet(char* p)
 	//폭탄 관련
 	case INIT_BOMB: {
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
-		bombs.emplace_back(packet->x, packet->y, bombs.size(), 3, packet->power);	//타이머 임시값
+		bombs.emplace_back(packet->x, packet->y, bombs.size(), bomb_fuse_timer, packet->power);	//타이머 임시값
 
 		auto [map_ix, map_iy] = WindowPosToMapIndex(packet->x, packet->y);
 
 		selectedMap[map_iy][map_ix] = BOMB;
 		break;
 	}
+
 	case CHECK_EXPLOSION:{
 		CHECK_EXPLOSION_packet* packet = reinterpret_cast<CHECK_EXPLOSION_packet*>(p);
 
@@ -1149,7 +1135,7 @@ void Process_packet(char* p)
 
 			auto [explosion_x, explosion_y] = MapIndexToWindowPos(packet->ix, packet->iy);
 			// 폭발 큐에 폭발 넣기- 여러번 보냄
-			explosions.emplace_back(explosion_x, explosion_y, explosions.size(), 1);
+			explosions.emplace_back(explosion_x, explosion_y, explosions.size(), bomb_explosion_timer);
 		}
 		else {
 			cout << "\n폭발 끝!!\n";
@@ -1161,6 +1147,7 @@ void Process_packet(char* p)
 
 		break;
 	}
+
 	case DELETE_OBJECT: {
 		DELETE_OBJECT_packet* packet = reinterpret_cast<DELETE_OBJECT_packet*>(p);
 		cout << "\n바위 파괴!!\n";

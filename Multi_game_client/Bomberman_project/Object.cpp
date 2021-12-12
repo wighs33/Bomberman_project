@@ -13,3 +13,7 @@ static std::pair<int, int> WindowPosToMapIndex(int x, int y)
 	int map_y = (y - outer_wall_start) / tile_size;
 	return std::make_pair(map_x, map_y);
 }
+
+//void Bomb::ExplodeBomb(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap)
+//{
+//}
