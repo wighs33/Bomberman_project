@@ -1191,11 +1191,8 @@ void Process_packet(char* p)
 				player._y = packet->y;
 				player._heart = packet->hp;
 
-				if (player._state == ACCEPT) {	//게임 시작 직전
+				if (player._state == ACCEPT && packet->state == PLAY) {	//게임 플레이 상태로 바뀔 시
 					player._dir = 0;
-					destroyButton = true;
-				}
-				else if (player._state == PLAY) {	//게임 도중
 					destroyButton = true;
 				}
 
