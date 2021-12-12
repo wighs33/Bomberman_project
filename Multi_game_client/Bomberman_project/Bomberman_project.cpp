@@ -171,6 +171,11 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == INVALID_SOCKET) err_quit("socket()");
 
+	//Nagle 알고리즘 적용X
+	bool optval = TRUE;
+	retval = setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&optval, sizeof(optval));
+	if (retval == SOCKET_ERROR) err_quit("connect()");
+
 	//아이피, 포트번호 입력 대기
 	//WaitForSingleObject(hEvent, INFINITE);
 

@@ -83,7 +83,7 @@ void Timer_Event(int _obj_id, EVENT_TYPE ev, std::chrono::milliseconds ms);
 void Disconnect(int c_id);
 
 DWORD WINAPI do_timer(LPVOID arg);
-DWORD WINAPI Thread_1(LPVOID arg);
+DWORD WINAPI Thread(LPVOID arg);
 
 std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
 std::pair<int, int> WindowPosToMapIndex(int x, int y);
@@ -218,7 +218,7 @@ int main(int argc, char* argv[])
 			inet_ntoa(clientaddr.sin_addr) << "  포트 번호 : " << ntohs(clientaddr.sin_port) << endl;
 
 
-		hThread[i] = CreateThread(NULL, 0, Thread_1, (LPVOID)client_sock, 0, NULL);
+		hThread[i] = CreateThread(NULL, 0, Thread, (LPVOID)client_sock, 0, NULL);
 
 	}
 
@@ -1133,7 +1133,7 @@ void Disconnect(int c_id)
 	cout << "------------???------------" << endl;   //충돌땜에 한글확인불가
 }
 
-DWORD WINAPI Thread_1(LPVOID arg)
+DWORD WINAPI Thread(LPVOID arg)
 {
 	SOCKET client_sock = (SOCKET)arg;
 	int index = get_new_index();
