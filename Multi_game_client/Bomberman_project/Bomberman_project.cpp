@@ -1142,7 +1142,7 @@ void Process_packet(char* p)
 			cout << packet->ix << ", " << packet->iy << endl;
 			selectedMap[packet->iy][packet->ix] = EMPTY;	//Æø¹ß ³¡
 			//Æø¹ß Å¥¿¡¼­ Ã³À½ Æø¹ß »èÁ¦ - ¿©·¯¹ø º¸³¿
-			explosions.pop_front();
+			//explosions.pop_front();
 		}
 
 		break;
@@ -1171,6 +1171,8 @@ void Process_packet(char* p)
 
 	case CHANGE_STATE: {
 		PLAYER_CHANGE_STATE_packet* packet = reinterpret_cast<PLAYER_CHANGE_STATE_packet*>(p);
+
+		cout << "[change state] id: " << packet->id << " , x: " << packet->x << ", y: " << packet->y << ", state: " << packet->state << endl;
 
 		for (auto& player : players) {
 			if (strcmp(player._id, packet->id) == 0) 

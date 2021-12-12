@@ -434,6 +434,7 @@ void send_all_play_start()
 					state_packet.x = another._x;
 					state_packet.y = another._y;
 					state_packet.state = another._state;
+					state_packet.hp = another._heart;
 					strcpy_s(state_packet.id, another._id);
 
 					other.do_send(sizeof(state_packet), &state_packet);
