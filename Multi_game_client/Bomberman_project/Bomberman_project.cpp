@@ -637,7 +637,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		//접속 후 화면 출력
 		if (retval) {
-
 			int item_size_adj = 20;
 
 			//맵 그리기
@@ -677,7 +676,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 					case ITEM_ROCK:			//방어용 돌 생성 아이템
 						oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_item_rock);
-						TransparentBlt(mem1dc, window_x + item_size_adj / 2, window_y + item_size_adj / 2, tile_size - item_size_adj, tile_size - item_size_adj, mem2dc, 0, 0, heart_img_size_w, heart_img_size_h, RGB(79, 51, 44));
+						TransparentBlt(mem1dc, window_x + item_size_adj / 2, window_y + item_size_adj / 2, tile_size - item_size_adj, tile_size - item_size_adj, mem2dc, 0, 0, rock_img_size, rock_img_size, RGB(79, 51, 44));
 						break;
 
 					default:
