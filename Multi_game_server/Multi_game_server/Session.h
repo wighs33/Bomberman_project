@@ -41,7 +41,7 @@ public:
 	int _exp;
 	int _heart; // ¸ñ¼û
 	int _bomb_max_count; // ÆøÅº°³¼ö
-	int _current_bomb_count;	//ÇöÀç ³öµĞ ÆøÅº °¹¼ö
+	atomic<int> _current_bomb_count = 0;	//ÇöÀç ³öµĞ ÆøÅº °¹¼ö
 	int _power; // ÆøÅº À§·Â
 	int _rock_count;
 	atomic<bool> no_damage = false;
