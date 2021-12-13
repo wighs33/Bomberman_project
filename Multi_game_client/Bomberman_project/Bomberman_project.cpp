@@ -1098,7 +1098,7 @@ void Process_packet(char* p)
 		players[my_index]._heart = 3;
 		players[my_index]._bomb_max_count = 2;
 		players[my_index]._bomb_power = 1;
-		players[my_index]._rock_count = 100;
+		players[my_index]._rock_count = 0;
 		players[my_index]._level = packet->level;
 		players[my_index]._exp = packet->exp;
 		players[my_index]._index = packet->index;

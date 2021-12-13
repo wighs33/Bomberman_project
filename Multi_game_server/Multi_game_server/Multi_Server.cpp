@@ -1079,14 +1079,6 @@ void process_packet(int client_index, char* p)
 		PRESS_SHIFT_packet* packet = reinterpret_cast<PRESS_SHIFT_packet*>(p);
 
 		auto [cl_ix, cl_iy] = WindowPosToMapIndex(cl._x + 10, cl._y + 10);
-		cout << cl._x + 10 << endl;
-		cout << cl._y + 10 << endl;
-		cout << outer_wall_start << endl;
-		cout << tile_size << endl;
-		cout << cl_ix << endl;
-		cout << cl_iy << endl;
-
-
 
 		switch (cl._dir)
 		{
