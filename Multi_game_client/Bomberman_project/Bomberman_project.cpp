@@ -448,23 +448,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		switch (wParam) {
 		case VK_SPACE:
 		{
-			int px = players[my_index]._x;
-			int py = players[my_index]._y;
-			auto [map_ix, map_iy] = WindowPosToMapIndex(px + 10, py + 10);
-			auto [bomb_x, bomb_y] = MapIndexToWindowPos(map_ix, map_iy);
-			
-			//서버로 폭탄 설치 요청 패킷 전송
-			players[my_index].InputSpaceBar(send_queue, send_buf, bomb_x, bomb_y);
-			SetEvent(hEvent);
-			break;
-		}
-		case VK_SHIFT:
-		{
-			//실제 코드
-			if (players[my_index]._rock_count) {
-				players[my_index].CreateRock(send_queue, send_buf);
+			if (players[my_index]._state != DEAD && players[my_index]._state != NO_ACCEPT) {
+				int px = players[my_index]._x;
+				int py = players[my_index]._y;
+				auto [map_ix, map_iy] = WindowPosToMapIndex(px + 10, py + 10);
+				auto [bomb_x, bomb_y] = MapIndexToWindowPos(map_ix, map_iy);
+
+				//서버로 폭탄 설치 요청 패킷 전송
+				players[my_index].InputSpaceBar(send_queue, send_buf, bomb_x, bomb_y);
 				SetEvent(hEvent);
 			}
+
+			break;
+		}
+
+		case VK_SHIFT:
+		{
+			if (players[my_index]._state != DEAD && players[my_index]._state != NO_ACCEPT) {
+				if (players[my_index]._rock_count) {
+					players[my_index].CreateRock(send_queue, send_buf);
+					SetEvent(hEvent);
+				}
+			}
+
 			break;
 		}
 
@@ -481,22 +487,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 	case WM_TIMER:
 		//[이동 처리]
-		if (GetAsyncKeyState(VK_RIGHT)) {
-			players[my_index].InputMoveKey(send_queue, send_buf, RIGHT);
-			SetEvent(hEvent);
+		if (players[my_index]._state != DEAD && players[my_index]._state != NO_ACCEPT) {
+			if (GetAsyncKeyState(VK_RIGHT)) {
+				players[my_index].InputMoveKey(send_queue, send_buf, RIGHT);
+				SetEvent(hEvent);
+			}
+			if (GetAsyncKeyState(VK_LEFT)) {
+				players[my_index].InputMoveKey(send_queue, send_buf, LEFT);
+				SetEvent(hEvent);
+			}
+			if (GetAsyncKeyState(VK_UP)) {
+				players[my_index].InputMoveKey(send_queue, send_buf, UP);
+				SetEvent(hEvent);
+			}
+			if (GetAsyncKeyState(VK_DOWN)) {
+				players[my_index].InputMoveKey(send_queue, send_buf, DOWN);
+				SetEvent(hEvent);
+			}
 		}
-		if (GetAsyncKeyState(VK_LEFT)) {
-			players[my_index].InputMoveKey(send_queue, send_buf, LEFT);
-			SetEvent(hEvent);
-		}
-		if (GetAsyncKeyState(VK_UP)) {
-			players[my_index].InputMoveKey(send_queue, send_buf, UP);
-			SetEvent(hEvent);
-		}
-		if (GetAsyncKeyState(VK_DOWN)) {
-			players[my_index].InputMoveKey(send_queue, send_buf, DOWN);
-			SetEvent(hEvent);
-		}
+
 
 		//[연산처리]
 		//--- 레디 텍스트 이동
@@ -1393,7 +1402,6 @@ void Process_packet(char* p)
 	}
 
 }
-
 
 std::pair<int, int> MapIndexToWindowPos(int ix, int iy)
 {
