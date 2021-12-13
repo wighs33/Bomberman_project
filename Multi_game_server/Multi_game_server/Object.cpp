@@ -59,7 +59,6 @@ static void SendExplosionStart(array<Session, MAX_USER>& clients, int ix, int iy
 			check_explosion_packet.iy = iy;
 			check_explosion_packet.isActive = true;
 			pl.do_send(sizeof(check_explosion_packet), &check_explosion_packet);
-			cout << ix << ", " << iy << endl;
 		}
 	}
 }
