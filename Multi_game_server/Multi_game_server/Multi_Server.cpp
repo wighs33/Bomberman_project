@@ -89,6 +89,7 @@ void Timer_Event(int _obj_id, EVENT_TYPE ev, std::chrono::milliseconds ms);
 void Disconnect(int c_id);
 void Send_change_player(int _index);
 void SendExplosionEnd(int ix, int iy);
+void SendCreateBlock(int ix, int iy, char id[], bool isSuccess);
 
 DWORD WINAPI do_timer(LPVOID arg);
 DWORD WINAPI Thread(LPVOID arg);
@@ -306,6 +307,23 @@ void Send_change_player(int _index) {
 			packet.hp = cl._heart;
 			strcpy_s(packet.id, cl._id);
 			pl.do_send(sizeof(packet), &packet);
+		}
+	}
+}
+
+void SendCreateBlock(int ix, int iy, char id[], bool isSuccess) {
+	for (auto& pl : clients) {
+		if (pl._state != PLAY) continue;
+		if (true == pl.in_use)
+		{
+			CREATE_ROCK_packet create_rock_packet;
+			create_rock_packet.size = sizeof(create_rock_packet);
+			create_rock_packet.type = CREATE_ROCK;
+			create_rock_packet.ix = ix;
+			create_rock_packet.iy = iy;
+			create_rock_packet.isSuccess = isSuccess;
+			strcpy_s(create_rock_packet.id, id);
+			pl.do_send(sizeof(create_rock_packet), &create_rock_packet);
 		}
 	}
 }
