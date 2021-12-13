@@ -107,7 +107,7 @@ void SendExplosionEnd(int ix, int iy) {
 	}
 }
 
-void SendCreateBlock(int ix, int iy, bool isSuccess) {
+void SendCreateBlock(int ix, int iy, char id[], bool isSuccess) {
 	for (auto& pl : clients) {
 		if (pl._state != PLAY) continue;
 		if (true == pl.in_use)
@@ -118,6 +118,7 @@ void SendCreateBlock(int ix, int iy, bool isSuccess) {
 			create_rock_packet.ix = ix;
 			create_rock_packet.iy = iy;
 			create_rock_packet.isSuccess = isSuccess;
+			strcpy_s(create_rock_packet.id, id);
 			pl.do_send(sizeof(create_rock_packet), &create_rock_packet);
 		}
 	}
@@ -1131,13 +1132,13 @@ void process_packet(int client_index, char* p)
 		case UP:
 		{
 			if (cl_iy - 1 == -1) {
-				SendCreateBlock(NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
 				return;
 			}
 
 			//后镑 咯何
 			if (selectedMap[cl_iy - 1][cl_ix] != EMPTY) {
-				SendCreateBlock(NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
 				return;
 			}
 
@@ -1147,26 +1148,26 @@ void process_packet(int client_index, char* p)
 				{
 					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
 					if (cl_ix == pl_ix && cl_iy - 1 == pl_iy) {
-						SendCreateBlock(NULL, NULL, FALSE);
+						SendCreateBlock(NULL, NULL, NULL, FALSE);
 						return;
 					}
 				}
 			};
 
-			SendCreateBlock(cl_ix, cl_iy - 1, TRUE);
+			SendCreateBlock(cl_ix, cl_iy - 1, cl._id, TRUE);
 			selectedMap[cl_iy - 1][cl_ix] = ROCK;
 			return;
 		}
 		case DOWN:
 		{
 			if (cl_iy + 1 == tile_max_h_num) {
-				SendCreateBlock(NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
 				return;
 			}
 
 			//后镑 咯何
 			if (selectedMap[cl_iy + 1][cl_ix] != EMPTY) {
-				SendCreateBlock(NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
 				return;
 			}
 
@@ -1176,26 +1177,26 @@ void process_packet(int client_index, char* p)
 				{
 					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
 					if (cl_ix == pl_ix && cl_iy + 1 == pl_iy) {
-						SendCreateBlock(NULL, NULL, FALSE);
+						SendCreateBlock(NULL, NULL, NULL, FALSE);
 						return;
 					}
 				}
 			};
 
-			SendCreateBlock(cl_ix, cl_iy + 1, TRUE);
+			SendCreateBlock(cl_ix, cl_iy + 1, cl._id, TRUE);
 			selectedMap[cl_iy + 1][cl_ix] = ROCK;
 			return;
 		}
 		case LEFT:
 		{
 			if (cl_ix - 1 == -1) {
-				SendCreateBlock(NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
 				return;
 			}
 
 			//后镑 咯何
 			if (selectedMap[cl_iy][cl_ix - 1] != EMPTY) {
-				SendCreateBlock(NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
 				return;
 			}
 
@@ -1205,26 +1206,26 @@ void process_packet(int client_index, char* p)
 				{
 					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
 					if (cl_ix - 1 == pl_ix && cl_iy == pl_iy) {
-						SendCreateBlock(NULL, NULL, FALSE);
+						SendCreateBlock(NULL, NULL, NULL, FALSE);
 						return;
 					}
 				}
 			};
 
-			SendCreateBlock(cl_ix - 1, cl_iy, TRUE);
+			SendCreateBlock(cl_ix - 1, cl_iy, cl._id, TRUE);
 			selectedMap[cl_iy][cl_ix - 1] = ROCK;
 			return;
 		}
 		case RIGHT:
 		{
 			if (cl_ix + 1 == tile_max_w_num) {
-				SendCreateBlock(NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
 				return;
 			}
 
 			//后镑 咯何
 			if (selectedMap[cl_iy][cl_ix + 1] != EMPTY) {
-				SendCreateBlock(NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
 				return;
 			}
 
@@ -1234,13 +1235,13 @@ void process_packet(int client_index, char* p)
 				{
 					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
 					if (cl_ix + 1 == pl_ix && cl_iy == pl_iy) {
-						SendCreateBlock(NULL, NULL, FALSE);
+						SendCreateBlock(NULL, NULL, NULL, FALSE);
 						return;
 					}
 				}
 			};
 
-			SendCreateBlock(cl_ix + 1, cl_iy, TRUE);
+			SendCreateBlock(cl_ix + 1, cl_iy, cl._id, TRUE);
 			selectedMap[cl_iy][cl_ix + 1] = ROCK;
 			return;
 		}

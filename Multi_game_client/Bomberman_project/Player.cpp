@@ -62,6 +62,7 @@ void Player::CreateRock(std::queue<char*>& send_queue, char send_buf[BUFSIZE])
 	PRESS_SHIFT_packet shift_packet;
 	shift_packet.size = sizeof(shift_packet);
 	shift_packet.type = PRESS_SHIFT;
+	strcpy_s(shift_packet.id, _id);
 
 	ZeroMemory(send_buf, sizeof(send_buf));
 	memcpy(&send_buf[0], &shift_packet, BUFSIZE);

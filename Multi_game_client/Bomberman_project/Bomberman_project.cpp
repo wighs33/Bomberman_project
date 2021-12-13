@@ -484,17 +484,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		}
 		case VK_SHIFT:
 		{
-			//임시 확인용
-			players[my_index].CreateRock(send_queue, send_buf);
-			SetEvent(hEvent);
-
-
 			//실제 코드
-			//if (players[my_index]._rock_count) {
-			//	players[my_index].CreateRock(send_queue, send_buf);
-			//	SetEvent(hEvent);
-			//	--players[my_index]._rock_count;
-			//}
+			if (players[my_index]._rock_count) {
+				players[my_index].CreateRock(send_queue, send_buf);
+				SetEvent(hEvent);
+			}
 			break;
 		}
 
@@ -735,6 +729,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				TransparentBlt(mem1dc, bomb._x, bomb._y, bomb_fuse_w, bomb_fuse_h, mem2dc, bomb_fuse_img_size_w_gap * animation_loc, 0, bomb_fuse_img_size_w_gap, bomb_fuse_img_size_h, RGB(255, 255, 255));
 			}
 
+			//폭발
+			for (auto& explosion : explosions) {
+				oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_explosion);
+				unsigned int animation_loc = (int)(bomb_explosion_w_count_size - ((explosion._timer * bomb_explosion_w_count_size) / bomb_explosion_timer));
+				TransparentBlt(mem1dc, explosion._x, explosion._y, bomb_explosion_w, bomb_explosion_h, mem2dc, bomb_explosion_img_size_w_gap * animation_loc, 0, bomb_explosion_img_size_w_gap, bomb_explosion_img_size_h, RGB(0, 0, 0));
+			}
+
 			//플레이어
 			for (int i = 0; i < MAX_USER; ++i) {
 				if (players[i]._state != NO_ACCEPT) {
@@ -832,13 +833,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				SetTextColor(mem1dc, RGB(255, 255, 0));	//폰트 색 노랑 설정
 
 				TextOut(mem1dc, str_ready_x, bg_h / 2, "READY 버튼를 눌러주세요...", _tcslen("READY 버튼를 눌러주세요..."));
-			}
-
-			//폭발
-			for (auto& explosion : explosions) {
-				oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_explosion);
-				unsigned int animation_loc = (int)(bomb_explosion_w_count_size - ((explosion._timer * bomb_explosion_w_count_size) / bomb_explosion_timer));
-				TransparentBlt(mem1dc, explosion._x, explosion._y, bomb_explosion_w, bomb_explosion_h, mem2dc, bomb_explosion_img_size_w_gap * animation_loc, 0, bomb_explosion_img_size_w_gap, bomb_explosion_img_size_h, RGB(0, 0, 0));
 			}
 
 		}
@@ -1324,6 +1318,11 @@ void Process_packet(char* p)
 		CREATE_ROCK_packet* packet = reinterpret_cast<CREATE_ROCK_packet*>(p);
 		if (packet->isSuccess) {
 			selectedMap[packet->iy][packet->ix] = ROCK;
+			for (auto& player : players) {
+				if (strcmp(player._id, packet->id) == 0) {
+					--player._rock_count;
+				}
+			}
 		}
 
 		break;
