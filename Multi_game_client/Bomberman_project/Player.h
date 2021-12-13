@@ -23,5 +23,6 @@ public:
 	void InputMoveKey(std::queue<char*>& send_queue, char send_buf[BUFSIZE], int dir);
 	void InputSpaceBar(std::queue<char*>& send_queue, char send_buf[BUFSIZE], int bomb_x, int bomb_y);
 	void ChangeState(std::queue<char*>& send_queue, char send_buf[BUFSIZE], Player_Condition state);
+	void CreateRock(std::queue<char*>& send_queue, char send_buf[BUFSIZE]);
 };
 

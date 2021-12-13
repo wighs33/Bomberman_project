@@ -56,3 +56,17 @@ void Player::ChangeState(std::queue<char*>& send_queue, char send_buf[BUFSIZE], 
 	memcpy(&send_buf[0], &state_packet, BUFSIZE);
 	send_queue.push(send_buf);
 }
+
+void Player::CreateRock(std::queue<char*>& send_queue, char send_buf[BUFSIZE])
+{
+	PRESS_E_packet e_packet;
+	e_packet.size = sizeof(e_packet);
+	e_packet.type = MOVE;
+	e_packet.dir = _dir;
+	e_packet.dir = _x;
+	e_packet.dir = _y;
+
+	ZeroMemory(send_buf, sizeof(send_buf));
+	memcpy(&send_buf[0], &e_packet, BUFSIZE);
+	send_queue.push(send_buf);
+}

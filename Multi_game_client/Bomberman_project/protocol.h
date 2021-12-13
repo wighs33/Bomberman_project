@@ -107,4 +107,17 @@ struct PLAYER_ITEM_BUFF_packet {// 플레이어 버프 패킷 + 아이템 제거 패킷
 	int ix, iy; // 아이템 맵인덱스
 	char id[MAX_NAME_SIZE]; // 플레이어 아이디
 };
+
+struct PRESS_E_packet { // 블록생성 초기신호 패킷
+	unsigned char size; // 패킷 사이즈
+	char type; // 패킷 타입
+	int dir; // 플레이어 방향
+	int x, y; // 플레이어 좌표
+};
+
+struct CREATE_ROCK_packet { // 블록생성 패킷
+	unsigned char size; // 패킷 사이즈
+	char type; // 패킷 타입
+	int ix, iy; // 아이템 맵인덱스
+};
 #pragma pack(pop)

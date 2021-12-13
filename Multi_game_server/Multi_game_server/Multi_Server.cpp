@@ -1102,7 +1102,9 @@ void process_packet(int client_index, char* p)
 		}
 		break;
 	}
+	case PRESS_E: {
 
+	}
 	default: {
 		cout << "[¿¡·¯] UnKnown Packet" << endl;
 		err_quit("UnKnown Packet");

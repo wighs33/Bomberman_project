@@ -482,6 +482,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			SetEvent(hEvent);
 			break;
 		}
+		case 'E':
+		{
+			if (players[my_index]._rock_count) {
+				players[my_index].CreateRock(send_queue, send_buf);
+				SetEvent(hEvent);
+				--players[my_index]._rock_count;
+			}
+			break;
+		}
 
 		case 'P':
 			PrintMap();
