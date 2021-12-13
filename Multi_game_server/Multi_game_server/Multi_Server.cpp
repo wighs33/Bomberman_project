@@ -1290,7 +1290,7 @@ DWORD WINAPI Thread(LPVOID arg)
 	while (1) {
 		// 데이터 받기
 		player.do_recv();
-		//int remain_data = num_byte + cl._prev_size;
+		
 		if (clients[index].in_use == false)
 		{
 			cout << "종료" << endl;
@@ -1300,25 +1300,9 @@ DWORD WINAPI Thread(LPVOID arg)
 		char* packet_start = clients[index]._recv_buf;
 		char packet_size = packet_start[0];
 
-		//while (packet_size <= remain_data) {
+		
 		process_packet(index, packet_start);
-		//remain_data -= packet_size;
-	//    packet_start += packet_size;
-		//if (remain_data > 0) packet_size = packet_start[0];
-		//else break;
-	//}
-
-	/*if (0 < remain_data) {
-		cl._prev_size = remain_data;
-		memcpy(&exp_over->_net_buf, packet_start, remain_data);
-	}*/
-
-		if (g_shutdown == true)
-		{
-			// closesocket()
-			closesocket(client_sock);
-			return 0;
-		}
+	
 	}
 }
 
