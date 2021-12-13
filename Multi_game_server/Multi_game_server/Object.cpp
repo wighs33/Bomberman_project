@@ -115,7 +115,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 	//폭탄 아래 체크
 	for (int i = 1; i <= _power; ++i) {
 		//범위 체크
-		if (bomb_iy + i == tile_max_h_num + 1) break;
+		if (bomb_iy + i == tile_max_h_num) break;
 		//블럭 체크
 		if (objectMap[bomb_iy + i][bomb_ix] == BLOCK) break;
 		//바위 체크
@@ -179,7 +179,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 	//폭탄 오른쪽 체크
 	for (int i = 1; i <= _power; ++i) {
 		//범위 체크
-		if (bomb_ix + i == tile_max_w_num + 1) break;
+		if (bomb_ix + i == tile_max_w_num) break;
 		//블럭 체크
 		if (objectMap[bomb_iy][bomb_ix + i] == BLOCK) break;
 		//바위 체크
