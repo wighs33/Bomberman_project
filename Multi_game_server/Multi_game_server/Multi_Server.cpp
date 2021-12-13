@@ -107,6 +107,22 @@ void SendExplosionEnd(int ix, int iy) {
 	}
 }
 
+void SendCreateBlock(int ix, int iy, bool isSuccess) {
+	for (auto& pl : clients) {
+		if (pl._state != PLAY) continue;
+		if (true == pl.in_use)
+		{
+			CREATE_ROCK_packet create_rock_packet;
+			create_rock_packet.size = sizeof(create_rock_packet);
+			create_rock_packet.type = CREATE_ROCK;
+			create_rock_packet.ix = ix;
+			create_rock_packet.iy = iy;
+			create_rock_packet.isSuccess = isSuccess;
+			pl.do_send(sizeof(create_rock_packet), &create_rock_packet);
+		}
+	}
+}
+
 void Send_change_player(int _index) {
 
 	Session& cl = clients[_index];
@@ -1102,8 +1118,135 @@ void process_packet(int client_index, char* p)
 		}
 		break;
 	}
-	case PRESS_E: {
+	case PRESS_SHIFT: {
+		PRESS_SHIFT_packet* packet = reinterpret_cast<PRESS_SHIFT_packet*>(p);
 
+		auto [cl_ix, cl_iy] = WindowPosToMapIndex(cl._x, cl._y);
+
+		switch (cl._dir)
+		{
+		case UP:
+		{
+			if (cl_iy - 1 == -1) {
+				SendCreateBlock(NULL, NULL, FALSE);
+				return;
+			}
+
+			//빈곳 여부
+			if (selectedMap[cl_iy - 1][cl_ix] != EMPTY) {
+				SendCreateBlock(NULL, NULL, FALSE);
+				return;
+			}
+
+			//플레이어 여부
+			for (auto& pl : clients) {
+				if (true == pl.in_use)
+				{
+					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
+					if (cl_ix == pl_ix && cl_iy - 1 == pl_iy) {
+						SendCreateBlock(NULL, NULL, FALSE);
+						return;
+					}
+				}
+			};
+
+			SendCreateBlock(cl_ix, cl_iy - 1, TRUE);
+			selectedMap[cl_iy - 1][cl_ix] = ROCK;
+			return;
+		}
+		case DOWN:
+		{
+			if (cl_iy + 1 == tile_max_h_num) {
+				SendCreateBlock(NULL, NULL, FALSE);
+				return;
+			}
+
+			//빈곳 여부
+			if (selectedMap[cl_iy + 1][cl_ix] != EMPTY) {
+				SendCreateBlock(NULL, NULL, FALSE);
+				return;
+			}
+
+			//플레이어 여부
+			for (auto& pl : clients) {
+				if (true == pl.in_use)
+				{
+					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
+					if (cl_ix == pl_ix && cl_iy + 1 == pl_iy) {
+						SendCreateBlock(NULL, NULL, FALSE);
+						return;
+					}
+				}
+			};
+
+			SendCreateBlock(cl_ix, cl_iy + 1, TRUE);
+			selectedMap[cl_iy + 1][cl_ix] = ROCK;
+			return;
+		}
+		case LEFT:
+		{
+			if (cl_ix - 1 == -1) {
+				SendCreateBlock(NULL, NULL, FALSE);
+				return;
+			}
+
+			//빈곳 여부
+			if (selectedMap[cl_iy][cl_ix - 1] != EMPTY) {
+				SendCreateBlock(NULL, NULL, FALSE);
+				return;
+			}
+
+			//플레이어 여부
+			for (auto& pl : clients) {
+				if (true == pl.in_use)
+				{
+					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
+					if (cl_ix - 1 == pl_ix && cl_iy == pl_iy) {
+						SendCreateBlock(NULL, NULL, FALSE);
+						return;
+					}
+				}
+			};
+
+			SendCreateBlock(cl_ix - 1, cl_iy, TRUE);
+			selectedMap[cl_iy][cl_ix - 1] = ROCK;
+			return;
+		}
+		case RIGHT:
+		{
+			if (cl_ix + 1 == tile_max_w_num) {
+				SendCreateBlock(NULL, NULL, FALSE);
+				return;
+			}
+
+			//빈곳 여부
+			if (selectedMap[cl_iy][cl_ix + 1] != EMPTY) {
+				SendCreateBlock(NULL, NULL, FALSE);
+				return;
+			}
+
+			//플레이어 여부
+			for (auto& pl : clients) {
+				if (true == pl.in_use)
+				{
+					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
+					if (cl_ix + 1 == pl_ix && cl_iy == pl_iy) {
+						SendCreateBlock(NULL, NULL, FALSE);
+						return;
+					}
+				}
+			};
+
+			SendCreateBlock(cl_ix + 1, cl_iy, TRUE);
+			selectedMap[cl_iy][cl_ix + 1] = ROCK;
+			return;
+		}
+		default:
+			cout << "정상 이동키 아님" << endl;
+			return;
+		}
+
+		break;
 	}
 	default: {
 		cout << "[에러] UnKnown Packet" << endl;
