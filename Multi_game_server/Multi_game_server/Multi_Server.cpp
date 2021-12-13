@@ -706,7 +706,7 @@ int Check_Collision(int source_type, int source_index)
 					buff_packet.ix = ix;
 					buff_packet.iy = iy;
 					strcpy_s(buff_packet.id, clients[source_index]._id);
-					++clients[source_index]._heart;
+					if (clients[source_index]._heart < 5) ++clients[source_index]._heart;
 					selectedMap[iy][ix] = EMPTY;
 					for (auto& cl : clients) {
 						if (cl.in_use == false) continue;
@@ -731,7 +731,7 @@ int Check_Collision(int source_type, int source_index)
 					buff_packet.ix = ix;
 					buff_packet.iy = iy;
 					strcpy_s(buff_packet.id, clients[source_index]._id);
-					++clients[source_index]._bomb_max_count;
+					if (clients[source_index]._bomb_max_count < 5) ++clients[source_index]._bomb_max_count;
 					selectedMap[iy][ix] = EMPTY;
 					for (auto& cl : clients) {
 						if (cl.in_use == false) continue;
@@ -757,7 +757,7 @@ int Check_Collision(int source_type, int source_index)
 					buff_packet.ix = ix;
 					buff_packet.iy = iy;
 					strcpy_s(buff_packet.id, clients[source_index]._id);
-					++clients[source_index]._power;
+					if (clients[source_index]._power < 5) ++clients[source_index]._power;
 					selectedMap[iy][ix] = EMPTY;
 					for (auto& cl : clients) {
 						if (cl.in_use == false) continue;
@@ -782,7 +782,7 @@ int Check_Collision(int source_type, int source_index)
 					buff_packet.ix = ix;
 					buff_packet.iy = iy;
 					strcpy_s(buff_packet.id, clients[source_index]._id);
-					++clients[source_index]._rock_count;
+					if (clients[source_index]._rock_count < 5) ++clients[source_index]._rock_count;
 					selectedMap[iy][ix] = EMPTY;
 					for (auto& cl : clients) {
 						if (cl.in_use == false) continue;
