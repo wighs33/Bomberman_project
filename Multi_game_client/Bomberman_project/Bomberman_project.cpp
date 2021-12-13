@@ -562,6 +562,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				pl._idle_time++;
 			}
 		}
+		//피격상태 체크
+		for (auto& pl : players) {
+			if (pl._display_hurt > 0) {
+				pl._display_hurt--;
+			}
+		}
 
 		//폭탄
 		for (auto& bomb : bombs) {
@@ -740,6 +746,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			for (int i = 0; i < MAX_USER; ++i) {
 				if (players[i]._state != NO_ACCEPT) {
 					HBITMAP hBit_character;
+					int RED_val, GREEN_val, BLUE_val;
 
 					switch (i) {
 					case 0: hBit_character = hBit_issac;  break;
@@ -747,6 +754,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					case 2: hBit_character = hBit_lazarus; ; break;
 					case 3: hBit_character = hBit_samson;  break;
 					case 4: hBit_character = hBit_eve; break;
+					}
+					
+					RED_val = 0;
+					GREEN_val = 0;
+					BLUE_val = 0;
+
+					if (players[i]._display_hurt > 0 && players[i]._display_hurt % 10 > 5) {
+						switch (i) {
+						case 0: hBit_character = hBit_issac_hurt;  break;
+						case 1: hBit_character = hBit_magdalene_hurt;  break;
+						case 2: hBit_character = hBit_lazarus_hurt; ; break;
+						case 3: hBit_character = hBit_samson_hurt;  break;
+						case 4: hBit_character = hBit_eve_hurt; break;
+						}
+
+						RED_val = 118;
+						GREEN_val = 14;
+						BLUE_val = 18;
 					}
 
 					oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_character);
@@ -756,69 +781,69 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 						//몸통
 						if (players[i]._idle_time >= idle_time_limit) {	//정지상태일 시
 							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-								mem2dc, p_body_img_w_start, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+								mem2dc, p_body_img_w_start, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(RED_val, GREEN_val, BLUE_val));
 						}
 						else {	//움직이는 상태일 시
 							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-								mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start + p_body_img_h_rd_gap, p_body_img_size, p_body_img_size, RGB(RED_val, GREEN_val, BLUE_val));
 						}
 						//머리
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
-							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 2), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
+							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 2), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(RED_val, GREEN_val, BLUE_val));
 					}
 					//좌 이동시 
 					else if (players[i]._dir == 2) {
 						//몸통
 						if (players[i]._idle_time >= idle_time_limit) {	//정지상태일 시
 							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-								mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(RED_val, GREEN_val, BLUE_val));
 						}
 						else {	//움직이는 상태일 시
 							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-								mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start + p_body_img_h_rd_gap + p_body_img_h_ld_gap, p_body_img_size, p_body_img_size, RGB(RED_val, GREEN_val, BLUE_val));
 						}
 						//머리
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
-							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 6), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
+							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 6), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(RED_val, GREEN_val, BLUE_val));
 					}
 					//하 이동시
 					else if (players[i]._dir == 3) {
 						//몸통
 						if (players[i]._idle_time >= idle_time_limit) {	//정지상태일 시
 							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-								mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+								mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(RED_val, GREEN_val, BLUE_val));
 						}
 						else {	//움직이는 상태일 시
 							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-								mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * p_body_idx, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(RED_val, GREEN_val, BLUE_val));
 						}
 						//머리
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
-							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
+							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(RED_val, GREEN_val, BLUE_val));
 					}
 					//상 이동시
 					else if (players[i]._dir == 4) {
 						//몸통
 						if (players[i]._idle_time >= idle_time_limit) {	//정지상태일 시
 							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-								mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+								mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(RED_val, GREEN_val, BLUE_val));
 						}
 						else {	//움직이는 상태일 시
 							TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-								mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+								mem2dc, p_body_img_w_start + p_body_img_w_gap * (10 - 1 - p_body_idx), p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(RED_val, GREEN_val, BLUE_val));
 						}
 						//머리
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
-							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 4), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
+							mem2dc, p_head_img_w_start + p_head_img_w_gap * (p_head_idx + 4), p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(RED_val, GREEN_val, BLUE_val));
 					}
 					//초기상태
 					else if (players[i]._dir == 0) {
 						//몸통
 						TransparentBlt(mem1dc, players[i]._x, players[i]._y, p_size, p_size,
-							mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(0, 0, 0));
+							mem2dc, p_body_img_w_start, p_body_img_h_start, p_body_img_size, p_body_img_size, RGB(RED_val, GREEN_val, BLUE_val));
 						//머리
 						TransparentBlt(mem1dc, players[i]._x - p_head_loc_w, players[i]._y - p_head_loc_h, p_size, p_size + (p_head_img_w_size - p_head_img_h_size),
-							mem2dc, p_head_img_w_start, p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(0, 0, 0));
+							mem2dc, p_head_img_w_start, p_head_img_h_start, p_head_img_w_size, p_head_img_h_size, RGB(RED_val, GREEN_val, BLUE_val));
 					}
 				}
 
@@ -1242,20 +1267,23 @@ void Process_packet(char* p)
 			{
 				player._x = packet->x;
 				player._y = packet->y;
-				player._heart = packet->hp;
 
 				if (packet->state == PLAY && player._state != PLAY) {	//게임 플레이 상태로 바뀔 시
 					player._dir = 0;
 					destroyButton = true;
 				}
+				else if (packet->state == PLAY && packet->hp < player._heart) {	//폭발 피격 시
+					player._display_hurt = 30;
+				}
 				else if (packet->state == NO_ACCEPT) {	// 플레이어 나감 
 
 				}
 				else if (packet->state == DEAD) {	// 플레이어 사망
-
+					player._display_dead = 6 * 3 + tile_size;
 				}
 
 				player._state = packet->state;
+				player._heart = packet->hp;
 			}
 		}
 

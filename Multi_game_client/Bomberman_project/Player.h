@@ -18,6 +18,8 @@ public:
 	int _exp;
 	int _index;
 	int _idle_time;	//정지상태 지속시간 저장
+	int _display_hurt;	//피격시 보여주는 피격 애니메이션 지속시간 저장
+	int _display_dead;	//사망시 보여주는 사망 애니메이션 지속시간 저장
 
 	void InputID(std::queue<char*>& send_queue, char send_buf[BUFSIZE], char id[]);
 	void InputMoveKey(std::queue<char*>& send_queue, char send_buf[BUFSIZE], int dir);
