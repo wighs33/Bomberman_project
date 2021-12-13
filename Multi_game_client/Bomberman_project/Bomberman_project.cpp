@@ -177,7 +177,7 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	if (retval == SOCKET_ERROR) err_quit("connect()");
 
 	//아이피, 포트번호 입력 대기
-	WaitForSingleObject(hEvent, INFINITE);
+	//WaitForSingleObject(hEvent, INFINITE);
 
 	char IP_NUM[16 + 3 + 1];
 	u_short PORT_NUM;
@@ -192,10 +192,10 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	SOCKADDR_IN serveraddr;
 	ZeroMemory(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_addr.s_addr = inet_addr(IP_NUM);
-	serveraddr.sin_port = htons(PORT_NUM);
-	//serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	//serveraddr.sin_port = htons(10000);
+	//serveraddr.sin_addr.s_addr = inet_addr(IP_NUM);
+	//serveraddr.sin_port = htons(PORT_NUM);
+	serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	serveraddr.sin_port = htons(10000);
 
 	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("connect()");
@@ -367,7 +367,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:
 
 		//접속설정 대화상자 생성 (아이피, 포트번호 입력)
-		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG2), hwnd, (DLGPROC)ConnectSettingDlgProc);
+		//DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG2), hwnd, (DLGPROC)ConnectSettingDlgProc);
 
 		//로그인 대화상자 생성
 		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG1), hwnd, (DLGPROC)LoginDlgProc);
@@ -482,13 +482,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			SetEvent(hEvent);
 			break;
 		}
-		case 'E':
+		case VK_SHIFT:
 		{
-			if (players[my_index]._rock_count) {
-				players[my_index].CreateRock(send_queue, send_buf);
-				SetEvent(hEvent);
-				--players[my_index]._rock_count;
-			}
+			//임시 확인용
+			players[my_index].CreateRock(send_queue, send_buf);
+			SetEvent(hEvent);
+
+
+			//실제 코드
+			//if (players[my_index]._rock_count) {
+			//	players[my_index].CreateRock(send_queue, send_buf);
+			//	SetEvent(hEvent);
+			//	--players[my_index]._rock_count;
+			//}
 			break;
 		}
 
@@ -1314,7 +1320,14 @@ void Process_packet(char* p)
 		break;
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////
-					
+	case CREATE_ROCK: {
+		CREATE_ROCK_packet* packet = reinterpret_cast<CREATE_ROCK_packet*>(p);
+		if (packet->isSuccess) {
+			selectedMap[packet->iy][packet->ix] = ROCK;
+		}
+
+		break;
+	}
 
 	default: {
 		
