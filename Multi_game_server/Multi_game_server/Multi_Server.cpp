@@ -149,6 +149,11 @@ int main(int argc, char* argv[])
 	SOCKET listen_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (listen_socket == INVALID_SOCKET) err_quit("socket()");
 
+	//Nagle 알고리즘 적용X
+	bool optval = TRUE;
+	int retval = setsockopt(listen_socket, IPPROTO_TCP, TCP_NODELAY, (char*)&optval, sizeof(optval));
+	if (retval == SOCKET_ERROR) err_quit("connect()");
+
 	//bind
 	SOCKADDR_IN server_addr;
 	ZeroMemory(&server_addr, sizeof(server_addr));
@@ -169,6 +174,9 @@ int main(int argc, char* argv[])
 		addrlen = sizeof(clientaddr);
 		client_sock = accept(listen_socket, (SOCKADDR*)&clientaddr, &addrlen);
 
+		optval = TRUE;
+		retval = setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (char*)&optval, sizeof(optval));
+		if (retval == SOCKET_ERROR) err_quit("connect()");
 
 		// 접속한 클라이언트 정보 출력
 		std::cout << "[TCP 서버] 클라이언트 접속: IP 주소 " <<
@@ -204,9 +212,11 @@ DWORD WINAPI do_timer(LPVOID arg) {
 		timer_event ev;
 		bool ret = timer_queue.try_pop(ev);
 		if (ret == false) continue;
+		int _id = ev.obj_id;
 		if (ev.start_time <= chrono::system_clock::now()) {
 			if (ev.order == START_EXPL) //1. 폭발 시작
 			{
+
 				bombs.front().Explode(selectedMap, clients);
 				//2. 폭탄이 삭제되기 전 전역큐에 폭발범위에 해당하는 맵인덱스들을 넣는다.
 				explosionVecs.push_back(bombs.front().explosionMapIndexs);
@@ -222,12 +232,11 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				//PrintMap();
 
 				//폭탄 삭제전 플레이어 현재 폭탄 갯수 갱신
-				for (auto& pl : clients) {
-					if (strcmp(pl._id, bombs.front()._owner_id) == 0) {
-						pl._current_bomb_count--;
-					}
-				}
-
+				int bt = clients[_id]._current_bomb_count;
+				if (bt > 0) { 
+					--clients[_id]._current_bomb_count;
+				};
+				
 				bombs.pop_front();
 			}
 			else if (ev.order == END_EXPL) //4. 폭발 끝
@@ -401,7 +410,6 @@ void init_client(int client_index)
 	clients[client_index]._power = 1;
 	clients[client_index]._heart = 3;
 	clients[client_index]._bomb_max_count = 2;
-	clients[client_index]._current_bomb_count = 0;
 	clients[client_index]._rock_count = 0;
 	clients[client_index]._state = ACCEPT;
 }
@@ -920,8 +928,6 @@ void process_packet(int client_index, char* p)
 	}
 
 	case INIT_BOMB: {	// 1. 폭탄 받음
-		timer_event ev;
-		ev.obj_id = g_b_count++;
 		//////////////////////////////////////////////////////////
 
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
@@ -930,29 +936,20 @@ void process_packet(int client_index, char* p)
 
 		cout << "플레이어 - " << packet->owner_id << " 폭탄 설치" << endl;
 
-		bool proceed = FALSE;
-
-		//플레이어 현재 폭탄 개수 검사
-		for (auto& pl : clients) {
-			if (strcmp(pl._id, packet->owner_id) == 0) {
-				//만약 정해진 폭탄 최대 개수보다 현재 놔두려는 폭탄개수가 많거나 같다면 막는다.
-				if (pl._current_bomb_count >= pl._bomb_max_count) 
-					break;
-				
-				else {
-					pl._current_bomb_count++;
-					proceed = TRUE;
-					break;
-				}
-			}
+		int bc = cl._current_bomb_count;
+		auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(packet->x, packet->y);
+		if (bc >= cl._bomb_max_count) break;
+		else {
+			if (selectedMap[bomb_iy][bomb_ix] == EMPTY) ++cl._current_bomb_count;
+			else break;
 		}
 
-		if (proceed == FALSE) break;
-		
+		selectedMap[bomb_iy][bomb_ix] = BOMB;
+		int obj_id = g_b_count++;
 		//2. 폭탄 큐에 넣음
-		bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, packet->power, packet->owner_id));
+		bombs.push_back(Bomb(packet->x, packet->y, obj_id, packet->power, packet->owner_id));
 
-		packet->indx = ev.obj_id;
+		packet->indx = obj_id;
 
 		for (auto& pl : clients) {
 			if (pl._state != PLAY) continue;
@@ -965,8 +962,8 @@ void process_packet(int client_index, char* p)
 		};
 
 		//4. 타이머 큐에 3초짜리 타이머 넣음
-		Timer_Event(ev.obj_id, START_EXPL, 3000ms);
-		Timer_Event(ev.obj_id, END_EXPL, 3500ms);
+		Timer_Event(cl._index, START_EXPL, 3000ms);
+		Timer_Event(cl._index, END_EXPL, 3500ms);
 
 		//5. 폭탄 터뜨림
 		SetEvent(htimerEvent);
@@ -1099,7 +1096,136 @@ void process_packet(int client_index, char* p)
 		}
 		break;
 	}
+	case PRESS_SHIFT: {
+		PRESS_SHIFT_packet* packet = reinterpret_cast<PRESS_SHIFT_packet*>(p);
 
+		auto [cl_ix, cl_iy] = WindowPosToMapIndex(cl._x, cl._y);
+
+		switch (cl._dir)
+		{
+		case UP:
+		{
+			if (cl_iy - 1 == -1) {
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				return;
+			}
+
+			//빈곳 여부
+			if (selectedMap[cl_iy - 1][cl_ix] != EMPTY) {
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				return;
+			}
+
+			//플레이어 여부
+			for (auto& pl : clients) {
+				if (true == pl.in_use)
+				{
+					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
+					if (cl_ix == pl_ix && cl_iy - 1 == pl_iy) {
+						SendCreateBlock(NULL, NULL, NULL, FALSE);
+						return;
+					}
+				}
+			};
+
+			SendCreateBlock(cl_ix, cl_iy - 1, cl._id, TRUE);
+			selectedMap[cl_iy - 1][cl_ix] = ROCK;
+			return;
+		}
+		case DOWN:
+		{
+			if (cl_iy + 1 == tile_max_h_num) {
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				return;
+			}
+
+			//빈곳 여부
+			if (selectedMap[cl_iy + 1][cl_ix] != EMPTY) {
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				return;
+			}
+
+			//플레이어 여부
+			for (auto& pl : clients) {
+				if (true == pl.in_use)
+				{
+					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
+					if (cl_ix == pl_ix && cl_iy + 1 == pl_iy) {
+						SendCreateBlock(NULL, NULL, NULL, FALSE);
+						return;
+					}
+				}
+			};
+
+			SendCreateBlock(cl_ix, cl_iy + 1, cl._id, TRUE);
+			selectedMap[cl_iy + 1][cl_ix] = ROCK;
+			return;
+		}
+		case LEFT:
+		{
+			if (cl_ix - 1 == -1) {
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				return;
+			}
+
+			//빈곳 여부
+			if (selectedMap[cl_iy][cl_ix - 1] != EMPTY) {
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				return;
+			}
+
+			//플레이어 여부
+			for (auto& pl : clients) {
+				if (true == pl.in_use)
+				{
+					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
+					if (cl_ix - 1 == pl_ix && cl_iy == pl_iy) {
+						SendCreateBlock(NULL, NULL, NULL, FALSE);
+						return;
+					}
+				}
+			};
+
+			SendCreateBlock(cl_ix - 1, cl_iy, cl._id, TRUE);
+			selectedMap[cl_iy][cl_ix - 1] = ROCK;
+			return;
+		}
+		case RIGHT:
+		{
+			if (cl_ix + 1 == tile_max_w_num) {
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				return;
+			}
+
+			//빈곳 여부
+			if (selectedMap[cl_iy][cl_ix + 1] != EMPTY) {
+				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				return;
+			}
+
+			//플레이어 여부
+			for (auto& pl : clients) {
+				if (true == pl.in_use)
+				{
+					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
+					if (cl_ix + 1 == pl_ix && cl_iy == pl_iy) {
+						SendCreateBlock(NULL, NULL, NULL, FALSE);
+						return;
+					}
+				}
+			};
+
+			SendCreateBlock(cl_ix + 1, cl_iy, cl._id, TRUE);
+			selectedMap[cl_iy][cl_ix + 1] = ROCK;
+			return;
+		}
+		default:
+			cout << "정상 이동키 아님" << endl;
+			return;
+		}
+
+		break;
+	}
 	default: {
 		cout << "[에러] UnKnown Packet" << endl;
 		err_quit("UnKnown Packet");

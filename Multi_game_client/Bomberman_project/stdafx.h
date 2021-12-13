@@ -174,6 +174,8 @@ enum Packet_Type {
 	DELETE_OBJECT,
 	CREATE_ITEM,
 	ITEM_BUFF,
+	PRESS_SHIFT,
+	CREATE_ROCK
 };
 
 enum Player_Condition {
