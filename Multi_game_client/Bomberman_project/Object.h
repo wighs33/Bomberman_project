@@ -8,7 +8,6 @@ public:
 	bool _isActive;
 	int _x, _y;
 	int _object_index;	// 오브젝트 인덱스 값
-	std::mutex _active_lock;
 
 	Object()
 	{
@@ -33,22 +32,6 @@ public:
 		_y = obj._y;
 		_object_index = obj._object_index;
 	}
-};
-
-class Block: public Object	// 블록 - [파괴 불가능함]
-{
-public:
-	Block(int X, int Y, int OBJ_INDX) : Object(X, Y, OBJ_INDX) { }
-
-	explicit Block(const Block& copy) : Object(copy._x, copy._y, copy._object_index) { }
-};
-
-class Rock : public Object	// 바위 - [파괴 가능함]
-{
-public:
-	Rock(int X, int Y, int OBJ_INDX) : Object(X, Y, OBJ_INDX) { };
-
-	explicit Rock(const Rock& copy) : Object(copy._x, copy._y, copy._object_index) { }
 };
 
 class Bomb: public Object
@@ -90,21 +73,5 @@ public:
 	explicit Explosion(const Bomb& copy) : Object(copy._x, copy._y, copy._object_index)
 	{
 		_timer = copy._timer;
-	}
-};
-
-class Item: public Object
-{
-public:
-	int item_type;		// 아이템 타입 (HEART, MORE_BOMB, MORE_POWER, ROCK)
-
-	Item(int X, int Y, int OBJ_INDX, int ITEM_TYPE) : Object(X, Y, OBJ_INDX)
-	{
-		item_type = ITEM_TYPE;
-	}
-
-	explicit Item(const Item& copy) : Object(copy._x, copy._y, copy._object_index)
-	{
-		item_type = copy.item_type;
 	}
 };

@@ -13,10 +13,6 @@ HINSTANCE g_hInst;
 LPCTSTR lpszClass = "Window Class Name";
 LPCTSTR lpszWindowName = "테러맨";
 
-//random_device rd;
-//default_random_engine dre{ rd() };
-//uniform_int_distribution<> uid{ 1,100 };
-
 HANDLE hEvent;
 SOCKET sock;
 
@@ -54,15 +50,6 @@ tileArr<int, tile_max_w_num, tile_max_h_num>	selectedMap;
 //플레이어
 playerArr<Player, MAX_USER>	players;
 
-//블록 - [파괴 불가능]
-//vector <Block>	blocks;
-
-//바위 - [파괴 가능]
-//vector <Rock>	rocks;
-
-//아이템
-//vector <Item>	items;
-
 //폭탄
 deque <Bomb>	bombs;
 
@@ -79,8 +66,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 BOOL CALLBACK LoginDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK ConnectSettingDlgProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
 void DisplayText(HWND hEdit, const char* fmt, ...);
-void err_quit(const char* msg);
-void err_display(const char* msg);
+void Err_quit(const char* msg);
+void Err_display(const char* msg);
 void Send_packet();
 void Recv_packet();
 void Process_packet(char* p);
@@ -88,19 +75,10 @@ void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num> &map,const char* map_
 void Setting_Map();
 void Display_Players_Info(HDC, HDC, int, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, 
 	HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP, HBITMAP);
+void PrintMap();
 
 std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
 std::pair<int, int> WindowPosToMapIndex(int x, int y);
-
-//테스트
-void PrintMap() {
-	for (int i = 0; i < tile_max_h_num; ++i) {
-		for (int j = 0; j < tile_max_w_num; ++j)
-			cout << selectedMap[i][j] << ' ';
-		cout << endl;
-	}
-	cout << endl;
-}
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -169,12 +147,12 @@ DWORD WINAPI ClientMain(LPVOID arg)
 		return 1;
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == INVALID_SOCKET) err_quit("socket()");
+	if (sock == INVALID_SOCKET) Err_quit("socket()");
 
 	//Nagle 알고리즘 적용X
 	bool optval = TRUE;
 	retval = setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&optval, sizeof(optval));
-	if (retval == SOCKET_ERROR) err_quit("connect()");
+	if (retval == SOCKET_ERROR) Err_quit("connect()");
 
 	//아이피, 포트번호 입력 대기
 	WaitForSingleObject(hEvent, INFINITE);
@@ -194,11 +172,9 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_addr.s_addr = inet_addr(IP_NUM);
 	serveraddr.sin_port = htons(PORT_NUM);
-	/*serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	serveraddr.sin_port = htons(10000);*/
 
 	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
-	if (retval == SOCKET_ERROR) err_quit("connect()");
+	if (retval == SOCKET_ERROR) Err_quit("connect()");
 
 	//수신용 쓰레드 생성
 	CreateThread(NULL, 0, RecvThread, (LPVOID)sock, 0, NULL);
@@ -493,7 +469,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		}
 
 		case 'P':
-			PrintMap();
+			//PrintMap();
 			break;
 
 		case 'Q':
@@ -804,6 +780,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 					GREEN_val = 0;
 					BLUE_val = 0;
 
+					//피격상태일때
 					if (players[i]._display_hurt > 0 && players[i]._display_hurt % 10 > 5) {
 						switch (i) {
 						case 0: hBit_character = hBit_issac_hurt;  break;
@@ -996,7 +973,7 @@ void DisplayText(HWND hEdit, const char* fmt, ...)
 	va_end(arg);
 }
 
-void err_quit(const char* msg)
+void Err_quit(const char* msg)
 {
 	LPVOID lpMsgBuf;
 	FormatMessage(
@@ -1027,7 +1004,7 @@ void err_quit(const char* msg)
 	exit(1);
 }
 
-void err_display(const char* msg)
+void Err_display(const char* msg)
 {
 	LPVOID lpMsgBuf;
 	FormatMessage(
@@ -1044,7 +1021,7 @@ void Send_packet()
 {
 	retval = send(sock, send_queue.front(), BUFSIZE, 0);
 	if (retval == SOCKET_ERROR) {
-		err_quit("send()");
+		Err_quit("send()");
 	}
 	send_queue.pop();
 }
@@ -1055,7 +1032,7 @@ void Recv_packet()
 	ZeroMemory(recv_buf, sizeof(recv_buf));
 	int retval = recv(sock, recv_buf, BUFSIZE, 0);
 	if (retval == SOCKET_ERROR) {
-		err_quit("recv()");
+		Err_quit("recv()");
 	}
 }
 
@@ -1129,17 +1106,25 @@ void Setting_Map()
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
-			//blocks.push_back(Block(X, Y, bl_indx));
 			bl_indx++;
 		}
 		else if (selectedMap[i / tile_max_w_num][i % tile_max_w_num] == ROCK || selectedMap[i / tile_max_w_num][i % tile_max_w_num] == SPECIALROCK) {
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
-			//rocks.push_back(Rock(X, Y, r_indx));
 			r_indx++;
 		}
 	}
+}
+
+//맵 상태 전체 출력
+void PrintMap() {
+	for (int i = 0; i < tile_max_h_num; ++i) {
+		for (int j = 0; j < tile_max_w_num; ++j)
+			cout << selectedMap[i][j] << ' ';
+		cout << endl;
+	}
+	cout << endl;
 }
 
 //수신한 패킷 판별 함수
@@ -1199,7 +1184,6 @@ void Process_packet(char* p)
 		//cout << "[수신 성공] \'" << players[index]._id << "\' (타 플레이어) 로그인 확인" << endl;
 
 		//플레이어 초기화
-
 		players[index]._state = packet->state;
 		players[index]._x = packet->x;
 		players[index]._y = packet->y;
@@ -1237,7 +1221,6 @@ void Process_packet(char* p)
 		break;
 	}
 
-
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 	//폭탄 관련
 	case INIT_BOMB: {
@@ -1261,8 +1244,8 @@ void Process_packet(char* p)
 		}
 
 		if (packet->isActive) {
-			cout << "\n폭발 발생!!\n";
-			cout << packet->ix << ", " << packet->iy << endl;
+			//cout << "\n폭발 발생!!\n";
+			//cout << "폭발위치: " << packet->ix << ", " << packet->iy << endl;
 			selectedMap[packet->iy][packet->ix] = EXPLOSION;	//폭발 발생
 
 			auto [explosion_x, explosion_y] = MapIndexToWindowPos(packet->ix, packet->iy);
@@ -1270,8 +1253,8 @@ void Process_packet(char* p)
 			explosions.emplace_back(explosion_x, explosion_y, explosions.size(), bomb_explosion_timer);
 		}
 		else {
-			cout << "\n폭발 끝!!\n";
-			cout << packet->ix << ", " << packet->iy << endl;
+			//cout << "\n폭발 끝!!\n";
+			//cout << "폭발위치: " << packet->ix << ", " << packet->iy << endl;
 			selectedMap[packet->iy][packet->ix] = EMPTY;	//폭발 끝
 			//폭발 큐에서 처음 폭발 삭제 - 여러번 보냄
 			explosions.pop_front();
@@ -1282,8 +1265,9 @@ void Process_packet(char* p)
 
 	case DELETE_OBJECT: {
 		DELETE_OBJECT_packet* packet = reinterpret_cast<DELETE_OBJECT_packet*>(p);
-		cout << "\n바위 파괴!!\n";
-		cout << packet->ix << ", " << packet->iy << endl;
+
+		//cout << "\n바위 파괴!!\n";
+		//cout << "파괴된 바위 위치: " << packet->ix << ", " << packet->iy << endl;
 
 		selectedMap[packet->iy][packet->ix] = EMPTY;
 
@@ -1293,8 +1277,8 @@ void Process_packet(char* p)
 
 	case CREATE_ITEM: {
 		CREATE_ITEM_packet* packet = reinterpret_cast<CREATE_ITEM_packet*>(p);
-		cout << "\n아이템 생성!!\n";
-		cout << packet->ix << ", " << packet->iy << "\t" << packet->item_type << endl;
+		//cout << "\n아이템 생성!!\n";
+		//cout << "아이템 위치: " << packet->ix << ", " << packet->iy << "\t아이템 종류 - " << packet->item_type << endl;
 
 		selectedMap[packet->iy][packet->ix] = packet->item_type;
 
@@ -1304,7 +1288,7 @@ void Process_packet(char* p)
 	case CHANGE_STATE: {
 		PLAYER_CHANGE_STATE_packet* packet = reinterpret_cast<PLAYER_CHANGE_STATE_packet*>(p);
 
-		cout << "[change state] id: " << packet->id << " , x: " << packet->x << ", y: " << packet->y << ", state: " << packet->state << endl;
+		//cout << "[change state] id: " << packet->id << " , x: " << packet->x << ", y: " << packet->y << ", state: " << packet->state << endl;
 
 		for (auto& player : players) {
 			if (strcmp(player._id, packet->id) == 0) 
@@ -1334,10 +1318,8 @@ void Process_packet(char* p)
 		break;
 	}
 
-
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 	// 아이템 버프 관련
-
 	case ITEM_BUFF: {
 		PLAYER_ITEM_BUFF_packet* packet = reinterpret_cast<PLAYER_ITEM_BUFF_packet*>(p);
 		for (auto& player : players) {
@@ -1346,8 +1328,9 @@ void Process_packet(char* p)
 				{
 					if (player._heart < 5) ++player._heart;
 					selectedMap[packet->iy][packet->ix] = EMPTY;
-					cout << "\n체력 증가!!\n";
-					cout << player._heart << endl;
+					
+					//cout << "\n체력 증가!!\n";
+					//cout << "획득한 플레이어: " << player._id << ", 체력: " << player._heart << endl;
 					break;
 				}
 
@@ -1356,8 +1339,8 @@ void Process_packet(char* p)
 					if (player._bomb_max_count < 5) ++player._bomb_max_count;
 					selectedMap[packet->iy][packet->ix] = EMPTY;
 
-					cout << "\n폭탄개수 증가!!\n";
-					cout << player._bomb_max_count << endl;
+					//cout << "\n폭탄개수 증가!!\n";
+					//cout << "획득한 플레이어: " << player._id << ", 폭탄개수: " << player._bomb_max_count << endl;
 					break;
 				}
 
@@ -1366,8 +1349,8 @@ void Process_packet(char* p)
 					if (player._bomb_power < 5) ++player._bomb_power;
 					selectedMap[packet->iy][packet->ix] = EMPTY;
 
-					cout << "\n폭탄파워 증가!!\n";
-					cout << player._bomb_power << endl;
+					//cout << "\n폭탄파워 증가!!\n";
+					//cout << "획득한 플레이어: " << player._id << ", 폭탄파워: " << player._bomb_power << endl;
 					break;
 				}
 
@@ -1376,8 +1359,8 @@ void Process_packet(char* p)
 					if (player._rock_count < 5) ++player._rock_count;
 					selectedMap[packet->iy][packet->ix] = EMPTY;
 
-					cout << "\n돌아이템 개수 증가!!\n";
-					cout << player._rock_count << endl;
+					//cout << "\n돌아이템 개수 증가!!\n";
+					//cout << "획득한 플레이어: " << player._id << ", 돌아이템 개수: " << player._rock_count << endl;
 					break;
 				}
 			}
@@ -1386,6 +1369,7 @@ void Process_packet(char* p)
 		break;
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////
+
 	case CREATE_ROCK: {
 		CREATE_ROCK_packet* packet = reinterpret_cast<CREATE_ROCK_packet*>(p);
 		if (packet->isSuccess) {
@@ -1403,7 +1387,7 @@ void Process_packet(char* p)
 	default: {
 		
 		MessageBox(NULL, "[에러] UnKnown Packet", "에러", MB_ICONERROR);
-		err_display("UnKnown Packet");
+		Err_display("UnKnown Packet");
 	}
 
 	}

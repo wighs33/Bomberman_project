@@ -48,10 +48,9 @@ public:
 	bool in_use;
 
 	std::mutex use_lock;
-	//std::deque<Bomb> bombs;
 
 
-	void do_send(int num_bytes, void* mess)//send 작업은 여러 번 일어나야 하므로 함수 호출 시 새로운 send_buf를 동적 할당 하여 사용 후 작업 완료 시 메모리 해제를 실시 한다. 
+	void Do_send(int num_bytes, void* mess)//send 작업은 여러 번 일어나야 하므로 함수 호출 시 새로운 send_buf를 동적 할당 하여 사용 후 작업 완료 시 메모리 해제를 실시 한다. 
 	{
 		char _send_buf[BUFSIZE];
 		ZeroMemory(_send_buf, sizeof(_send_buf));
@@ -59,7 +58,7 @@ public:
 		send(_cl, _send_buf, num_bytes, 0);
 	};
 
-	void do_recv()  //recv_buf 객체 당 하나씩 배정되며, 호출 시 메모리 초기화를 통해 재활용 한다.
+	void Do_recv()  //recv_buf 객체 당 하나씩 배정되며, 호출 시 메모리 초기화를 통해 재활용 한다.
 	{
 		ZeroMemory(_recv_buf, sizeof(_recv_buf));
 		int ret = recv(_cl, _recv_buf, BUFSIZE, 0);

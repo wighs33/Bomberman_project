@@ -27,7 +27,7 @@ static void SendDestroyedRock(array<Session, MAX_USER>& clients, int ix, int iy)
 			del_obj_packet.ob_type = ROCK;
 			del_obj_packet.ix = ix;
 			del_obj_packet.iy = iy;
-			pl.do_send(sizeof(del_obj_packet), &del_obj_packet);
+			pl.Do_send(sizeof(del_obj_packet), &del_obj_packet);
 		}
 	}
 }
@@ -42,7 +42,7 @@ static void SendCreatedItem(array<Session, MAX_USER>& clients, int ix, int iy, i
 			create_iteam_packet.item_type = item_type;
 			create_iteam_packet.ix = ix;
 			create_iteam_packet.iy = iy;
-			pl.do_send(sizeof(create_iteam_packet), &create_iteam_packet);
+			pl.Do_send(sizeof(create_iteam_packet), &create_iteam_packet);
 		}
 	}
 }
@@ -58,7 +58,7 @@ static void SendExplosionStart(array<Session, MAX_USER>& clients, int ix, int iy
 			check_explosion_packet.ix = ix;
 			check_explosion_packet.iy = iy;
 			check_explosion_packet.isActive = true;
-			pl.do_send(sizeof(check_explosion_packet), &check_explosion_packet);
+			pl.Do_send(sizeof(check_explosion_packet), &check_explosion_packet);
 		}
 	}
 }

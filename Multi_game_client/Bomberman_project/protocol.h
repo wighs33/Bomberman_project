@@ -121,4 +121,5 @@ struct CREATE_ROCK_packet { // 블록생성 패킷
 	bool isSuccess; // 성공여부
 	char id[MAX_NAME_SIZE]; // 플레이어 아이디
 };
+
 #pragma pack(pop)

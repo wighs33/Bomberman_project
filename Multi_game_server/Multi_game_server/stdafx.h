@@ -20,8 +20,6 @@
 #pragma comment(lib, "ws2_32")
 #pragma comment(lib, "json/jsoncpp.lib")
 
-const short SERVER_PORT = 10000;
-
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////
@@ -62,19 +60,20 @@ const int game_mil_sec{ 30 };		//게임 프레임 시간간격 - 밀리초
 
 //////////////////////////////////////////////////////////////////////////
 
+const short SERVER_PORT = 10000;
+
 const int BUFSIZE = 256;
 
 const int  MAX_NAME_SIZE = 20;
 const int  MAX_MAP_SIZE = 256;
 
+//const int  MAX_ROCK = 10;
+//const int  MAX_ITEM = 10;
+//const int  MAX_BLOCK = 10;
+//const int  MAX_BOMB = 1000;
 
-const int  MAX_ROCK = 10;
-const int  MAX_ITEM = 10;
-const int  MAX_BLOCK = 10;
-const int  MAX_BOMB = 1000;
-
-constexpr int BOMB_ID_START = MAX_ROCK + MAX_ITEM + MAX_BLOCK;
-constexpr int BOMB_ID_END = BOMB_ID_START + MAX_BOMB - 1;
+//constexpr int BOMB_ID_START = MAX_ROCK + MAX_ITEM + MAX_BLOCK;
+//constexpr int BOMB_ID_END = BOMB_ID_START + MAX_BOMB - 1;
 
 const int  MAX_USER = 4;
 
@@ -122,7 +121,6 @@ enum Player_Move {
 	UP
 };
 
-
 enum MapData {
 	EMPTY,
 	BOMB,
@@ -141,5 +139,4 @@ enum EVENT_TYPE {
 	START_EXPL,  // 폭발 시작
 	END_EXPL,     // 폭발 끝
 	TURN_Damage   //노 데미지 풀기
-	
 };

@@ -1,4 +1,3 @@
-
 #include "stdafx.h"
 #include "json/json.h"
 #include "protocol.h"
@@ -10,7 +9,9 @@
 //플레이어
 array<Session, MAX_USER> clients;
 
+//플레이어 DB
 vector<Session_DB> clients_DB;
+
 char g_id_buf[BUFSIZE] = " ";
 
 //맵
@@ -23,35 +24,18 @@ tileArr<int, tile_max_w_num, tile_max_h_num>	selectedMap;
 
 int map_num;	//몇 번 맵 선택?
 
-std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
-std::pair<int, int> WindowPosToMapIndex(int x, int y);
-
-HANDLE htimerEvent; // 타이머 쓰레드 시작용
 HANDLE hThread[MAX_USER + 1];
-
-//블록 - [파괴 불가능]
-vector <Block>	blocks;
-
-//바위 - [파괴 가능]
-vector <Rock>	rocks;
-
-//아이템
-vector <Item>	items;
 
 //폭탄
 std::deque <Bomb>	bombs;
-//vector <Bomb>	bombs;
 std::deque <vector<pair<int, int>>>	explosionVecs;  //폭발 맵위치 벡터큐
-
-//atomic<bool> g_item[MAX_ITEM_SIZE];
 
 bool g_shutdown = false;
 
-//mutex mylock;
-
-// ====================================================================
-
 atomic<int> g_b_count = 0;
+
+//타이머
+HANDLE htimerEvent; // 타이머 쓰레드 시작용
 
 struct timer_event {
 	int obj_id;
@@ -65,22 +49,17 @@ struct timer_event {
 
 };
 
-
 concurrency::concurrent_priority_queue <timer_event> timer_queue;
-
-//array <Object, MAX_BOMB> objects;
-
-// ====================================================================
 
 //////////////////////////////////////////////////////////
 
-void err_quit(const char* msg);
-bool get_status(int client_index, char* id);
-void init_client(int client_index);
-bool check_all_ready();
-void send_all_play_start();
-void process_packet(int client_index, char* p);
-int get_new_index();
+void Err_quit(const char* msg);
+bool Get_status(int client_index, char* id);
+void Init_client(int client_index);
+bool Check_all_ready();
+void Send_all_play_start();
+void Process_packet(int client_index, char* p);
+int Get_new_index();
 void Load_Map(tileArr<int, tile_max_w_num, tile_max_h_num>& map, const char* map_path);
 void Setting_Map();
 int Check_Collision(int source_type, int source_index);
@@ -90,9 +69,13 @@ void Disconnect(int c_id);
 void Send_change_player(int _index);
 void SendExplosionEnd(int ix, int iy);
 void SendCreateBlock(int ix, int iy, char id[], bool isSuccess);
+void PrintMap();
 
-DWORD WINAPI do_timer(LPVOID arg);
+DWORD WINAPI Do_timer(LPVOID arg);
 DWORD WINAPI Thread(LPVOID arg);
+
+std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
+std::pair<int, int> WindowPosToMapIndex(int x, int y);
 
 //////////////////////////////////////////////////////////
 
@@ -116,27 +99,23 @@ int main(int argc, char* argv[])
 	Load_Map(map_1, "maps_json/map_1.json");
 	Load_Map(map_2, "maps_json/map_2.json");
 
+	while (TRUE) {
+		cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
+		scanf("%d", &map_num);
 
-	//테스트할 때 주석
-	//while (TRUE) {
-	//	cout << "몇번 맵을 플레이 하실껀가요?(1, 2 중 선택): ";
-	//	scanf("%d", &map_num);
-
-	//	if (map_num == 1 || map_num == 2) {
-	//		cout << map_num << " 번 맵을 선택하였습니다." << endl << endl;
-	//		break;
-	//	}
-	//	else {
-	//		cout << "잘못 입력하셨습니다. (1, 2 중 하나를 선택하여 주세요.)" << endl << endl;
-	//	}
-	//}
-	map_num = 1;
+		if (map_num == 1 || map_num == 2) {
+			cout << map_num << " 번 맵을 선택하였습니다." << endl << endl;
+			break;
+		}
+		else {
+			cout << "잘못 입력하셨습니다. (1, 2 중 하나를 선택하여 주세요.)" << endl << endl;
+		}
+	}
 
 	Setting_Map();
 
 	//타이머 스레드 스위치용
 	htimerEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-	
 
 	//윈속 초기화
 	WSADATA wsa;
@@ -145,12 +124,12 @@ int main(int argc, char* argv[])
 
 	//리슨 소켓 생성
 	SOCKET listen_socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (listen_socket == INVALID_SOCKET) err_quit("socket()");
+	if (listen_socket == INVALID_SOCKET) Err_quit("socket()");
 
 	//Nagle 알고리즘 적용X
 	bool optval = TRUE;
 	int retval = setsockopt(listen_socket, IPPROTO_TCP, TCP_NODELAY, (char*)&optval, sizeof(optval));
-	if (retval == SOCKET_ERROR) err_quit("connect()");
+	if (retval == SOCKET_ERROR) Err_quit("connect()");
 
 	//bind
 	SOCKADDR_IN server_addr;
@@ -162,7 +141,7 @@ int main(int argc, char* argv[])
 	listen(listen_socket, SOMAXCONN);
 
 	//타이머 쓰레드 만들기
-	hThread[0] = CreateThread(NULL, 0, do_timer, NULL, 0, NULL);
+	hThread[0] = CreateThread(NULL, 0, Do_timer, NULL, 0, NULL);
 
 	for (int i = 1; i < MAX_USER + 1; ++i) {
 		// 데이터 통신에 사용할 변수
@@ -172,9 +151,10 @@ int main(int argc, char* argv[])
 		addrlen = sizeof(clientaddr);
 		client_sock = accept(listen_socket, (SOCKADDR*)&clientaddr, &addrlen);
 
+		//Nagle 알고리즘 적용X
 		optval = TRUE;
 		retval = setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (char*)&optval, sizeof(optval));
-		if (retval == SOCKET_ERROR) err_quit("connect()");
+		if (retval == SOCKET_ERROR) Err_quit("connect()");
 
 		// 접속한 클라이언트 정보 출력
 		std::cout << "[TCP 서버] 클라이언트 접속: IP 주소 " <<
@@ -202,7 +182,7 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-DWORD WINAPI do_timer(LPVOID arg) {
+DWORD WINAPI Do_timer(LPVOID arg) {
 	WaitForSingleObject(htimerEvent, INFINITE);
 
 	while (true) {
@@ -255,11 +235,15 @@ DWORD WINAPI do_timer(LPVOID arg) {
 			}
 			else if (ev.order == TURN_Damage)
 			{
-				cout << "데미지" << endl;
+				cout << "플레이어 폭발 피격!!" << endl;
 				clients[ev.obj_id]._heart--;
-				cout << clients[ev.obj_id]._heart << endl;
+				cout << "피격 플레이어: " << clients[ev.obj_id]._id << ", 체력:" << clients[ev.obj_id]._heart << endl;
 
-				if (clients[ev.obj_id]._heart <= 0) clients[ev.obj_id]._state = DEAD;
+				if (clients[ev.obj_id]._heart <= 0) {
+					clients[ev.obj_id]._state = DEAD;
+					cout << "플레이어: " << clients[ev.obj_id]._id << " 사망!!!" << endl;
+				}
+
 				clients[ev.obj_id].no_damage = false;
 				Send_change_player(ev.obj_id);
 			}
@@ -283,7 +267,7 @@ void SendExplosionEnd(int ix, int iy) {
 			check_explosion_packet.ix = ix;
 			check_explosion_packet.iy = iy;
 			check_explosion_packet.isActive = false;
-			pl.do_send(sizeof(check_explosion_packet), &check_explosion_packet);
+			pl.Do_send(sizeof(check_explosion_packet), &check_explosion_packet);
 		}
 	}
 }
@@ -303,7 +287,7 @@ void Send_change_player(int _index) {
 			packet.state = cl._state;
 			packet.hp = cl._heart;
 			strcpy_s(packet.id, cl._id);
-			pl.do_send(sizeof(packet), &packet);
+			pl.Do_send(sizeof(packet), &packet);
 		}
 	}
 }
@@ -320,12 +304,12 @@ void SendCreateBlock(int ix, int iy, char id[], bool isSuccess) {
 			create_rock_packet.iy = iy;
 			create_rock_packet.isSuccess = isSuccess;
 			strcpy_s(create_rock_packet.id, id);
-			pl.do_send(sizeof(create_rock_packet), &create_rock_packet);
+			pl.Do_send(sizeof(create_rock_packet), &create_rock_packet);
 		}
 	}
 }
 
-//테스트
+//맵 상태 전체 출력
 void PrintMap() {
 	for (int i = 0; i < tile_max_h_num; ++i) {
 		for (int j = 0; j < tile_max_w_num; ++j)
@@ -335,7 +319,7 @@ void PrintMap() {
 	cout << endl;
 }
 
-void err_quit(const char* msg)
+void Err_quit(const char* msg)
 {
 	LPVOID lpMsgBuf;
 	FormatMessage(
@@ -348,7 +332,7 @@ void err_quit(const char* msg)
 	exit(1);
 }
 
-bool get_status(int client_index, char* id)
+bool Get_status(int client_index, char* id)
 {
 	//아이디 검색
 	strcpy_s(g_id_buf, id);
@@ -365,13 +349,13 @@ bool get_status(int client_index, char* id)
 	clients[client_index]._exp = b_n->_exp;
 
 	//기타 인게임 데이터 초기화
-	init_client(client_index);
+	Init_client(client_index);
 
 	return true;
 }
 
 //인게임 데이터 초기화
-void init_client(int client_index)
+void Init_client(int client_index)
 {
 	//맵별 위치 지정
 	if (map_num == 1) {
@@ -431,7 +415,7 @@ void init_client(int client_index)
 
 //모든 플레이어가 READY 상태인지 검사
 //모두 READY 상태라면 PLAY 상태로 변경
-bool check_all_ready()
+bool Check_all_ready()
 {
 	for (auto& cl : clients)
 	{
@@ -447,7 +431,7 @@ bool check_all_ready()
 		if (cl.in_use == TRUE) {
 			cout << "클라이언트 \'" << cl._id << "\' - 플레이 상태" << endl;
 			//인게임 데이터 초기화 - 위치 등등...
-			init_client(cl._index);
+			Init_client(cl._index);
 			cl._state = PLAY;
 		}
 	}
@@ -455,7 +439,7 @@ bool check_all_ready()
 	return true;
 }
 
-void send_all_play_start()
+void Send_all_play_start()
 {
 	for (auto& other : clients)
 	{
@@ -472,7 +456,7 @@ void send_all_play_start()
 					state_packet.hp = another._heart;
 					strcpy_s(state_packet.id, another._id);
 
-					other.do_send(sizeof(state_packet), &state_packet);
+					other.Do_send(sizeof(state_packet), &state_packet);
 				}
 			}
 		}
@@ -549,23 +533,22 @@ void Setting_Map()
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
-			blocks.push_back(Block(X, Y, bl_indx));
 			bl_indx++;
 		}
 		else if (selectedMap[i / tile_max_w_num][i % tile_max_w_num] == ROCK || selectedMap[i / tile_max_w_num][i % tile_max_w_num] == SPECIALROCK) {
 			int X = outer_wall_start + (i % tile_max_w_num) * tile_size;
 			int Y = outer_wall_start + (i / tile_max_w_num) * tile_size;
 
-			rocks.push_back(Rock(X, Y, r_indx));
 			r_indx++;
 		}
 	}
 }
 
-//충돌체크
+//===== 충돌체크 함수
 //충돌 발생시 해당 오브젝트 인덱스 번호 + 1 리턴 / 충돌이 없으면 0 리턴
 //따라서!! 충돌이 안일어날시 0을 리턴하므로, 0번째 인덱스를 구분하기 위해서 + 1을 해준다.
 
+//--- 폭발과 객체간 충돌체크용 함수 (밑에 충돌체크 함수보다 부하 적음)
 int Check_Expl_Collision(int source_type, int source_index, vector<pair<int, int>>& expl)
 {
 	int s_x{ 0 }, s_y{ 0 };
@@ -579,6 +562,7 @@ int Check_Expl_Collision(int source_type, int source_index, vector<pair<int, int
 		s_y_bias = p_size;
 		break;
 	}
+
 	RECT temp;
 	RECT source_rt{ s_x, s_y, s_x + s_x_bias, s_y + s_y_bias };
 
@@ -607,9 +591,11 @@ int Check_Expl_Collision(int source_type, int source_index, vector<pair<int, int
 				}
 			}
 		};
+
 	return 0;	//충돌X
 }
 
+//--- 일반적인 객체간 충돌체크용 함수
 int Check_Collision(int source_type, int source_index)
 {
 	int s_x{ 0 }, s_y{ 0 };
@@ -711,7 +697,7 @@ int Check_Collision(int source_type, int source_index)
 					for (auto& cl : clients) {
 						if (cl.in_use == false) continue;
 						if (cl._state != PLAY) continue;
-						cl.do_send(sizeof(buff_packet), &buff_packet);
+						cl.Do_send(sizeof(buff_packet), &buff_packet);
 					}
 					return 0;
 				}
@@ -736,7 +722,7 @@ int Check_Collision(int source_type, int source_index)
 					for (auto& cl : clients) {
 						if (cl.in_use == false) continue;
 						if (cl._state != PLAY) continue;
-						cl.do_send(sizeof(buff_packet), &buff_packet);
+						cl.Do_send(sizeof(buff_packet), &buff_packet);
 					}
 					
 					return 0;
@@ -762,7 +748,7 @@ int Check_Collision(int source_type, int source_index)
 					for (auto& cl : clients) {
 						if (cl.in_use == false) continue;
 						if (cl._state != PLAY) continue;
-						cl.do_send(sizeof(buff_packet), &buff_packet);
+						cl.Do_send(sizeof(buff_packet), &buff_packet);
 					}
 					return 0;
 				}
@@ -787,7 +773,7 @@ int Check_Collision(int source_type, int source_index)
 					for (auto& cl : clients) {
 						if (cl.in_use == false) continue;
 						if (cl._state != PLAY) continue;
-						cl.do_send(sizeof(buff_packet), &buff_packet);
+						cl.Do_send(sizeof(buff_packet), &buff_packet);
 					}
 					return 0;
 				}
@@ -811,10 +797,8 @@ void Timer_Event(int _obj_id, EVENT_TYPE ev, std::chrono::milliseconds ms)
 	timer_queue.push(t);
 }
 
-
-void process_packet(int client_index, char* p)
+void Process_packet(int client_index, char* p)
 {
-
 	Session& cl = clients[client_index];
 
 	char packet_type = p[1];
@@ -823,12 +807,12 @@ void process_packet(int client_index, char* p)
 
 	case LOGIN: {
 		LOGIN_packet* packet = reinterpret_cast<LOGIN_packet*>(p);
-		
 
-		if (!get_status(client_index, packet->id)) {
+
+		if (!Get_status(client_index, packet->id)) {
 			LOGIN_ERROR_packet login_error_packet;
 			login_error_packet.type = LOGIN_ERROR;
-			cl.do_send(sizeof(login_error_packet), &login_error_packet);
+			cl.Do_send(sizeof(login_error_packet), &login_error_packet);
 			break;
 		}
 
@@ -844,7 +828,7 @@ void process_packet(int client_index, char* p)
 				L_packet.index = cl._index;
 				L_packet.exp = cl._exp;
 				L_packet.map = map_num;
-				cl.do_send(sizeof(L_packet), &L_packet);
+				cl.Do_send(sizeof(L_packet), &L_packet);
 
 				continue;
 			};
@@ -862,7 +846,7 @@ void process_packet(int client_index, char* p)
 			IN_Player.level = other._level;
 			IN_Player.exp = other._exp;
 			strcpy_s(IN_Player.id, other._id);
-			cl.do_send(sizeof(IN_Player), &IN_Player);
+			cl.Do_send(sizeof(IN_Player), &IN_Player);
 
 			// 이미 접속해 있는 플레이어들에게 현재 접속한 플레이어의 정보 전송
 			INIT_PLAYER_packet IN_Other;
@@ -876,7 +860,7 @@ void process_packet(int client_index, char* p)
 			IN_Other.level = cl._level;
 			IN_Other.exp = cl._exp;
 			strcpy_s(IN_Other.id, cl._id);
-			other.do_send(sizeof(IN_Other), &IN_Other);
+			other.Do_send(sizeof(IN_Other), &IN_Other);
 
 		}
 
@@ -896,7 +880,7 @@ void process_packet(int client_index, char* p)
 		case 2: x_bias = pl_speed * (-1); break;
 		case 1: x_bias = pl_speed * (+1); break;
 		default:
-			cout << "Invalid move in client " << cl._id << endl;
+			cout << "Invalid value recieved for move in client " << cl._id << endl;
 			getchar();
 			exit(-1);
 		}
@@ -921,23 +905,21 @@ void process_packet(int client_index, char* p)
 				Move_Player.y = cl._y;
 				Move_Player.dir = cl._dir;
 				strcpy_s(Move_Player.id, cl._id);
-				pl.do_send(sizeof(Move_Player), &Move_Player);
+				pl.Do_send(sizeof(Move_Player), &Move_Player);
 
 			}
 		}
 		break;
 	}
 
-
-
 	case INIT_BOMB: {	// 1. 폭탄 받음
 		//////////////////////////////////////////////////////////
 
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
-		
+
 		if (cl._state != PLAY) break;
 
-		cout << "플레이어 - " << packet->owner_id << " 폭탄 설치" << endl;
+		//cout << "플레이어: " << packet->owner_id << "     " << packet->x << ", " << packet->y << " 위치에 폭탄 설치" << endl;
 
 		int bc = cl._current_bomb_count;
 		auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(packet->x, packet->y);
@@ -959,7 +941,7 @@ void process_packet(int client_index, char* p)
 			if (true == pl.in_use)
 			{
 				// 3. 폭탄생성명령 모든 플레이어에게 보냄
-				pl.do_send(sizeof(INIT_BOMB_packet), packet);
+				pl.Do_send(sizeof(INIT_BOMB_packet), packet);
 			}
 		};
 
@@ -985,8 +967,8 @@ void process_packet(int client_index, char* p)
 			cl._state = packet->state;
 			cout << "클라이언트 \'" << cl._id << "\' - 준비 상태" << endl;
 
-			if (check_all_ready()) {
-				send_all_play_start();
+			if (Check_all_ready()) {
+				Send_all_play_start();
 				break;
 			}
 
@@ -1003,7 +985,7 @@ void process_packet(int client_index, char* p)
 						state_packet.state = cl._state;
 						state_packet.hp = cl._heart;
 						strcpy_s(state_packet.id, cl._id);
-						other.do_send(sizeof(state_packet), &state_packet);
+						other.Do_send(sizeof(state_packet), &state_packet);
 					}
 					else
 					{
@@ -1016,7 +998,7 @@ void process_packet(int client_index, char* p)
 						state_packet.state = other._state;
 						state_packet.hp = cl._heart;
 						strcpy_s(state_packet.id, other._id);
-						cl.do_send(sizeof(state_packet), &state_packet);
+						cl.Do_send(sizeof(state_packet), &state_packet);
 					}
 				}
 			}
@@ -1041,7 +1023,7 @@ void process_packet(int client_index, char* p)
 						state_packet.state = cl._state;
 						state_packet.hp = cl._heart;
 						strcpy_s(state_packet.id, cl._id);
-						other.do_send(sizeof(state_packet), &state_packet);
+						other.Do_send(sizeof(state_packet), &state_packet);
 					}
 					else
 					{
@@ -1054,7 +1036,7 @@ void process_packet(int client_index, char* p)
 						state_packet.state = other._state;
 						state_packet.hp = cl._heart;
 						strcpy_s(state_packet.id, other._id);
-						cl.do_send(sizeof(state_packet), &state_packet);
+						cl.Do_send(sizeof(state_packet), &state_packet);
 					}
 				}
 			}
@@ -1063,7 +1045,6 @@ void process_packet(int client_index, char* p)
 		}
 
 
-			
 		default: {
 			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;
 			cout << "packet state number: " << packet->state << endl;
@@ -1075,13 +1056,14 @@ void process_packet(int client_index, char* p)
 		}
 		break;
 	}
+
 	case PRESS_SHIFT: {
 		PRESS_SHIFT_packet* packet = reinterpret_cast<PRESS_SHIFT_packet*>(p);
 
 		auto [cl_ix, cl_iy] = WindowPosToMapIndex(cl._x + 10, cl._y + 10);
 
-		switch (cl._dir)
-		{
+		switch (cl._dir) {
+
 		case UP:
 		{
 			if (cl_iy - 1 == -1) {
@@ -1111,6 +1093,7 @@ void process_packet(int client_index, char* p)
 			selectedMap[cl_iy - 1][cl_ix] = ROCK;
 			return;
 		}
+
 		case DOWN:
 		{
 			if (cl_iy + 1 == tile_max_h_num) {
@@ -1140,6 +1123,7 @@ void process_packet(int client_index, char* p)
 			selectedMap[cl_iy + 1][cl_ix] = ROCK;
 			return;
 		}
+
 		case LEFT:
 		{
 			if (cl_ix - 1 == -1) {
@@ -1169,6 +1153,7 @@ void process_packet(int client_index, char* p)
 			selectedMap[cl_iy][cl_ix - 1] = ROCK;
 			return;
 		}
+
 		case RIGHT:
 		{
 			if (cl_ix + 1 == tile_max_w_num) {
@@ -1198,24 +1183,35 @@ void process_packet(int client_index, char* p)
 			selectedMap[cl_iy][cl_ix + 1] = ROCK;
 			return;
 		}
+
+		case 0:		//처음 시작시 방향 0인 상태 (만약 이 상태에서 블록아이템 사용을 할 시, 그냥 무시) 
+		{
+			return;
+		}
+
 		default:
-			cout << "정상 이동키 아님" << endl;
+			cout << "Invalid dir value  in client: \'" << cl._id << "\'" << endl;
+			cout << "client's dir: " << cl._dir << endl;
+			getchar();
+			exit(-1);
 			return;
 		}
 
 		break;
 	}
+
+
 	default: {
 		cout << "[에러] UnKnown Packet" << endl;
-		err_quit("UnKnown Packet");
+		Err_quit("UnKnown Packet");
+		break;
 	}
 
 	}
-
 
 }
 
-int get_new_index()
+int Get_new_index()
 {
 	static int g_id = 0;
 
@@ -1237,30 +1233,30 @@ void Disconnect(int c_id)
 	clients[c_id]._state = NO_ACCEPT;
 	Send_change_player(c_id);
 	closesocket(clients[c_id]._cl);
-	cout << "------------???------------" << endl;   //충돌땜에 한글확인불가
+
+	cout << "[플레이어 접속종료] \'" << clients[c_id]._id << "\' (" << c_id + 1 << " 번째 플레이어)" << endl;
 }
 
 DWORD WINAPI Thread(LPVOID arg)
 {
 	SOCKET client_sock = (SOCKET)arg;
-	int index = get_new_index();
+	int index = Get_new_index();
 	Session& player = clients[index];
 	player._cl = client_sock;
 	player._index = index;
 
 	while (1) {
 		// 데이터 받기
-		player.do_recv();
+		player.Do_recv();
 		
 		if (clients[index].in_use == false)
 		{
-			cout << "종료" << endl;
 			Disconnect(index);
 			return 0;
 		}
 		char* packet_start = clients[index]._recv_buf;
 		char packet_size = packet_start[0];
-		process_packet(index, packet_start);
+		Process_packet(index, packet_start);
 	
 	}
 }

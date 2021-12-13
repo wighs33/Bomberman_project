@@ -3,7 +3,6 @@
 #include <winsock2.h>	// windows.h 보다 위에 두어야 재정의 빌드 에러 안 생김
 #include <windows.h>	
 #include <tchar.h>
-//#include <random>
 #include <array>
 #include <fstream>
 #include <mutex>
@@ -200,7 +199,6 @@ enum Player_Move {
 	UP
 };
 
-
 enum MapData {
 	EMPTY,
 	BOMB,
@@ -219,5 +217,4 @@ enum EVENT_TYPE {
 	START_EXPL,  // 폭발 시작
 	END_EXPL,     // 폭발 끝
 	TURN_Damage   //노 데미지 풀기
-
 };
