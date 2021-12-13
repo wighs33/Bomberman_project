@@ -568,6 +568,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				pl._display_hurt--;
 			}
 		}
+		//사망상태 체크
+		for (auto& pl : players) {
+			if (pl._display_dead > 0) {
+				pl._display_dead--;
+			}
+		}
 
 		//폭탄
 		for (auto& bomb : bombs) {
@@ -743,8 +749,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 
 			//플레이어
+			//사망시 애니메이션
 			for (int i = 0; i < MAX_USER; ++i) {
-				if (players[i]._state != NO_ACCEPT) {
+				if (players[i]._state == DEAD && players[i]._display_dead > 0) {
+					HBITMAP hBit_character;
+
+					switch (i) {
+					case 0: hBit_character = hBit_issac;  break;
+					case 1: hBit_character = hBit_magdalene;  break;
+					case 2: hBit_character = hBit_lazarus; ; break;
+					case 3: hBit_character = hBit_samson;  break;
+					case 4: hBit_character = hBit_eve; break;
+					}
+
+					oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit_character);
+
+					//쓰러지는 애니메이션 재생
+					if (players[i]._display_dead > dead_fall_animation_time_gap * 2 + p_size) {
+						TransparentBlt(mem1dc, players[i]._x, players[i]._y - dead_fall_y_adj, p_size, p_size,
+							mem2dc, 10, 319, dead_fall_img_size, dead_fall_img_size, RGB(0, 0, 0));
+					}
+					else if (players[i]._display_dead > dead_fall_animation_time_gap + p_size) {
+						TransparentBlt(mem1dc, players[i]._x, players[i]._y - dead_fall_y_adj, p_size, p_size,
+							mem2dc, 76, 319, dead_fall_img_size, dead_fall_img_size, RGB(0, 0, 0));
+					}
+					else if (players[i]._display_dead > p_size) {
+						TransparentBlt(mem1dc, players[i]._x, players[i]._y - dead_fall_y_adj, p_size, p_size,
+							mem2dc, 130, 319, dead_fall_img_size, dead_fall_img_size, RGB(0, 0, 0));
+					}
+					else {
+						int shrink_size = p_size - players[i]._display_dead;
+						TransparentBlt(mem1dc, players[i]._x + shrink_size / 2, players[i]._y - dead_fall_y_adj + shrink_size / 2, p_size - shrink_size, p_size - shrink_size,
+							mem2dc, 130, 319, dead_fall_img_size, dead_fall_img_size, RGB(0, 0, 0));
+					}
+				
+				}
+				
+			}
+			
+			for (int i = 0; i < MAX_USER; ++i) {
+				if (players[i]._state != NO_ACCEPT && players[i]._state != DEAD) {
 					HBITMAP hBit_character;
 					int RED_val, GREEN_val, BLUE_val;
 
@@ -1279,7 +1323,7 @@ void Process_packet(char* p)
 
 				}
 				else if (packet->state == DEAD) {	// 플레이어 사망
-					player._display_dead = 6 * 3 + tile_size;
+					player._display_dead = dead_fall_animation_time_gap * 3 + p_size;
 				}
 
 				player._state = packet->state;

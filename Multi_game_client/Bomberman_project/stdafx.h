@@ -131,6 +131,13 @@ const int h_gap = 190;				// 플레이어 ui 간 간격
 
 const int idle_time_limit = 5;				// 플레이어 정지상태 지속시간 리미트 -> 움직임 애니메이션 정지
 
+////////////////////////////////////////////////////////////////////////////
+//플레이어 사망상태 애니메이션 관련 상수들
+
+const int dead_fall_y_adj = 25;
+const int dead_fall_animation_time_gap = 10;
+const int dead_fall_img_size = 40;
+
 //////////////////////////////////////////////////////////////////////////
 
 const int BUFSIZE = 256;
