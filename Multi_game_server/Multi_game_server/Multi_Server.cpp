@@ -23,6 +23,12 @@ tileArr<int, tile_max_w_num, tile_max_h_num>	selectedMap;
 
 int map_num;	//몇 번 맵 선택?
 
+std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
+std::pair<int, int> WindowPosToMapIndex(int x, int y);
+
+HANDLE htimerEvent; // 타이머 쓰레드 시작용
+HANDLE hThread[MAX_USER + 1];
+
 //블록 - [파괴 불가능]
 vector <Block>	blocks;
 
@@ -81,60 +87,11 @@ int Check_Collision(int source_type, int source_index);
 int Check_Expl_Collision(int source_type, int source_index, vector<pair<int, int>>& expl);
 void Timer_Event(int _obj_id, EVENT_TYPE ev, std::chrono::milliseconds ms);
 void Disconnect(int c_id);
+void Send_change_player(int _index);
+void SendExplosionEnd(int ix, int iy);
 
 DWORD WINAPI do_timer(LPVOID arg);
 DWORD WINAPI Thread(LPVOID arg);
-
-std::pair<int, int> MapIndexToWindowPos(int ix, int iy);
-std::pair<int, int> WindowPosToMapIndex(int x, int y);
-
-HANDLE htimerEvent; // 타이머 쓰레드 시작용
-HANDLE hThread[MAX_USER + 1];
-
-void SendExplosionEnd(int ix, int iy) {
-	for (auto& pl : clients) {
-		if (pl._state != PLAY) continue;
-		if (true == pl.in_use)
-		{
-			CHECK_EXPLOSION_packet check_explosion_packet;
-			check_explosion_packet.size = sizeof(check_explosion_packet);
-			check_explosion_packet.type = CHECK_EXPLOSION;
-			check_explosion_packet.ix = ix;
-			check_explosion_packet.iy = iy;
-			check_explosion_packet.isActive = false;
-			pl.do_send(sizeof(check_explosion_packet), &check_explosion_packet);
-		}
-	}
-}
-
-void Send_change_player(int _index) {
-
-	Session& cl = clients[_index];
-	for (auto& pl : clients) {
-		if (pl._state == NO_ACCEPT) continue;
-		if (true == pl.in_use)
-		{
-			PLAYER_CHANGE_STATE_packet packet;
-			packet.size = sizeof(PLAYER_CHANGE_STATE_packet);
-			packet.type = CHANGE_STATE;
-			packet.x = cl._x;
-			packet.y = cl._y;
-			packet.state = cl._state;
-			packet.hp = cl._heart;
-			strcpy_s(packet.id,cl._id);
-			pl.do_send(sizeof(packet), &packet);
-		}
-	}
-}
-//테스트
-void PrintMap() {
-	for (int i = 0; i < tile_max_h_num; ++i) {
-		for (int j = 0; j < tile_max_w_num; ++j)
-			cout << selectedMap[i][j] << ' ';
-		cout << endl;
-	}
-	cout << endl;
-}
 
 //////////////////////////////////////////////////////////
 
@@ -239,7 +196,6 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-
 DWORD WINAPI do_timer(LPVOID arg) {
 	WaitForSingleObject(htimerEvent, INFINITE);
 
@@ -307,6 +263,52 @@ DWORD WINAPI do_timer(LPVOID arg) {
 		}
 	}
 
+}
+
+void SendExplosionEnd(int ix, int iy) {
+	for (auto& pl : clients) {
+		if (pl._state != PLAY) continue;
+		if (true == pl.in_use)
+		{
+			CHECK_EXPLOSION_packet check_explosion_packet;
+			check_explosion_packet.size = sizeof(check_explosion_packet);
+			check_explosion_packet.type = CHECK_EXPLOSION;
+			check_explosion_packet.ix = ix;
+			check_explosion_packet.iy = iy;
+			check_explosion_packet.isActive = false;
+			pl.do_send(sizeof(check_explosion_packet), &check_explosion_packet);
+		}
+	}
+}
+
+void Send_change_player(int _index) {
+
+	Session& cl = clients[_index];
+	for (auto& pl : clients) {
+		if (pl._state == NO_ACCEPT) continue;
+		if (true == pl.in_use)
+		{
+			PLAYER_CHANGE_STATE_packet packet;
+			packet.size = sizeof(PLAYER_CHANGE_STATE_packet);
+			packet.type = CHANGE_STATE;
+			packet.x = cl._x;
+			packet.y = cl._y;
+			packet.state = cl._state;
+			packet.hp = cl._heart;
+			strcpy_s(packet.id, cl._id);
+			pl.do_send(sizeof(packet), &packet);
+		}
+	}
+}
+
+//테스트
+void PrintMap() {
+	for (int i = 0; i < tile_max_h_num; ++i) {
+		for (int j = 0; j < tile_max_w_num; ++j)
+			cout << selectedMap[i][j] << ' ';
+		cout << endl;
+	}
+	cout << endl;
 }
 
 void err_quit(const char* msg)
