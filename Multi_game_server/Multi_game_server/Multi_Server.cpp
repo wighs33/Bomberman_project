@@ -826,7 +826,7 @@ void process_packet(int client_index, char* p)
 
 	case LOGIN: {
 		LOGIN_packet* packet = reinterpret_cast<LOGIN_packet*>(p);
-		//send_login_ok_packet(client_index);
+		
 
 		if (!get_status(client_index, packet->id)) {
 			LOGIN_ERROR_packet login_error_packet;
@@ -931,19 +931,7 @@ void process_packet(int client_index, char* p)
 		break;
 	}
 
-	case MOVE_OK: {
-		MOVE_OK_packet* packet = reinterpret_cast<MOVE_OK_packet*>(p);
-		cl._x = packet->x;
-		cl._y = packet->y;
-		cl._dir = packet->dir;
-		for (auto& pl : clients) {
-			if (true == pl.in_use)
-			{
-				pl.do_send(sizeof(MOVE_OK_packet), packet);
-			}
-		}
-		break;
-	}
+
 
 	case INIT_BOMB: {	// 1. ÆøÅº ¹ÞÀ½
 		//////////////////////////////////////////////////////////
@@ -1299,8 +1287,6 @@ DWORD WINAPI Thread(LPVOID arg)
 		}
 		char* packet_start = clients[index]._recv_buf;
 		char packet_size = packet_start[0];
-
-		
 		process_packet(index, packet_start);
 	
 	}
