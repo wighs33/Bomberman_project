@@ -973,7 +973,6 @@ void process_packet(int client_index, char* p)
 			if (pl._state != PLAY) continue;
 			if (true == pl.in_use)
 			{
-				cout <<"\n¾ÆÀÌµð: "<< pl._id << endl;
 				// 3. ÆøÅº»ý¼º¸í·É ¸ðµç ÇÃ·¹ÀÌ¾î¿¡°Ô º¸³¿
 				pl.do_send(sizeof(INIT_BOMB_packet), packet);
 			}
@@ -985,12 +984,6 @@ void process_packet(int client_index, char* p)
 
 		//5. ÆøÅº ÅÍ¶ß¸²
 		SetEvent(htimerEvent);
-		
-		//ÀÓ½Ã Ãâ·Â
-		//PrintMap();
-
-		//Å¥¿¡ ÆøÅº °³¼ö
-		cout << "Å¥¿¡ ÆøÅº °³¼ö: " << bombs.size() << endl;
 
 		break;
 	}
@@ -1117,20 +1110,28 @@ void process_packet(int client_index, char* p)
 	case PRESS_SHIFT: {
 		PRESS_SHIFT_packet* packet = reinterpret_cast<PRESS_SHIFT_packet*>(p);
 
-		auto [cl_ix, cl_iy] = WindowPosToMapIndex(cl._x, cl._y);
+		auto [cl_ix, cl_iy] = WindowPosToMapIndex(cl._x + 10, cl._y + 10);
+		cout << cl._x + 10 << endl;
+		cout << cl._y + 10 << endl;
+		cout << outer_wall_start << endl;
+		cout << tile_size << endl;
+		cout << cl_ix << endl;
+		cout << cl_iy << endl;
+
+
 
 		switch (cl._dir)
 		{
 		case UP:
 		{
 			if (cl_iy - 1 == -1) {
-				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, cl._id, FALSE);
 				return;
 			}
 
 			//ºó°÷ ¿©ºÎ
 			if (selectedMap[cl_iy - 1][cl_ix] != EMPTY) {
-				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, cl._id, FALSE);
 				return;
 			}
 
@@ -1138,9 +1139,9 @@ void process_packet(int client_index, char* p)
 			for (auto& pl : clients) {
 				if (true == pl.in_use)
 				{
-					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
+					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x + 10, pl._y + 10);
 					if (cl_ix == pl_ix && cl_iy - 1 == pl_iy) {
-						SendCreateBlock(NULL, NULL, NULL, FALSE);
+						SendCreateBlock(NULL, NULL, cl._id, FALSE);
 						return;
 					}
 				}
@@ -1153,13 +1154,13 @@ void process_packet(int client_index, char* p)
 		case DOWN:
 		{
 			if (cl_iy + 1 == tile_max_h_num) {
-				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, cl._id, FALSE);
 				return;
 			}
 
 			//ºó°÷ ¿©ºÎ
 			if (selectedMap[cl_iy + 1][cl_ix] != EMPTY) {
-				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, cl._id, FALSE);
 				return;
 			}
 
@@ -1167,9 +1168,9 @@ void process_packet(int client_index, char* p)
 			for (auto& pl : clients) {
 				if (true == pl.in_use)
 				{
-					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
+					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x + 10, pl._y + 10);
 					if (cl_ix == pl_ix && cl_iy + 1 == pl_iy) {
-						SendCreateBlock(NULL, NULL, NULL, FALSE);
+						SendCreateBlock(NULL, NULL, cl._id, FALSE);
 						return;
 					}
 				}
@@ -1182,13 +1183,13 @@ void process_packet(int client_index, char* p)
 		case LEFT:
 		{
 			if (cl_ix - 1 == -1) {
-				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, cl._id, FALSE);
 				return;
 			}
 
 			//ºó°÷ ¿©ºÎ
 			if (selectedMap[cl_iy][cl_ix - 1] != EMPTY) {
-				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, cl._id, FALSE);
 				return;
 			}
 
@@ -1196,9 +1197,9 @@ void process_packet(int client_index, char* p)
 			for (auto& pl : clients) {
 				if (true == pl.in_use)
 				{
-					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
+					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x + 10, pl._y + 10);
 					if (cl_ix - 1 == pl_ix && cl_iy == pl_iy) {
-						SendCreateBlock(NULL, NULL, NULL, FALSE);
+						SendCreateBlock(NULL, NULL, cl._id, FALSE);
 						return;
 					}
 				}
@@ -1211,13 +1212,13 @@ void process_packet(int client_index, char* p)
 		case RIGHT:
 		{
 			if (cl_ix + 1 == tile_max_w_num) {
-				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, cl._id, FALSE);
 				return;
 			}
 
 			//ºó°÷ ¿©ºÎ
 			if (selectedMap[cl_iy][cl_ix + 1] != EMPTY) {
-				SendCreateBlock(NULL, NULL, NULL, FALSE);
+				SendCreateBlock(NULL, NULL, cl._id, FALSE);
 				return;
 			}
 
@@ -1225,9 +1226,9 @@ void process_packet(int client_index, char* p)
 			for (auto& pl : clients) {
 				if (true == pl.in_use)
 				{
-					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x, pl._y);
+					auto [pl_ix, pl_iy] = WindowPosToMapIndex(pl._x + 10, pl._y + 10);
 					if (cl_ix + 1 == pl_ix && cl_iy == pl_iy) {
-						SendCreateBlock(NULL, NULL, NULL, FALSE);
+						SendCreateBlock(NULL, NULL, cl._id, FALSE);
 						return;
 					}
 				}
