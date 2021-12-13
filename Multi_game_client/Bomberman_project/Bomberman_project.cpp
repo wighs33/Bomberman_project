@@ -192,8 +192,8 @@ DWORD WINAPI ClientMain(LPVOID arg)
 	SOCKADDR_IN serveraddr;
 	ZeroMemory(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
-	/*serveraddr.sin_addr.s_addr = inet_addr(IP_NUM);
-	serveraddr.sin_port = htons(PORT_NUM);*/
+	//serveraddr.sin_addr.s_addr = inet_addr(IP_NUM);
+	//serveraddr.sin_port = htons(PORT_NUM);
 	serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	serveraddr.sin_port = htons(10000);
 
