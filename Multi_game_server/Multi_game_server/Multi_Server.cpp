@@ -137,9 +137,6 @@ int main(int argc, char* argv[])
 	//타이머 스레드 스위치용
 	htimerEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	
-	//for (int i = 0; i < MAX_ITEM_SIZE - 1; ++i) {                    //v_id의 벡터는 비워져 있고 i의 카운트당 원소가 채워지므로 i값을 벡터의 인덱스로 생각하며 두개의 map에 v_id[i]의 값을 넣어줌 
-	//	g_item[i] = true;                                            
-	//}
 
 	//윈속 초기화
 	WSADATA wsa;
@@ -1073,24 +1070,7 @@ void process_packet(int client_index, char* p)
 		}
 
 
-				   // 준비
-				   //case DEAD: { 
-				   //	for (auto& pl : clients) {
-				   //		if (true == pl.in_use)
-				   //		{
-				   //			PLAYER_CHANGE_STATE_packet con_packet;
-				   //			con_packet.size = sizeof(con_packet);
-				   //			con_packet.type = CHANGE_STATE;
-				   //			strcpy_s(con_packet.id, cl._id);
-				   //			con_packet.x = cl._x;
-				   //			con_packet.y = cl._y;
-				   //			con_packet.hp = cl._heart;
-				   //			con_packet.state = DEAD;
-				   //			pl.do_send(sizeof(con_packet), &con_packet);
-				   //		}
-				   //	}
-				   //	break; 
-				   //}// 하트
+			
 		default: {
 			cout << "Invalid state in client: \'" << cl._id << "\'" << endl;
 			cout << "packet state number: " << packet->state << endl;
