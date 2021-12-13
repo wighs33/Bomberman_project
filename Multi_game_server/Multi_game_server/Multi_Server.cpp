@@ -273,9 +273,11 @@ DWORD WINAPI do_timer(LPVOID arg) {
 		timer_event ev;
 		bool ret = timer_queue.try_pop(ev);
 		if (ret == false) continue;
+		int _id = ev.obj_id;
 		if (ev.start_time <= chrono::system_clock::now()) {
 			if (ev.order == START_EXPL) //1. Æø¹ß ½ÃÀÛ
 			{
+
 				bombs.front().Explode(selectedMap, clients);
 				//2. ÆøÅºÀÌ »èÁ¦µÇ±â Àü Àü¿ªÅ¥¿¡ Æø¹ß¹üÀ§¿¡ ÇØ´çÇÏ´Â ¸ÊÀÎµ¦½ºµéÀ» ³Ö´Â´Ù.
 				explosionVecs.push_back(bombs.front().explosionMapIndexs);
@@ -291,12 +293,11 @@ DWORD WINAPI do_timer(LPVOID arg) {
 				//PrintMap();
 
 				//ÆøÅº »èÁ¦Àü ÇÃ·¹ÀÌ¾î ÇöÀç ÆøÅº °¹¼ö °»½Å
-				for (auto& pl : clients) {
-					if (strcmp(pl._id, bombs.front()._owner_id) == 0) {
-						pl._current_bomb_count--;
-					}
-				}
-
+				int bt = clients[_id]._current_bomb_count;
+				if (bt > 0) { 
+					--clients[_id]._current_bomb_count;
+				};
+				
 				bombs.pop_front();
 			}
 			else if (ev.order == END_EXPL) //4. Æø¹ß ³¡
@@ -424,7 +425,6 @@ void init_client(int client_index)
 	clients[client_index]._power = 1;
 	clients[client_index]._heart = 3;
 	clients[client_index]._bomb_max_count = 2;
-	clients[client_index]._current_bomb_count = 0;
 	clients[client_index]._rock_count = 0;
 	clients[client_index]._state = ACCEPT;
 }
@@ -943,8 +943,6 @@ void process_packet(int client_index, char* p)
 	}
 
 	case INIT_BOMB: {	// 1. ÆøÅº ¹ÞÀ½
-		timer_event ev;
-		ev.obj_id = g_b_count++;
 		//////////////////////////////////////////////////////////
 
 		INIT_BOMB_packet* packet = reinterpret_cast<INIT_BOMB_packet*>(p);
@@ -953,29 +951,20 @@ void process_packet(int client_index, char* p)
 
 		cout << "ÇÃ·¹ÀÌ¾î - " << packet->owner_id << " ÆøÅº ¼³Ä¡" << endl;
 
-		bool proceed = FALSE;
-
-		//ÇÃ·¹ÀÌ¾î ÇöÀç ÆøÅº °³¼ö °Ë»ç
-		for (auto& pl : clients) {
-			if (strcmp(pl._id, packet->owner_id) == 0) {
-				//¸¸¾à Á¤ÇØÁø ÆøÅº ÃÖ´ë °³¼öº¸´Ù ÇöÀç ³öµÎ·Á´Â ÆøÅº°³¼ö°¡ ¸¹°Å³ª °°´Ù¸é ¸·´Â´Ù.
-				if (pl._current_bomb_count >= pl._bomb_max_count) 
-					break;
-				
-				else {
-					pl._current_bomb_count++;
-					proceed = TRUE;
-					break;
-				}
-			}
+		int bc = cl._current_bomb_count;
+		auto [bomb_ix, bomb_iy] = WindowPosToMapIndex(packet->x, packet->y);
+		if (bc >= cl._bomb_max_count) break;
+		else {
+			if (selectedMap[bomb_iy][bomb_ix] == EMPTY) ++cl._current_bomb_count;
+			else break;
 		}
 
-		if (proceed == FALSE) break;
-		
+		selectedMap[bomb_iy][bomb_ix] = BOMB;
+		int obj_id = g_b_count++;
 		//2. ÆøÅº Å¥¿¡ ³ÖÀ½
-		bombs.push_back(Bomb(packet->x, packet->y, ev.obj_id, packet->power, packet->owner_id));
+		bombs.push_back(Bomb(packet->x, packet->y, obj_id, packet->power, packet->owner_id));
 
-		packet->indx = ev.obj_id;
+		packet->indx = obj_id;
 
 		for (auto& pl : clients) {
 			if (pl._state != PLAY) continue;
@@ -988,8 +977,8 @@ void process_packet(int client_index, char* p)
 		};
 
 		//4. Å¸ÀÌ¸Ó Å¥¿¡ 3ÃÊÂ¥¸® Å¸ÀÌ¸Ó ³ÖÀ½
-		Timer_Event(ev.obj_id, START_EXPL, 3000ms);
-		Timer_Event(ev.obj_id, END_EXPL, 3500ms);
+		Timer_Event(cl._index, START_EXPL, 3000ms);
+		Timer_Event(cl._index, END_EXPL, 3500ms);
 
 		//5. ÆøÅº ÅÍ¶ß¸²
 		SetEvent(htimerEvent);
