@@ -1272,9 +1272,8 @@ void Process_packet(char* p)
 			if (strcmp(player._id, packet->id) == 0) {
 				if(packet->item_type == ITEM_HEART)
 				{
-					++player._heart;
+					if (player._heart < 5) ++player._heart;
 					selectedMap[packet->iy][packet->ix] = EMPTY;
-
 					cout << "\n체력 증가!!\n";
 					cout << player._heart << endl;
 					break;
@@ -1282,7 +1281,7 @@ void Process_packet(char* p)
 
 				if (packet->item_type == ITEM_MORE_BOMB)
 				{
-					++player._bomb_max_count;
+					if (player._bomb_max_count < 5) ++player._bomb_max_count;
 					selectedMap[packet->iy][packet->ix] = EMPTY;
 
 					cout << "\n폭탄개수 증가!!\n";
@@ -1292,7 +1291,7 @@ void Process_packet(char* p)
 
 				if (packet->item_type == ITEM_MORE_POWER)
 				{
-					++player._bomb_power;
+					if (player._bomb_power < 5) ++player._bomb_power;
 					selectedMap[packet->iy][packet->ix] = EMPTY;
 
 					cout << "\n폭탄파워 증가!!\n";
@@ -1302,7 +1301,7 @@ void Process_packet(char* p)
 
 				if (packet->item_type == ITEM_ROCK)
 				{
-					++player._rock_count;
+					if (player._rock_count < 5) ++player._rock_count;
 					selectedMap[packet->iy][packet->ix] = EMPTY;
 
 					cout << "\n돌아이템 개수 증가!!\n";
