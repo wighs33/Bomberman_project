@@ -192,6 +192,11 @@ int main(int argc, char* argv[])
 	SOCKET listen_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (listen_socket == INVALID_SOCKET) err_quit("socket()");
 
+	//Nagle 알고리즘 적용X
+	bool optval = TRUE;
+	int retval = setsockopt(listen_socket, IPPROTO_TCP, TCP_NODELAY, (char*)&optval, sizeof(optval));
+	if (retval == SOCKET_ERROR) err_quit("connect()");
+
 	//bind
 	SOCKADDR_IN server_addr;
 	ZeroMemory(&server_addr, sizeof(server_addr));
