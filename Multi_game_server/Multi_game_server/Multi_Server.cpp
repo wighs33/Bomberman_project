@@ -217,6 +217,9 @@ int main(int argc, char* argv[])
 		addrlen = sizeof(clientaddr);
 		client_sock = accept(listen_socket, (SOCKADDR*)&clientaddr, &addrlen);
 
+		optval = TRUE;
+		retval = setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (char*)&optval, sizeof(optval));
+		if (retval == SOCKET_ERROR) err_quit("connect()");
 
 		// 접속한 클라이언트 정보 출력
 		std::cout << "[TCP 서버] 클라이언트 접속: IP 주소 " <<
