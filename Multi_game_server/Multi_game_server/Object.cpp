@@ -68,8 +68,7 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 	random_device seeder;
 	const auto seed = seeder.entropy() ? seeder() : time(nullptr);
 	mt19937_64 eng(static_cast<mt19937_64::result_type>(seed));
-	//uniform_int_distribution<int> itemDist(ITEM_HEART, ITEM_ROCK);
-	uniform_int_distribution<int> itemDist(ITEM_MORE_POWER, ITEM_MORE_POWER);
+	uniform_int_distribution<int> itemDist(ITEM_HEART, ITEM_ROCK);
 
 
 	//¸ÊÀÎµ¦½ºÀÇ ÆøÅº ÁÂÇ¥
