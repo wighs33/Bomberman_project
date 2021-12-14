@@ -1030,7 +1030,7 @@ void Send_packet()
 {
 	retval = send(sock, send_queue.front(), BUFSIZE, 0);
 	if (retval == SOCKET_ERROR) {
-		Err_quit("send()");
+		Err_display("send()");
 	}
 	send_queue.pop();
 }
@@ -1041,7 +1041,7 @@ void Recv_packet()
 	ZeroMemory(recv_buf, sizeof(recv_buf));
 	int retval = recv(sock, recv_buf, BUFSIZE, 0);
 	if (retval == SOCKET_ERROR) {
-		Err_quit("recv()");
+		Err_display("recv()");
 	}
 }
 
