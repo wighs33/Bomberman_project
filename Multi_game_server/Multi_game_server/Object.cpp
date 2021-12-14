@@ -68,7 +68,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 	random_device seeder;
 	const auto seed = seeder.entropy() ? seeder() : time(nullptr);
 	mt19937_64 eng(static_cast<mt19937_64::result_type>(seed));
-	uniform_int_distribution<int> itemDist(ITEM_HEART, ITEM_ROCK);
+	//uniform_int_distribution<int> itemDist(ITEM_HEART, ITEM_ROCK);
+	uniform_int_distribution<int> itemDist(ITEM_MORE_POWER, ITEM_MORE_POWER);
 
 
 	//맵인덱스의 폭탄 좌표
@@ -81,10 +82,10 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 	explosionMapIndexs.emplace_back(bomb_ix, bomb_iy);
 	SendExplosionStart(clients, bomb_ix, bomb_iy);
 
-	Sleep(1);
-
 	//폭탄 위 체크
 	for (int i = 1; i <= _power; ++i) {
+		if (_power == 3 && i == 2) Sleep(1);
+		if (_power >= 4 && (i == 2 || i == 4)) Sleep(1);
 		//범위 체크
 		if (bomb_iy - i == -1) break;
 		//블럭 체크
@@ -116,6 +117,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 
 	//폭탄 아래 체크
 	for (int i = 1; i <= _power; ++i) {
+		if (_power == 3 && i == 2) Sleep(1);
+		if (_power >= 4 && (i == 2 || i == 4)) Sleep(1);
 		//범위 체크
 		if (bomb_iy + i == tile_max_h_num) break;
 		//블럭 체크
@@ -148,6 +151,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 
 	//폭탄 왼쪽 체크
 	for (int i = 1; i <= _power; ++i) {
+		if (_power == 3 && i == 2) Sleep(1);
+		if (_power >= 4 && (i == 2 || i == 4)) Sleep(1);
 		//범위 체크
 		if (bomb_ix - i == -1) break;
 		//블럭 체크
@@ -180,6 +185,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 
 	//폭탄 오른쪽 체크
 	for (int i = 1; i <= _power; ++i) {
+		if (_power == 3 && i == 2) Sleep(1);
+		if (_power >= 4 && (i == 2 || i == 4)) Sleep(1);
 		//범위 체크
 		if (bomb_ix + i == tile_max_w_num) break;
 		//블럭 체크
