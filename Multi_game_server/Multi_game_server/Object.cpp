@@ -81,6 +81,8 @@ void Bomb::Explode(tileArr<int, tile_max_w_num, tile_max_h_num>& objectMap, arra
 	explosionMapIndexs.emplace_back(bomb_ix, bomb_iy);
 	SendExplosionStart(clients, bomb_ix, bomb_iy);
 
+	Sleep(1);
+
 	//ÆøÅº À§ Ã¼Å©
 	for (int i = 1; i <= _power; ++i) {
 		if (_power == 3 && i == 2) Sleep(1);
