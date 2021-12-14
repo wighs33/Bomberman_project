@@ -32,7 +32,7 @@ std::deque <vector<pair<int, int>>>	explosionVecs;  //폭발 맵위치 벡터큐
 
 bool g_shutdown = false;
 
-atomic<int> g_b_count = 0;
+int g_b_count = 0;
 
 //타이머
 HANDLE htimerEvent; // 타이머 쓰레드 시작용
@@ -930,7 +930,7 @@ void Process_packet(int client_index, char* p)
 		}
 
 		selectedMap[bomb_iy][bomb_ix] = BOMB;
-		int obj_id = g_b_count++;
+		int obj_id = g_b_count;
 		//2. 폭탄 큐에 넣음
 		bombs.push_back(Bomb(packet->x, packet->y, obj_id, packet->power, packet->owner_id));
 
