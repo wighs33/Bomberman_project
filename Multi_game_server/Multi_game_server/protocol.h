@@ -63,13 +63,6 @@ struct MOVE_OK_packet { // 플레이어 이동 확인 패킷
 	char id[MAX_NAME_SIZE]; // 플레이어 아이디
 };
 
-struct INIT_OBJECT_packet { // 오브젝트 생성 패킷
-	unsigned char size; // 패킷 사이즈
-	char type; // 패킷 타입 9
-	int ob_type; // 오브젝트 타입
-	int x, y; // 오브젝트 좌표
-};
-
 struct INIT_BOMB_packet {// 폭탄 생성 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입
