@@ -47,7 +47,6 @@ struct PLAYER_CHANGE_STATE_packet { // 플레이어 상태 패킷
 	char id[MAX_NAME_SIZE]; // 플레이어 아이디
 };
 
-
 struct MOVE_PLAYER_packet { // 플레이어 이동 패킷
 	unsigned char size; // 패킷 사이즈
 	char type; // 패킷 타입 7

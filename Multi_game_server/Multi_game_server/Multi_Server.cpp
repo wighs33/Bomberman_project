@@ -955,10 +955,6 @@ void Process_packet(int client_index, char* p)
 		break;
 	}
 
-	case INIT_OBJECT: {
-		break;
-	}
-
 	case CHANGE_STATE: {
 		PLAYER_CHANGE_STATE_packet* packet = reinterpret_cast<PLAYER_CHANGE_STATE_packet*>(p);
 		switch (packet->state) {
